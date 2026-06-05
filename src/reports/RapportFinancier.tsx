@@ -9,7 +9,7 @@ Font.register({
   family: "Montserrat",
   fonts: [
     { src: "https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459Wlhyw.ttf", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/montserrat/v26/JTURjIg1_i6t8kCHKm45_dJE3gnD-w.ttf", fontWeight: 700 },
+    { src: "https://fonts.gstatic.com/s/montserrat/v26/JTURjIg1_i6t8kCHKm45_bZF3gnD_vx3rCs.ttf", fontWeight: 700 },
   ],
 });
 

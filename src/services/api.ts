@@ -1,7 +1,6 @@
 import { supabase } from "./supabase.client";
 import type { TableName } from "../types/database";
 
-/** Erreur applicative typée — remontée jusqu'à l'ErrorBoundary / toasts. */
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -14,10 +13,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Pattern Service : CRUD générique, typé, avec gestion d'erreurs fine.
- * Aucun composant ne parle à Supabase directement — tout passe par ici.
- */
 export const api = {
   async list<TRow>(table: TableName, filter?: Record<string, string>): Promise<TRow[]> {
     let query = supabase.from(table).select("*");
@@ -46,13 +41,12 @@ export const api = {
     if (error) throw new ApiError(`Suppression impossible (${table})`, table, "remove", error);
   },
 
-  /**
-   * Upsert d'un lot dans une "transaction" logique : Supabase upsert est atomique
-   * par requête. Utilisé par le service compromis pour synchroniser revenus.
-   */
   async upsertMany<TRow extends object>(table: TableName, rows: Partial<TRow>[]): Promise<TRow[]> {
     if (rows.length === 0) return [];
-    const { data, error } = await supabase.from(table).upsert(rows).select();
+    const { data, error } = await supabase
+      .from(table)
+      .upsert(rows, { onConflict: "id" })
+      .select();
     if (error) throw new ApiError(`Upsert impossible (${table})`, table, "upsertMany", error);
     return (data ?? []) as TRow[];
   },
