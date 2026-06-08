@@ -13,13 +13,13 @@ const KEY = ["agency"] as const;
 /** Source unique des données — cache TanStack Query. */
 export function useAgencyData() {
   const user = useSessionStore((s) => s.user);
-  return useQuery<AgencyData>({
+  const result = useQuery<AgencyData>({
     queryKey: [...KEY, user?.id],
-    queryFn: () => (user ? loadAgencyData(user) : Promise.resolve(EMPTY)),
+    queryFn: () => loadAgencyData(user!),
     enabled: !!user,
-    initialData: EMPTY,
     staleTime: 30_000,
   });
+  return { ...result, data: result.data ?? EMPTY };
 }
 
 /** Patch local du cache après mutation (réactivité immédiate). */
