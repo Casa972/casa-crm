@@ -90,6 +90,23 @@ export const positiveNumber = z.coerce
 /** UUID applicatif (Date.now+random) — string non vide. */
 export const id = z.string().min(1);
 
+
+export const TypeBienEstimation = z.enum([
+  "Appartement en copropriété",
+  "Maison individuelle",
+  "Villa",
+  "Terrain",
+  "Local commercial",
+  "Fonds de commerce",
+]);
+export type TypeBienEstimation = z.infer<typeof TypeBienEstimation>;
+
+export const EtatGeneral = z.enum(["Parfait état", "Très bon état", "Bon état", "État moyen", "Travaux à prévoir"]);
+export type EtatGeneral = z.infer<typeof EtatGeneral>;
+
+export const ImpactCritere = z.enum(["Positif fort", "Positif", "Neutre", "Négatif", "Négatif fort"]);
+export type ImpactCritere = z.infer<typeof ImpactCritere>;
+
 export const COMMUNES_MARTINIQUE = [
   "Fort-de-France", "Le Lamentin", "Le Robert", "Sainte-Marie", "Le François",
   "Le Marin", "Sainte-Anne", "Les Trois-Îlets", "Le Diamant", "Le Vauclin",

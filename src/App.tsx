@@ -13,6 +13,7 @@ import { PilotageAgentView } from "./components/pilotage/PilotageAgentView";
 import { RevenusView } from "./components/revenus/RevenusView";
 import { ReportingView } from "./components/reporting/ReportingView";
 import { RedacteurView } from "./components/redacteur/RedacteurView";
+import { EstimationView } from "./components/estimation/EstimationView";
 import { CalculatriceView } from "./components/tools/CalculatriceView";
 import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
 import { daysDiff } from "./lib/format";
@@ -34,6 +35,7 @@ function CurrentView(): ReactElement {
     case "pilotage_agent": return <PilotageAgentView />;
     case "revenus": return <RevenusView />;
     case "reporting": return <ReportingView />;
+    case "estimation": return <EstimationView />;
     case "agenda": return <AgendaView />;
     case "taches": return <TachesView />;
     case "calculatrice": return <CalculatriceView />;

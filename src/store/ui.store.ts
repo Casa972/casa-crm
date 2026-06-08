@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 export type ViewId =
   | "today" | "clients" | "biens" | "redacteur"
-  | "pilotage" | "revenus" | "reporting"
+  | "pilotage" | "revenus" | "reporting" | "estimation"
   | "pilotage_agent" | "agenda" | "taches" | "calculatrice";
 
 interface UiState {
