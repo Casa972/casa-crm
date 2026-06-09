@@ -43,24 +43,66 @@ const INSEE: Record<string, string> = {
 };
 
 async function fetchDVF(commune: string, typeBien: string): Promise<RefMarche[]> {
-  const codeInsee = INSEE[commune] || "97209";
-  const nature = typeBien.toLowerCase().includes("terrain") ? "T" : "Appartement";
-  try {
-    const url = `https://apidf-preprod.cerema.fr/dvf_opendata/mutations/?code_insee=${codeInsee}&nature_mutation=Vente&type_local=${encodeURIComponent(nature)}&page_size=20`;
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error();
-    const data = await resp.json();
-    return ((data.results || data.features || []) as Record<string, unknown>[])
-      .slice(0, 15)
-      .map(r => {
-        const surf = Number(r.surface_reelle_bati || r.surface_carrez || 0);
-        const prix = Number(r.valeur_fonciere || 0);
-        const date = String(r.date_mutation || "").slice(0, 10);
-        const pieces = r.nombre_pieces_principales ? `${r.nombre_pieces_principales}p` : "";
-        return { id: uid(), type: `${String(r.type_local || nature)}${pieces ? " "+pieces : ""}`, surface: Math.round(surf), prix, prixM2: surf > 0 ? Math.round(prix / surf) : 0, observations: date ? `Vendu le ${new Date(date + "T12:00").toLocaleDateString("fr-FR")}` : "", source: "DVF" as const };
-      })
-      .filter(r => r.surface > 20 && r.prixM2 > 500 && r.prixM2 < 15000);
-  } catch { return []; }
+  const codeInsee = INSEE[commune];
+  if (!codeInsee) return [];
+
+  // Détermine le type_local pour le filtre
+  const typeLocal = typeBien.toLowerCase().includes("terrain")
+    ? "Terrain"
+    : typeBien.toLowerCase().includes("maison") || typeBien.toLowerCase().includes("villa")
+    ? "Maison"
+    : "Appartement";
+
+  // APIs DVF à essayer dans l'ordre (la première qui répond)
+  const urls = [
+    // API officielle DVF géolocalisée (cquest) — couvre les DOM
+    `https://api.cquest.org/dvf?code_commune=${codeInsee}&type_local=${encodeURIComponent(typeLocal)}&nombre=20`,
+    // Fallback : DVF data.gouv.fr direct
+    `https://files.data.gouv.fr/geo-dvf/latest/geojson/${codeInsee.slice(0, 3)}/mutations.geojson`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const resp = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!resp.ok) continue;
+      const data = await resp.json();
+
+      // Format cquest
+      if (data.resultats || data.items) {
+        const items = (data.resultats || data.items || []) as Record<string, unknown>[];
+        return parseItems(items, typeLocal);
+      }
+      // Format GeoJSON
+      if (data.features) {
+        const items = (data.features as { properties: Record<string, unknown> }[])
+          .map(f => f.properties);
+        return parseItems(items, typeLocal);
+      }
+    } catch { continue; }
+  }
+  return [];
+}
+
+function parseItems(items: Record<string, unknown>[], typeLocal: string): RefMarche[] {
+  return items
+    .map(r => {
+      const surf = Number(r.surface_reelle_bati || r.surface_carrez || r.surface_terrain || 0);
+      const prix = Number(r.valeur_fonciere || r.prix || 0);
+      const date = String(r.date_mutation || r.date || "").slice(0, 10);
+      const pieces = r.nombre_pieces_principales ? `${r.nombre_pieces_principales}p` : "";
+      const type = String(r.type_local || typeLocal);
+      return {
+        id: uid(),
+        type: pieces ? `${type} – ${pieces}` : type,
+        surface: Math.round(surf),
+        prix,
+        prixM2: surf > 0 ? Math.round(prix / surf) : 0,
+        observations: date ? `Vendu le ${new Date(date + "T12:00").toLocaleDateString("fr-FR")}` : "",
+        source: "DVF" as const,
+      };
+    })
+    .filter(r => r.surface > 15 && r.prixM2 > 500 && r.prixM2 < 20000)
+    .slice(0, 20);
 }
 
 // ─── Proposition de prix ──────────────────────────────────────────────────────
@@ -201,8 +243,8 @@ function EstimationEditor({ initial, onSave, onBack }: {
     if (!e.commune) { setDvfMsg("Renseignez la commune d'abord."); return; }
     setDvfLoading(true); setDvfMsg("Recherche en cours…");
     const refs = await fetchDVF(e.commune, e.typeBien);
-    if (refs.length === 0) setDvfMsg("Aucune transaction DVF trouvée. Essayez d'importer un CSV depuis data.gouv.fr/dvf.");
-    else { upd("refsDVF", [...e.refsDVF, ...refs]); setDvfMsg(`✓ ${refs.length} transaction(s) DVF importée(s)`); }
+    if (refs.length === 0) setDvfMsg(`⚠ Aucune transaction trouvée via l'API. Téléchargez manuellement sur dvf.data.gouv.fr puis importez le CSV.`);
+    else { upd("refsDVF", [...e.refsDVF, ...refs]); setDvfMsg(`✓ ${refs.length} transaction(s) DVF importée(s) pour ${e.commune}`); }
     setDvfLoading(false);
   };
 
@@ -424,7 +466,18 @@ function EstimationEditor({ initial, onSave, onBack }: {
                   {dvfLoading ? "Recherche…" : "Importer DVF"}
                 </button>
               </div>
-              {dvfMsg && <div className={`mt-2 text-[12px] font-medium ${dvfMsg.startsWith("✓") ? "text-emerald" : "text-amber"}`}>{dvfMsg}</div>}
+              {dvfMsg && (
+                <div className={`mt-2 text-[12px] font-medium ${dvfMsg.startsWith("✓") ? "text-emerald" : "text-amber"}`}>
+                  {dvfMsg}
+                  {dvfMsg.startsWith("⚠") && (
+                    <a href={`https://explore.data.gouv.fr/fr/immobilier?code_commune=${INSEE[e.commune] || "97229"}`}
+                      target="_blank" rel="noreferrer"
+                      className="ml-2 underline text-primary">
+                      Ouvrir DVF Explorer →
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
             <RefTable target="refsAnnonces" label="Références — Annonces actives (leboncoin, domimmo…)" />
             <RefTable target="refsDVF" label="Données DVF — Transactions réelles (DGFiP)" />
