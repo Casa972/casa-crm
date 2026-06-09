@@ -46,63 +46,58 @@ async function fetchDVF(commune: string, typeBien: string): Promise<RefMarche[]>
   const codeInsee = INSEE[commune];
   if (!codeInsee) return [];
 
-  // Détermine le type_local pour le filtre
-  const typeLocal = typeBien.toLowerCase().includes("terrain")
-    ? "Terrain"
-    : typeBien.toLowerCase().includes("maison") || typeBien.toLowerCase().includes("villa")
-    ? "Maison"
+  const typeLocal = typeBien.toLowerCase().includes("terrain") ? "Terrain"
+    : typeBien.toLowerCase().includes("maison") || typeBien.toLowerCase().includes("villa") ? "Maison"
     : "Appartement";
 
-  // APIs DVF à essayer dans l'ordre (la première qui répond)
-  const urls = [
-    // API officielle DVF géolocalisée (cquest) — couvre les DOM
-    `https://api.cquest.org/dvf?code_commune=${codeInsee}&type_local=${encodeURIComponent(typeLocal)}&nombre=20`,
-    // Fallback : DVF data.gouv.fr direct
-    `https://files.data.gouv.fr/geo-dvf/latest/geojson/${codeInsee.slice(0, 3)}/mutations.geojson`,
-  ];
+  // Fichier CSV DVF officiel par commune (accessible depuis le navigateur)
+  const dept = codeInsee.slice(0, 3); // "972"
+  const url = `https://files.data.gouv.fr/geo-dvf/latest/csv/${dept}/communes/${codeInsee}.csv`;
 
-  for (const url of urls) {
-    try {
-      const resp = await fetch(url, { headers: { Accept: "application/json" } });
-      if (!resp.ok) continue;
-      const data = await resp.json();
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const csv = await resp.text();
+    const lines = csv.split("\n");
+    const header = (lines[0] ?? "").split(",");
 
-      // Format cquest
-      if (data.resultats || data.items) {
-        const items = (data.resultats || data.items || []) as Record<string, unknown>[];
-        return parseItems(items, typeLocal);
-      }
-      // Format GeoJSON
-      if (data.features) {
-        const items = (data.features as { properties: Record<string, unknown> }[])
-          .map(f => f.properties);
-        return parseItems(items, typeLocal);
-      }
-    } catch { continue; }
-  }
-  return [];
-}
+    const idx = (col: string) => header.indexOf(col);
+    const iType = idx("type_local");
+    const iSurf = idx("surface_reelle_bati");
+    const iValeur = idx("valeur_fonciere");
+    const iDate = idx("date_mutation");
+    const iPieces = idx("nombre_pieces_principales");
 
-function parseItems(items: Record<string, unknown>[], typeLocal: string): RefMarche[] {
-  return items
-    .map(r => {
-      const surf = Number(r.surface_reelle_bati || r.surface_carrez || r.surface_terrain || 0);
-      const prix = Number(r.valeur_fonciere || r.prix || 0);
-      const date = String(r.date_mutation || r.date || "").slice(0, 10);
-      const pieces = r.nombre_pieces_principales ? `${r.nombre_pieces_principales}p` : "";
-      const type = String(r.type_local || typeLocal);
-      return {
+    const results: RefMarche[] = [];
+    for (const line of lines.slice(1)) {
+      if (!line.trim()) continue;
+      const cols = line.split(",");
+      const type = cols[iType]?.trim().replace(/^"|"$/g, "") ?? "";
+      if (typeLocal !== "Terrain" && type && type !== typeLocal) continue;
+      const surf = parseFloat(cols[iSurf]?.replace(/"/g, "") ?? "") || 0;
+      const prix = parseFloat(cols[iValeur]?.replace(/[" ]/g, "") ?? "") || 0;
+      const date = (cols[iDate]?.replace(/"/g, "") ?? "").slice(0, 10);
+      const pieces = cols[iPieces]?.replace(/"/g, "")?.trim() ?? "";
+      if (surf < 15 || prix < 1000) continue;
+      const prixM2 = Math.round(prix / surf);
+      if (prixM2 < 500 || prixM2 > 20000) continue;
+      results.push({
         id: uid(),
-        type: pieces ? `${type} – ${pieces}` : type,
+        type: pieces ? `${type || typeLocal} – ${pieces}p` : (type || typeLocal),
         surface: Math.round(surf),
-        prix,
-        prixM2: surf > 0 ? Math.round(prix / surf) : 0,
+        prix: Math.round(prix),
+        prixM2,
         observations: date ? `Vendu le ${new Date(date + "T12:00").toLocaleDateString("fr-FR")}` : "",
         source: "DVF" as const,
-      };
-    })
-    .filter(r => r.surface > 15 && r.prixM2 > 500 && r.prixM2 < 20000)
-    .slice(0, 20);
+      });
+    }
+    // Trier par date desc, garder les 25 plus récentes
+    return results
+      .sort((a, b) => b.observations.localeCompare(a.observations))
+      .slice(0, 25);
+  } catch {
+    return [];
+  }
 }
 
 // ─── Proposition de prix ──────────────────────────────────────────────────────
@@ -243,8 +238,12 @@ function EstimationEditor({ initial, onSave, onBack }: {
     if (!e.commune) { setDvfMsg("Renseignez la commune d'abord."); return; }
     setDvfLoading(true); setDvfMsg("Recherche en cours…");
     const refs = await fetchDVF(e.commune, e.typeBien);
-    if (refs.length === 0) setDvfMsg(`⚠ Aucune transaction trouvée via l'API. Téléchargez manuellement sur dvf.data.gouv.fr puis importez le CSV.`);
-    else { upd("refsDVF", [...e.refsDVF, ...refs]); setDvfMsg(`✓ ${refs.length} transaction(s) DVF importée(s) pour ${e.commune}`); }
+    if (refs.length === 0) {
+      setDvfMsg(`⚠ Fichier DVF inaccessible depuis ce navigateur (CORS).`);
+    } else {
+      upd("refsDVF", [...e.refsDVF, ...refs]);
+      setDvfMsg(`✓ ${refs.length} transaction(s) DVF importée(s) pour ${e.commune}`);
+    }
     setDvfLoading(false);
   };
 
@@ -458,24 +457,32 @@ function EstimationEditor({ initial, onSave, onBack }: {
             <div className="card mb-5 border-l-4 border-l-primary bg-primary-soft p-4">
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <div className="text-[13px] font-semibold text-primary">🏛️ Données DVF — Transactions officielles</div>
-                  <div className="text-[12px] text-primary/80">Importer automatiquement depuis data.gouv.fr pour <b>{e.commune}</b></div>
+                  <div className="text-[13px] font-semibold text-primary">🏛️ Données DVF — Transactions officielles DGFiP</div>
+                  <div className="text-[12px] text-primary/80">Ventes réelles enregistrées pour <b>{e.commune}</b></div>
                 </div>
                 <button className="btn-primary flex items-center gap-2" onClick={searchDVF} disabled={dvfLoading}>
                   {dvfLoading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-                  {dvfLoading ? "Recherche…" : "Importer DVF"}
+                  {dvfLoading ? "Chargement…" : "Importer DVF"}
                 </button>
               </div>
               {dvfMsg && (
                 <div className={`mt-2 text-[12px] font-medium ${dvfMsg.startsWith("✓") ? "text-emerald" : "text-amber"}`}>
                   {dvfMsg}
-                  {dvfMsg.startsWith("⚠") && (
-                    <a href={`https://explore.data.gouv.fr/fr/immobilier?code_commune=${INSEE[e.commune] || "97229"}`}
-                      target="_blank" rel="noreferrer"
-                      className="ml-2 underline text-primary">
-                      Ouvrir DVF Explorer →
-                    </a>
-                  )}
+                </div>
+              )}
+              {dvfMsg.startsWith("⚠") && INSEE[e.commune] && (
+                <div className="mt-3 rounded bg-white/70 p-3 text-[12px] text-ink-sub">
+                  <div className="font-semibold text-ink mb-1.5">📥 Import manuel en 3 étapes :</div>
+                  <div className="mb-1">1. Téléchargez le fichier CSV de {e.commune} :</div>
+                  <a
+                    href={`https://files.data.gouv.fr/geo-dvf/latest/csv/${INSEE[e.commune]?.slice(0,3)}/communes/${INSEE[e.commune]}.csv`}
+                    target="_blank" rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded border border-primary/30 bg-primary-soft px-3 py-1.5 text-[12px] font-semibold text-primary hover:bg-primary hover:text-white transition-colors mb-2"
+                  >
+                    <Download size={13} /> Télécharger {e.commune}.csv
+                  </a>
+                  <div className="mb-1">2. Ouvrez-le dans Excel, supprimez les colonnes inutiles, sauvegardez en CSV (séparateur ;)</div>
+                  <div>3. Importez-le avec le bouton <b>📥 CSV</b> dans le tableau DVF ci-dessous</div>
                 </div>
               )}
             </div>
