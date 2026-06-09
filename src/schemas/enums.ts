@@ -107,6 +107,13 @@ export type EtatGeneral = z.infer<typeof EtatGeneral>;
 export const ImpactCritere = z.enum(["Positif fort", "Positif", "Neutre", "Négatif", "Négatif fort"]);
 export type ImpactCritere = z.infer<typeof ImpactCritere>;
 
+
+export const AvisClient = z.enum(["Très intéressé", "Intéressé", "Mitigé", "Pas intéressé", "Offre possible"]);
+export type AvisClient = z.infer<typeof AvisClient>;
+
+export const SuiteDonner = z.enum(["Relance sous 48h", "Envoyer offre", "2ème visite à planifier", "Pas de suite", "Attente financement", "En réflexion"]);
+export type SuiteDonner = z.infer<typeof SuiteDonner>;
+
 export const COMMUNES_MARTINIQUE = [
   "Fort-de-France", "Le Lamentin", "Le Robert", "Sainte-Marie", "Le François",
   "Le Marin", "Sainte-Anne", "Les Trois-Îlets", "Le Diamant", "Le Vauclin",

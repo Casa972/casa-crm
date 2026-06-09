@@ -3,7 +3,7 @@ import { create } from "zustand";
 export type ViewId =
   | "today" | "clients" | "biens" | "redacteur"
   | "pilotage" | "revenus" | "reporting" | "estimation"
-  | "pilotage_agent" | "agenda" | "taches" | "calculatrice";
+  | "pilotage_agent" | "agenda" | "taches" | "calculatrice" | "compte_rendu";
 
 interface UiState {
   activeView: ViewId;

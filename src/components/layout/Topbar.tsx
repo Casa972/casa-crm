@@ -15,6 +15,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   taches: "Tâches",
   calculatrice: "Calculatrice",
   estimation: "Estimations de valeur vénale",
+  compte_rendu: "Comptes rendus de visite",
 };
 
 export function Topbar({ alertCount = 0 }: { alertCount?: number }) {
