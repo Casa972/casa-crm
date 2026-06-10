@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { loadAgencyData } from "../../services/agency.service";
+import { api } from "../../services/api";
+import { TABLES } from "../../types/database";
 import {
   bienService, mandatService, clientService, revenuService,
 } from "../../services/entity.services";
@@ -147,6 +149,19 @@ export function useEncaisserCommission() {
     },
     onSuccess: ({ compromis, revenu }) =>
       patch((d) => mergeCompromisRevenu(d, compromis, revenu)),
+  });
+}
+
+export function useDeleteCompromis() {
+  const patch = useCachePatch();
+  return useMutation({
+    mutationFn: (id: string) => api.remove(TABLES.compromis, id),
+    onSuccess: (_v, id) =>
+      patch((d) => ({
+        ...d,
+        compromis: d.compromis.filter((c) => c.id !== id),
+        revenus: d.revenus.filter((r) => r.sourceId !== id),
+      })),
   });
 }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Check } from "lucide-react";
+import { Plus, Edit2, Check, Trash2 } from "lucide-react";
 import { StatusPill, KpiCard } from "../shared/StatusPill";
 import { EmptyState, Modal } from "../ui/Modal";
 import { PageHeader } from "../shared/PageHeader";
@@ -7,7 +7,7 @@ import { CompromisForm } from "./forms";
 import { eur, fdate, daysDiff } from "../../lib/format";
 import { useFinancials } from "../../hooks/useFinancials";
 import {
-  useAgencyData, useSaveCompromis, useEncaisserCommission,
+  useAgencyData, useSaveCompromis, useEncaisserCommission, useDeleteCompromis,
 } from "../../hooks/queries/useAgencyData";
 import { commissionMontant } from "../../schemas/compromis.schema";
 import type { Compromis } from "../../types/domain";
@@ -17,6 +17,7 @@ export function PilotageView() {
   const fin = useFinancials(data);
   const saveCompromis = useSaveCompromis();
   const encaisser = useEncaisserCommission();
+  const delCompromis = useDeleteCompromis();
 
   const [modal, setModal] = useState<{ item?: Compromis } | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export function PilotageView() {
                             <button className="btn-primary !bg-emerald" onClick={() => encaisser.mutate(c)}><Check size={13} /> Marquer encaissée</button>
                           )}
                           <button className="btn-ghost" onClick={() => setModal({ item: c })}><Edit2 size={13} /> Modifier</button>
+                          <button className="btn-ghost text-danger hover:bg-danger-soft" onClick={() => { if (confirm("Supprimer ce dossier ?")) delCompromis.mutate(c.id); }}><Trash2 size={13} /> Supprimer</button>
                         </div>
                       </div>
                     )}
