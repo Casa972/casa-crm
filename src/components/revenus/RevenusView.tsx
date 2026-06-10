@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Trash2, TrendingUp } from "lucide-react";
+import { Plus, Edit2, Trash2, TrendingUp, Link2 } from "lucide-react";
 import { StatusPill, KpiCard } from "../shared/StatusPill";
 import { EmptyState, Modal } from "../ui/Modal";
 import { PageHeader } from "../shared/PageHeader";
@@ -7,6 +7,7 @@ import { RevenuForm } from "../pilotage/forms";
 import { eur, fdate } from "../../lib/format";
 import { useFinancials } from "../../hooks/useFinancials";
 import { useAgencyData, useSaveRevenu, useDeleteRevenu } from "../../hooks/queries/useAgencyData";
+import { useUiStore } from "../../store/ui.store";
 import type { Revenu } from "../../types/domain";
 
 export function RevenusView() {
@@ -14,6 +15,7 @@ export function RevenusView() {
   const fin = useFinancials(data);
   const save = useSaveRevenu();
   const del = useDeleteRevenu();
+  const setView = useUiStore((s) => s.setView);
   const [modal, setModal] = useState<{ item?: Revenu } | null>(null);
   const [filter, setFilter] = useState<"tous" | "Encaissé" | "En attente">("tous");
 
@@ -66,7 +68,18 @@ export function RevenusView() {
                       <TrendingUp size={14} className={r.statut === "Encaissé" ? "text-emerald" : "text-amber"} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13.5px] font-semibold text-ink">{r.desc || r.type}</div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[13.5px] font-semibold text-ink">{r.desc || r.type}</span>
+                        {r.source === "pilotage" && r.sourceId && (
+                          <button
+                            onClick={() => setView("pilotage")}
+                            className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary hover:bg-primary hover:text-white transition-colors"
+                            title="Voir dans Pilotage"
+                          >
+                            <Link2 size={10} /> Pilotage
+                          </button>
+                        )}
+                      </div>
                       <div className="text-xs text-ink-muted">{r.type} · {fdate(r.date)}</div>
                     </div>
                     <StatusPill label={r.statut} />

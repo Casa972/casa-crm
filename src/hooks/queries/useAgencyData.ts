@@ -104,14 +104,29 @@ export function useDeleteClient() {
 export function useSaveRevenu() {
   const patch = useCachePatch();
   return useMutation({
-    mutationFn: (r: Revenu) => revenuService.save(r),
+    mutationFn: async (r: Revenu) => {
+      const saved = await revenuService.save(r);
+      // Si lié à un compromis → sync commissionStatut en base
+      if (saved.sourceId && saved.source === "pilotage") {
+        const newStatut = saved.statut === "Encaissé" ? "Encaissée" : "À encaisser";
+        await api.update(TABLES.compromis, saved.sourceId, { commission_statut: newStatut });
+      }
+      return saved;
+    },
     onSuccess: (saved) =>
-      patch((d) => ({
-        ...d,
-        revenus: d.revenus.some((x) => x.id === saved.id)
+      patch((d) => {
+        const revenus = d.revenus.some((x) => x.id === saved.id)
           ? d.revenus.map((x) => (x.id === saved.id ? saved : x))
-          : [...d.revenus, saved],
-      })),
+          : [...d.revenus, saved];
+        let compromis = d.compromis;
+        if (saved.sourceId && saved.source === "pilotage") {
+          const newStatut = saved.statut === "Encaissé" ? "Encaissée" : "À encaisser";
+          compromis = d.compromis.map((c) =>
+            c.id === saved.sourceId ? { ...c, commissionStatut: newStatut } : c,
+          );
+        }
+        return { ...d, revenus, compromis };
+      }),
   });
 }
 
@@ -119,7 +134,19 @@ export function useDeleteRevenu() {
   const patch = useCachePatch();
   return useMutation({
     mutationFn: (id: string) => revenuService.remove(id),
-    onSuccess: (_v, id) => patch((d) => ({ ...d, revenus: d.revenus.filter((x) => x.id !== id) })),
+    onSuccess: (_v, id) =>
+      patch((d) => {
+        const deleted = d.revenus.find((r) => r.id === id);
+        const revenus = d.revenus.filter((r) => r.id !== id);
+        // Si ce revenu était lié à un compromis → remettre À encaisser
+        let compromis = d.compromis;
+        if (deleted?.sourceId && deleted.source === "pilotage") {
+          compromis = d.compromis.map((c) =>
+            c.id === deleted.sourceId ? { ...c, commissionStatut: "À encaisser" as const } : c,
+          );
+        }
+        return { ...d, revenus, compromis };
+      }),
   });
 }
 
@@ -154,8 +181,18 @@ export function useEncaisserCommission() {
 
 export function useDeleteCompromis() {
   const patch = useCachePatch();
+  const qc = useQueryClient();
+  const user = useSessionStore((s) => s.user);
   return useMutation({
-    mutationFn: (id: string) => api.remove(TABLES.compromis, id),
+    mutationFn: async (id: string) => {
+      // Supprimer le revenu lié en base (si existant)
+      const data = qc.getQueryData<AgencyData>([...KEY, user?.id]) ?? EMPTY;
+      const linked = data.revenus.find((r) => r.sourceId === id && r.source === "pilotage");
+      if (linked) await api.remove(TABLES.revenus, linked.id);
+      // Supprimer le compromis
+      await api.remove(TABLES.compromis, id);
+      return id;
+    },
     onSuccess: (_v, id) =>
       patch((d) => ({
         ...d,

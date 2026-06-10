@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Check, Trash2 } from "lucide-react";
+import { Plus, Edit2, Check, Trash2, Link2 } from "lucide-react";
 import { StatusPill, KpiCard } from "../shared/StatusPill";
 import { EmptyState, Modal } from "../ui/Modal";
 import { PageHeader } from "../shared/PageHeader";
@@ -9,6 +9,7 @@ import { useFinancials } from "../../hooks/useFinancials";
 import {
   useAgencyData, useSaveCompromis, useEncaisserCommission, useDeleteCompromis,
 } from "../../hooks/queries/useAgencyData";
+import { useUiStore } from "../../store/ui.store";
 import { commissionMontant } from "../../schemas/compromis.schema";
 import type { Compromis } from "../../types/domain";
 
@@ -18,6 +19,7 @@ export function PilotageView() {
   const saveCompromis = useSaveCompromis();
   const encaisser = useEncaisserCommission();
   const delCompromis = useDeleteCompromis();
+  const setView = useUiStore((s) => s.setView);
 
   const [modal, setModal] = useState<{ item?: Compromis } | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
@@ -94,7 +96,12 @@ export function PilotageView() {
                             <button className="btn-primary !bg-emerald" onClick={() => encaisser.mutate(c)}><Check size={13} /> Marquer encaissée</button>
                           )}
                           <button className="btn-ghost" onClick={() => setModal({ item: c })}><Edit2 size={13} /> Modifier</button>
-                          <button className="btn-ghost text-danger hover:bg-danger-soft" onClick={() => { if (confirm("Supprimer ce dossier ?")) delCompromis.mutate(c.id); }}><Trash2 size={13} /> Supprimer</button>
+                          {data.revenus.some(r => r.sourceId === c.id) && (
+                            <button className="btn-ghost text-[12px]" onClick={() => setView("revenus")}>
+                              <Link2 size={13} /> Voir dans Revenus
+                            </button>
+                          )}
+                          <button className="btn-ghost text-[12px] text-danger hover:bg-danger-soft" onClick={() => { if (confirm("Supprimer ce dossier ?")) delCompromis.mutate(c.id); }}><Trash2 size={13} /> Supprimer</button>
                         </div>
                       </div>
                     )}
