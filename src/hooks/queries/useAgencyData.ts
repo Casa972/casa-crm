@@ -12,19 +12,28 @@ import type { AgencyData, Bien, Mandat, Client, Revenu, Compromis } from "../../
 const EMPTY: AgencyData = { biens: [], mandats: [], compromis: [], clients: [], revenus: [] };
 const KEY = ["agency"] as const;
 
-/** Source unique des données — cache TanStack Query. */
+// ─── Source unique de vérité ──────────────────────────────────────────────────
+/**
+ * Un seul cache TanStack Query pour toutes les données.
+ * staleTime = 60s : les données se rafraîchissent depuis Supabase au plus tard
+ * toutes les 60 secondes à chaque focus fenêtre ou navigation entre vues.
+ * Toutes les mutations patchent ce cache immédiatement (réactivité zéro latence)
+ * ET envoient la requête en base → pas de désynchronisation possible.
+ */
 export function useAgencyData() {
   const user = useSessionStore((s) => s.user);
   const result = useQuery<AgencyData>({
     queryKey: [...KEY, user?.id],
     queryFn: () => loadAgencyData(user!),
     enabled: !!user,
-    staleTime: 30_000,
+    staleTime: 60_000,          // Rafraîchi depuis Supabase toutes les 60s
+    refetchOnWindowFocus: true, // Re-fetch quand l'utilisateur revient sur l'onglet
+    refetchInterval: 120_000,   // Polling toutes les 2 minutes (multi-utilisateur)
   });
   return { ...result, data: result.data ?? EMPTY };
 }
 
-/** Patch local du cache après mutation (réactivité immédiate). */
+/** Patch optimiste du cache après mutation. */
 function useCachePatch() {
   const qc = useQueryClient();
   const user = useSessionStore((s) => s.user);
@@ -32,18 +41,44 @@ function useCachePatch() {
     qc.setQueryData<AgencyData>([...KEY, user?.id], (prev) => fn(prev ?? EMPTY));
 }
 
+/** Invalidation complète — force un re-fetch depuis Supabase. */
+export function useInvalidateAll() {
+  const qc = useQueryClient();
+  const user = useSessionStore((s) => s.user);
+  return () => qc.invalidateQueries({ queryKey: [...KEY, user?.id] });
+}
+
+// ─── Helpers de merge ─────────────────────────────────────────────────────────
+function upsert<T extends { id: string }>(arr: T[], item: T): T[] {
+  return arr.some((x) => x.id === item.id)
+    ? arr.map((x) => (x.id === item.id ? item : x))
+    : [...arr, item];
+}
+
+function removeById<T extends { id: string }>(arr: T[], id: string): T[] {
+  return arr.filter((x) => x.id !== id);
+}
+
+// ─── BIENS ────────────────────────────────────────────────────────────────────
 export function useSaveBien() {
   const patch = useCachePatch();
   const agentId = useSessionStore((s) => s.user?.id);
   return useMutation({
     mutationFn: (b: Bien) => bienService.save(b, agentId),
     onSuccess: (saved) =>
-      patch((d) => ({
-        ...d,
-        biens: d.biens.some((x) => x.id === saved.id)
-          ? d.biens.map((x) => (x.id === saved.id ? saved : x))
-          : [...d.biens, saved],
-      })),
+      patch((d) => {
+        // Sync mandats liés : si bien vendu → expirer les mandats actifs
+        const prev = d.biens.find((x) => x.id === saved.id);
+        let mandats = d.mandats;
+        if (prev && prev.statut !== saved.statut && saved.statut === "Vendu") {
+          mandats = d.mandats.map((m) =>
+            (m.bienId === saved.id || m.bienId === saved.ref) && m.statut === "Actif"
+              ? { ...m, statut: "Expiré" as const }
+              : m,
+          );
+        }
+        return { ...d, biens: upsert(d.biens, saved), mandats };
+      }),
   });
 }
 
@@ -51,22 +86,26 @@ export function useDeleteBien() {
   const patch = useCachePatch();
   return useMutation({
     mutationFn: (id: string) => bienService.remove(id),
-    onSuccess: (_v, id) => patch((d) => ({ ...d, biens: d.biens.filter((x) => x.id !== id) })),
+    onSuccess: (_v, id) =>
+      patch((d) => ({
+        ...d,
+        biens: removeById(d.biens, id),
+        // Expirer les mandats actifs liés au bien supprimé
+        mandats: d.mandats.map((m) =>
+          m.bienId === id && m.statut === "Actif" ? { ...m, statut: "Expiré" as const } : m,
+        ),
+      })),
   });
 }
 
+// ─── MANDATS ──────────────────────────────────────────────────────────────────
 export function useSaveMandat() {
   const patch = useCachePatch();
   const agentId = useSessionStore((s) => s.user?.id);
   return useMutation({
     mutationFn: (m: Mandat) => mandatService.save(m, agentId),
     onSuccess: (saved) =>
-      patch((d) => ({
-        ...d,
-        mandats: d.mandats.some((x) => x.id === saved.id)
-          ? d.mandats.map((x) => (x.id === saved.id ? saved : x))
-          : [...d.mandats, saved],
-      })),
+      patch((d) => ({ ...d, mandats: upsert(d.mandats, saved) })),
   });
 }
 
@@ -74,22 +113,19 @@ export function useDeleteMandat() {
   const patch = useCachePatch();
   return useMutation({
     mutationFn: (id: string) => mandatService.remove(id),
-    onSuccess: (_v, id) => patch((d) => ({ ...d, mandats: d.mandats.filter((x) => x.id !== id) })),
+    onSuccess: (_v, id) =>
+      patch((d) => ({ ...d, mandats: removeById(d.mandats, id) })),
   });
 }
 
+// ─── CLIENTS ──────────────────────────────────────────────────────────────────
 export function useSaveClient() {
   const patch = useCachePatch();
   const agentId = useSessionStore((s) => s.user?.id);
   return useMutation({
     mutationFn: (c: Client) => clientService.save(c, agentId),
     onSuccess: (saved) =>
-      patch((d) => ({
-        ...d,
-        clients: d.clients.some((x) => x.id === saved.id)
-          ? d.clients.map((x) => (x.id === saved.id ? saved : x))
-          : [...d.clients, saved],
-      })),
+      patch((d) => ({ ...d, clients: upsert(d.clients, saved) })),
   });
 }
 
@@ -97,10 +133,12 @@ export function useDeleteClient() {
   const patch = useCachePatch();
   return useMutation({
     mutationFn: (id: string) => clientService.remove(id),
-    onSuccess: (_v, id) => patch((d) => ({ ...d, clients: d.clients.filter((x) => x.id !== id) })),
+    onSuccess: (_v, id) =>
+      patch((d) => ({ ...d, clients: removeById(d.clients, id) })),
   });
 }
 
+// ─── REVENUS ──────────────────────────────────────────────────────────────────
 export function useSaveRevenu() {
   const patch = useCachePatch();
   return useMutation({
@@ -115,9 +153,8 @@ export function useSaveRevenu() {
     },
     onSuccess: (saved) =>
       patch((d) => {
-        const revenus = d.revenus.some((x) => x.id === saved.id)
-          ? d.revenus.map((x) => (x.id === saved.id ? saved : x))
-          : [...d.revenus, saved];
+        const revenus = upsert(d.revenus, saved);
+        // Cascade → compromis si revenu lié
         let compromis = d.compromis;
         if (saved.sourceId && saved.source === "pilotage") {
           const newStatut = saved.statut === "Encaissé" ? "Encaissée" : "À encaisser";
@@ -133,24 +170,32 @@ export function useSaveRevenu() {
 export function useDeleteRevenu() {
   const patch = useCachePatch();
   return useMutation({
-    mutationFn: (id: string) => revenuService.remove(id),
+    mutationFn: async (id: string) => {
+      await revenuService.remove(id);
+      return id;
+    },
     onSuccess: (_v, id) =>
       patch((d) => {
         const deleted = d.revenus.find((r) => r.id === id);
-        const revenus = d.revenus.filter((r) => r.id !== id);
-        // Si ce revenu était lié à un compromis → remettre À encaisser
         let compromis = d.compromis;
+        // Cascade → remettre compromis à "À encaisser"
         if (deleted?.sourceId && deleted.source === "pilotage") {
           compromis = d.compromis.map((c) =>
             c.id === deleted.sourceId ? { ...c, commissionStatut: "À encaisser" as const } : c,
           );
         }
-        return { ...d, revenus, compromis };
+        return { ...d, revenus: removeById(d.revenus, id), compromis };
       }),
   });
 }
 
-/** Sauvegarde compromis + sync transactionnelle du revenu lié. */
+// ─── COMPROMIS ────────────────────────────────────────────────────────────────
+/**
+ * Sauvegarde compromis + sync transactionnelle du revenu lié.
+ * Si le compromis passe en "Acte signé" → revenu créé/mis à jour.
+ * Si le compromis sort de "Acte signé" → revenu fantôme supprimé.
+ * Les montants du revenu sont toujours recalculés depuis le compromis.
+ */
 export function useSaveCompromis() {
   const patch = useCachePatch();
   const qc = useQueryClient();
@@ -185,32 +230,31 @@ export function useDeleteCompromis() {
   const user = useSessionStore((s) => s.user);
   return useMutation({
     mutationFn: async (id: string) => {
-      // Supprimer le revenu lié en base (si existant)
       const data = qc.getQueryData<AgencyData>([...KEY, user?.id]) ?? EMPTY;
+      // Supprimer le revenu lié en base
       const linked = data.revenus.find((r) => r.sourceId === id && r.source === "pilotage");
       if (linked) await api.remove(TABLES.revenus, linked.id);
-      // Supprimer le compromis
       await api.remove(TABLES.compromis, id);
       return id;
     },
     onSuccess: (_v, id) =>
       patch((d) => ({
         ...d,
-        compromis: d.compromis.filter((c) => c.id !== id),
+        compromis: removeById(d.compromis, id),
         revenus: d.revenus.filter((r) => r.sourceId !== id),
       })),
   });
 }
 
+// ─── Merge interne ────────────────────────────────────────────────────────────
 function mergeCompromisRevenu(d: AgencyData, c: Compromis, r: Revenu | null): AgencyData {
-  const compromis = d.compromis.some((x) => x.id === c.id)
-    ? d.compromis.map((x) => (x.id === c.id ? c : x))
-    : [...d.compromis, c];
+  const compromis = upsert(d.compromis, c);
   let revenus = d.revenus;
   if (r) {
-    revenus = d.revenus.some((x) => x.id === r.id)
-      ? d.revenus.map((x) => (x.id === r.id ? r : x))
-      : [...d.revenus, r];
+    revenus = upsert(d.revenus, r);
+  } else {
+    // Revenu retiré (compromis n'est plus acte signé)
+    revenus = d.revenus.filter((x) => x.sourceId !== c.id);
   }
   return { ...d, compromis, revenus };
 }
