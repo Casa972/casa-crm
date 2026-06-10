@@ -31,7 +31,7 @@ export function PilotageAgentView() {
           <div className="flex flex-col gap-2">
             {relances.map((c) => (
               <button key={c.id} onClick={() => setView("clients")} className="card flex items-center gap-3.5 p-3 text-left hover:shadow-card-hover">
-                <div className="flex size-9 items-center justify-center rounded bg-danger-soft font-bold text-danger">{c.prenom[0]}</div>
+                <div className="flex size-9 items-center justify-center rounded bg-danger-soft font-bold text-danger">{c.prenom?.[0] ?? "?"}</div>
                 <div className="flex-1">
                   <div className="text-[13.5px] font-semibold text-ink">{c.prenom} {c.nom}</div>
                   <div className="text-xs text-ink-muted">{c.tel || "—"} · {c.statut}</div>

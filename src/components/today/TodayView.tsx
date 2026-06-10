@@ -56,7 +56,7 @@ export function TodayView() {
                   className="card flex items-center gap-3.5 p-3 text-left transition-shadow hover:shadow-card-hover"
                 >
                   <div className={`flex size-9 items-center justify-center rounded font-bold ${urgent ? "bg-danger-soft text-danger" : "bg-amber-soft text-amber"}`}>
-                    {c.prenom[0]}
+                    {c.prenom?.[0] ?? "?"}
                   </div>
                   <div className="flex-1">
                     <div className="text-[13.5px] font-semibold text-ink">{c.prenom} {c.nom}</div>
