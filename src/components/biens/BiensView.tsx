@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, AlertCircle, MapPin } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText } from "lucide-react";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
 import { Input } from "../ui/Field";
 import { BienForm, MandatForm } from "./forms";
+import { FicheCommercialeModal } from "./FicheCommercialeModal";
 import { eur, fdate, daysDiff } from "../../lib/format";
 import { useAgencyData, useSaveBien, useDeleteBien, useSaveMandat, useDeleteMandat } from "../../hooks/queries/useAgencyData";
 import { useFiltersStore } from "../../store/filters.store";
@@ -24,6 +25,7 @@ export function BiensView() {
 
   const [tab, setTab] = useState<Tab>("biens");
   const [modal, setModal] = useState<Modal_>(null);
+  const [ficheBien, setFicheBien] = useState<Bien | null>(null);
 
   const mandatsExpSoon = data.mandats.filter((m) => {
     const d = daysDiff(m.dateFin);
@@ -41,6 +43,7 @@ export function BiensView() {
   const bienCols = useBienColumns(
     (b) => setModal({ kind: "biens", item: b }),
     (id) => confirm("Supprimer ce bien ?") && delBien.mutate(id),
+    (b) => setFicheBien(b),
   );
   const mandatCols = useMandatColumns(
     data.biens,
@@ -102,6 +105,9 @@ export function BiensView() {
             onSave={(m) => { saveMandat.mutate(m); setModal(null); }} onClose={() => setModal(null)} />
         </Modal>
       )}
+      {ficheBien && (
+        <FicheCommercialeModal bien={ficheBien} onClose={() => setFicheBien(null)} />
+      )}
     </div>
   );
 }
@@ -118,7 +124,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 }
 
 const bh = createColumnHelper<Bien>();
-function useBienColumns(onEdit: (b: Bien) => void, onDelete: (id: string) => void): ColumnDef<Bien, any>[] {
+function useBienColumns(onEdit: (b: Bien) => void, onDelete: (id: string) => void, onFiche: (b: Bien) => void): ColumnDef<Bien, any>[] {
   return useMemo(() => [
     bh.accessor("ref", { header: "Réf.", cell: (c) => <span className="font-semibold">{c.getValue()}</span> }),
     bh.accessor("type", { header: "Type" }),
@@ -131,9 +137,9 @@ function useBienColumns(onEdit: (b: Bien) => void, onDelete: (id: string) => voi
     bh.accessor("prix", { header: "Prix", cell: (c) => <span className="font-semibold tabular-nums">{eur(c.getValue())}</span> }),
     bh.display({
       id: "actions", header: "",
-      cell: (c) => <RowActions onEdit={() => onEdit(c.row.original)} onDelete={() => onDelete(c.row.original.id)} />,
+      cell: (c) => <RowActions onEdit={() => onEdit(c.row.original)} onDelete={() => onDelete(c.row.original.id)} onFiche={() => onFiche(c.row.original)} />,
     }),
-  ] as ColumnDef<Bien, any>[], [onEdit, onDelete]);
+  ] as ColumnDef<Bien, any>[], [onEdit, onDelete, onFiche]);
 }
 
 const mh = createColumnHelper<Mandat>();
@@ -165,9 +171,12 @@ function useMandatColumns(biens: Bien[], onEdit: (m: Mandat) => void, onDelete: 
   ] as ColumnDef<Mandat, any>[], [biens, onEdit, onDelete]);
 }
 
-function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+function RowActions({ onEdit, onDelete, onFiche }: { onEdit: () => void; onDelete: () => void; onFiche?: () => void }) {
   return (
     <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+      {onFiche && (
+        <button onClick={onFiche} title="Générer fiche commerciale" className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-primary-soft hover:text-primary"><FileText size={13} /></button>
+      )}
       <button onClick={onEdit} className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-line/60 hover:text-ink"><Edit2 size={13} /></button>
       <button onClick={onDelete} className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-danger-soft hover:text-danger"><Trash2 size={13} /></button>
     </div>
