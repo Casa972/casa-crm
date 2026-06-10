@@ -97,10 +97,10 @@ export function FicheCommercialeModal({ bien, onClose }: { bien: Bien; onClose: 
           {tab === "contenu" && (
             <div>
               <Field label="Titre de la fiche">
-                <Input value={fiche.titreFiche} onChange={e => upd("titreFiche", e.target.value)} placeholder="Villa avec piscine vue mer – Le Diamant" />
+                <Input value={fiche.titreFiche} onChange={e => upd("titreFiche", e.target.value)} placeholder="" />
               </Field>
               <Field label="Description commerciale">
-                <Textarea rows={6} value={fiche.descriptionCommerciale} onChange={e => upd("descriptionCommerciale", e.target.value)} placeholder="Découvrez cette belle villa nichée dans un cadre de verdure exceptionnel… Décrivez l'atmosphère, les prestations, le potentiel, la vie de quartier." />
+                <Textarea rows={6} value={fiche.descriptionCommerciale} onChange={e => upd("descriptionCommerciale", e.target.value)} placeholder="" />
               </Field>
               <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Points forts</div>
               <div className="flex flex-wrap gap-2 mb-3">

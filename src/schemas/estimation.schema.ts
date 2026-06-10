@@ -77,7 +77,7 @@ export const estimationSchema = z.object({
   structureGeneral: EtatGeneral,
   finitionsInterieures: EtatGeneral,
   equipementsSanitaires: EtatGeneral,
-  travauxAPrevoir: z.string().default("Aucun à court terme"),
+  travauxAPrevoir: z.string().default(""),
 
   // Section 4 — Environnement
   descriptionEnvironnement: z.string().default(""),
@@ -102,9 +102,7 @@ export const estimationSchema = z.object({
   valeurVenale: z.coerce.number().min(1, "Valeur vénale requise"),
   valeurCoupDeCœur: z.coerce.number().default(0),
   argumentaireCoupDeCœur: z.string().default(""),
-  limites: z.string().default(
-    "La présente estimation ne constitue pas une expertise immobilière au sens de la Charte de l'Expertise en Évaluation Immobilière. Le rédacteur n'a pas procédé à des investigations techniques approfondies (diagnostics termites, amiante, mesurage Carrez contradictoire, état daté de copropriété). Il appartient aux parties de faire réaliser les diagnostics obligatoires.",
-  ),
+  limites: z.string().default(""),
 
   statut: z.enum(["Brouillon", "Finalisée"]).default("Brouillon"),
   agentId: z.string().optional(),

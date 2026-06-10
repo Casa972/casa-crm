@@ -169,7 +169,7 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
             <Field label="Occupation"><Select value={f.occupation} onChange={v => upd("occupation", v as MandatVenteFull["occupation"])} options={["Libre", "Occupé"]} /></Field>
           </Grid2>
           <Field label="Description du bien">
-            <Textarea rows={4} value={f.descriptionBien} onChange={e => upd("descriptionBien", e.target.value)} placeholder="Description détaillée du bien…" />
+            <Textarea rows={4} value={f.descriptionBien} onChange={e => upd("descriptionBien", e.target.value)} placeholder="" />
           </Field>
           <Field label="Désignation des lots (copropriété)">
             <Textarea rows={3} value={f.lots} onChange={e => upd("lots", e.target.value)} placeholder="Lot 43 : appartement T3 au 1er étage…" />
@@ -354,7 +354,7 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
             <Field label="Occupation"><Select value={f.occupation} onChange={v => upd("occupation", v as CompromisVente["occupation"])} options={["résidence principale", "résidence secondaire", "bien locatif", "bien libre"]} /></Field>
           </Grid2>
           <Field label="Composition détaillée (pièce par pièce)">
-            <Textarea rows={4} value={f.descriptionSurfaces} onChange={e => upd("descriptionSurfaces", e.target.value)} placeholder="Salon 13 m², cuisine 5 m², chambre 10 m²…" />
+            <Textarea rows={4} value={f.descriptionSurfaces} onChange={e => upd("descriptionSurfaces", e.target.value)} placeholder="" />
           </Field>
           <div className="mt-3 text-[11px] font-bold uppercase tracking-wide text-ink-muted mb-2">Copropriété</div>
           <Grid2>

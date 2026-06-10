@@ -167,10 +167,10 @@ function CRForm({ initial, onSave }: {
             <Field label="Délai d'achat"><Input value={cr.delaiAchat} onChange={e => upd("delaiAchat", e.target.value)} placeholder="3 mois, immédiat…" /></Field>
           </Grid2>
           <Field label="Points positifs exprimés par le visiteur">
-            <Textarea rows={3} value={cr.pointsPositifs} onChange={e => upd("pointsPositifs", e.target.value)} placeholder="Vue, exposition, luminosité, prestations…" />
+            <Textarea rows={3} value={cr.pointsPositifs} onChange={e => upd("pointsPositifs", e.target.value)} placeholder="" />
           </Field>
           <Field label="Points négatifs / réserves">
-            <Textarea rows={3} value={cr.pointsNegatifs} onChange={e => upd("pointsNegatifs", e.target.value)} placeholder="Prix trop élevé, travaux, charge…" />
+            <Textarea rows={3} value={cr.pointsNegatifs} onChange={e => upd("pointsNegatifs", e.target.value)} placeholder="" />
           </Field>
           <Grid2>
             <Field label="Suite à donner"><Select value={cr.suiteDonner} onChange={v => upd("suiteDonner", v)} options={SuiteDonner.options} /></Field>
@@ -183,7 +183,7 @@ function CRForm({ initial, onSave }: {
       {tab === "notes" && (
         <div>
           <Field label="Observations et notes complémentaires">
-            <Textarea rows={10} value={cr.observations} onChange={e => upd("observations", e.target.value)} placeholder="Contexte particulier, remarques de visite, informations transmises au propriétaire, points juridiques à vérifier…" />
+            <Textarea rows={10} value={cr.observations} onChange={e => upd("observations", e.target.value)} placeholder="" />
           </Field>
         </div>
       )}

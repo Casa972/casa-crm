@@ -54,7 +54,7 @@ export function BienForm({ initial, onSave, onClose }: {
         <Field label="Statut"><Select value={f.statut} onChange={s("statut")} options={statuts} /></Field>
         <Field label="Prix (€)" error={errors.prix}><Input type="number" value={f.prix} onChange={(e) => s("prix")(e.target.value)} /></Field>
       </Grid2>
-      <Field label="Description"><Textarea rows={3} value={f.desc} onChange={(e) => s("desc")(e.target.value)} placeholder="Vue mer, piscine, prestations..." /></Field>
+      <Field label="Description"><Textarea rows={3} value={f.desc} onChange={(e) => s("desc")(e.target.value)} placeholder="" /></Field>
       <FormActions onSave={submit} onClose={onClose} />
     </>
   );

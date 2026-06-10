@@ -1,7 +1,7 @@
 import { useState, useCallback, Suspense, lazy, useEffect } from "react";
 import {
   Plus, FileText, Edit2, Trash2, Download, ChevronLeft, ChevronRight,
-  Search, Loader2, Sparkles, Save, Link, CheckCircle2,
+  Sparkles, Save, Link, CheckCircle2, Loader2,
 } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { EmptyState } from "../ui/Modal";
@@ -42,63 +42,6 @@ const INSEE: Record<string, string> = {
   "Ducos": "97206", "Saint-Esprit": "97229", "Gros-Morne": "97211",
 };
 
-async function fetchDVF(commune: string, typeBien: string): Promise<RefMarche[]> {
-  const codeInsee = INSEE[commune];
-  if (!codeInsee) return [];
-
-  const typeLocal = typeBien.toLowerCase().includes("terrain") ? "Terrain"
-    : typeBien.toLowerCase().includes("maison") || typeBien.toLowerCase().includes("villa") ? "Maison"
-    : "Appartement";
-
-  // Fichier CSV DVF officiel par commune (accessible depuis le navigateur)
-  const dept = codeInsee.slice(0, 3); // "972"
-  const url = `https://files.data.gouv.fr/geo-dvf/latest/csv/${dept}/communes/${codeInsee}.csv`;
-
-  try {
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const csv = await resp.text();
-    const lines = csv.split("\n");
-    const header = (lines[0] ?? "").split(",");
-
-    const idx = (col: string) => header.indexOf(col);
-    const iType = idx("type_local");
-    const iSurf = idx("surface_reelle_bati");
-    const iValeur = idx("valeur_fonciere");
-    const iDate = idx("date_mutation");
-    const iPieces = idx("nombre_pieces_principales");
-
-    const results: RefMarche[] = [];
-    for (const line of lines.slice(1)) {
-      if (!line.trim()) continue;
-      const cols = line.split(",");
-      const type = cols[iType]?.trim().replace(/^"|"$/g, "") ?? "";
-      if (typeLocal !== "Terrain" && type && type !== typeLocal) continue;
-      const surf = parseFloat(cols[iSurf]?.replace(/"/g, "") ?? "") || 0;
-      const prix = parseFloat(cols[iValeur]?.replace(/[" ]/g, "") ?? "") || 0;
-      const date = (cols[iDate]?.replace(/"/g, "") ?? "").slice(0, 10);
-      const pieces = cols[iPieces]?.replace(/"/g, "")?.trim() ?? "";
-      if (surf < 15 || prix < 1000) continue;
-      const prixM2 = Math.round(prix / surf);
-      if (prixM2 < 500 || prixM2 > 20000) continue;
-      results.push({
-        id: uid(),
-        type: pieces ? `${type || typeLocal} – ${pieces}p` : (type || typeLocal),
-        surface: Math.round(surf),
-        prix: Math.round(prix),
-        prixM2,
-        observations: date ? `Vendu le ${new Date(date + "T12:00").toLocaleDateString("fr-FR")}` : "",
-        source: "DVF" as const,
-      });
-    }
-    // Trier par date desc, garder les 25 plus récentes
-    return results
-      .sort((a, b) => b.observations.localeCompare(a.observations))
-      .slice(0, 25);
-  } catch {
-    return [];
-  }
-}
 
 // ─── Proposition de prix ──────────────────────────────────────────────────────
 interface PrixSuggestion { prixMin: number; prixRetenu: number; prixMax: number; prixM2Moyen: number; prixM2Min: number; prixM2Max: number; nbRefs: number; coupDeCœur: number; methode: string; }
@@ -140,7 +83,7 @@ function newEstimation(agentId?: string): Estimation {
     surfaceHabitable: 0, surfaceTerrasse: 0, surfaceJardin: 0, surfaceTerrain: 0,
     modeConstructif: "Béton", etatGeneral: "Bon état", distribution: "", parking: "",
     cave: false, piscine: false, venduMeuble: false, notesDescription: "",
-    structureGeneral: "Bon état", finitionsInterieures: "Bon état", equipementsSanitaires: "Bon état", travauxAPrevoir: "Aucun à court terme",
+    structureGeneral: "Bon état", finitionsInterieures: "Bon état", equipementsSanitaires: "Bon état", travauxAPrevoir: "",
     descriptionEnvironnement: "",
     refsAnnonces: [], refsDVF: [], commentaireMarche: "",
     avecLocatif: false,
@@ -151,7 +94,7 @@ function newEstimation(agentId?: string): Estimation {
     ],
     criteres: CRITERES_DEFAUT.map(c => ({ id: uid(), critere: c, analyse: "", impact: "Neutre" as const })),
     argumentaireValeur: "", prixM2Retenu: 0, valeurVenale: 0, valeurCoupDeCœur: 0, argumentaireCoupDeCœur: "",
-    limites: "La présente estimation ne constitue pas une expertise immobilière au sens de la Charte de l'Expertise en Évaluation Immobilière. Le rédacteur n'a pas procédé à des investigations techniques approfondies (diagnostics termites, amiante, mesurage Carrez contradictoire, état daté de copropriété). Il appartient aux parties de faire réaliser les diagnostics obligatoires.",
+    limites: "",
   };
 }
 
@@ -183,8 +126,6 @@ function EstimationEditor({ initial, onSave, onBack }: {
 }) {
   const [e, setE] = useState<Estimation>(initial);
   const [step, setStep] = useState(1);
-  const [dvfLoading, setDvfLoading] = useState(false);
-  const [dvfMsg, setDvfMsg] = useState("");
   const [suggestion, setSuggestion] = useState<PrixSuggestion | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const { data } = useAgencyData();
@@ -233,19 +174,6 @@ function EstimationEditor({ initial, onSave, onBack }: {
   const delRef = (t: "refsAnnonces" | "refsDVF", idx: number) => upd(t, e[t].filter((_, i) => i !== idx));
   const updCritere = (idx: number, k: keyof CritereMarche, v: string) =>
     upd("criteres", e.criteres.map((c, i) => i === idx ? { ...c, [k]: v } : c));
-
-  const searchDVF = async () => {
-    if (!e.commune) { setDvfMsg("Renseignez la commune d'abord."); return; }
-    setDvfLoading(true); setDvfMsg("Recherche en cours…");
-    const refs = await fetchDVF(e.commune, e.typeBien);
-    if (refs.length === 0) {
-      setDvfMsg(`⚠ Fichier DVF inaccessible depuis ce navigateur (CORS).`);
-    } else {
-      upd("refsDVF", [...e.refsDVF, ...refs]);
-      setDvfMsg(`✓ ${refs.length} transaction(s) DVF importée(s) pour ${e.commune}`);
-    }
-    setDvfLoading(false);
-  };
 
   const applySuggestion = () => {
     if (!suggestion) return;
@@ -424,7 +352,7 @@ function EstimationEditor({ initial, onSave, onBack }: {
                 </label>
               ))}
             </div>
-            <Field label="Distribution"><Textarea rows={2} value={e.distribution} onChange={ev => upd("distribution", ev.target.value)} placeholder="Séjour, cuisine ouverte, 2 chambres…" /></Field>
+            <Field label="Distribution"><Textarea rows={2} value={e.distribution} onChange={ev => upd("distribution", ev.target.value)} placeholder="" /></Field>
           </div>
         )}
 
@@ -445,7 +373,7 @@ function EstimationEditor({ initial, onSave, onBack }: {
               <label className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Description de l'environnement</label>
               <AiButton label="Générer avec IA" loading={aiLoading === "env"} onClick={() => withAi("env", () => genEnvironnement(e))} />
             </div>
-            <Textarea rows={8} value={e.descriptionEnvironnement} onChange={ev => upd("descriptionEnvironnement", ev.target.value)} placeholder="Décrivez le quartier, la commune, les atouts de l'emplacement…" />
+            <Textarea rows={8} value={e.descriptionEnvironnement} onChange={ev => upd("descriptionEnvironnement", ev.target.value)} placeholder="" />
           </div>
         )}
 
@@ -455,41 +383,29 @@ function EstimationEditor({ initial, onSave, onBack }: {
             <h2 className="mb-1 font-heading text-base font-semibold text-ink">Étude de marché</h2>
             <p className="mb-4 text-[12.5px] text-ink-muted">Les références saisies ici alimentent la proposition de prix automatique à l'étape 6.</p>
             <div className="card mb-5 border-l-4 border-l-primary bg-primary-soft p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <div>
-                  <div className="text-[13px] font-semibold text-primary">🏛️ Données DVF — Transactions officielles DGFiP</div>
-                  <div className="text-[12px] text-primary/80">Ventes réelles enregistrées pour <b>{e.commune}</b></div>
-                </div>
-                <button className="btn-primary flex items-center gap-2" onClick={searchDVF} disabled={dvfLoading}>
-                  {dvfLoading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-                  {dvfLoading ? "Chargement…" : "Importer DVF"}
-                </button>
+              <div className="mb-3 text-[13px] font-semibold text-primary">🏛️ Données DVF — Transactions officielles DGFiP</div>
+              <div className="mb-3 text-[12px] text-primary/80">
+                Téléchargez le fichier CSV officiel pour <b>{e.commune}</b>, puis importez-le avec le bouton CSV ci-dessous.
               </div>
-              {dvfMsg && (
-                <div className={`mt-2 text-[12px] font-medium ${dvfMsg.startsWith("✓") ? "text-emerald" : "text-amber"}`}>
-                  {dvfMsg}
-                </div>
+              {INSEE[e.commune] ? (
+                <a
+                  href={`https://files.data.gouv.fr/geo-dvf/latest/csv/${INSEE[e.commune]?.slice(0,3)}/communes/${INSEE[e.commune]}.csv`}
+                  target="_blank" rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-primary-hover transition-colors"
+                >
+                  <Download size={14} /> Télécharger {e.commune}.csv (DGFiP)
+                </a>
+              ) : (
+                <div className="text-[12px] text-amber">Commune non reconnue — sélectionnez une commune à l'étape 1.</div>
               )}
-              {dvfMsg.startsWith("⚠") && INSEE[e.commune] && (
-                <div className="mt-3 rounded bg-white/70 p-3 text-[12px] text-ink-sub">
-                  <div className="font-semibold text-ink mb-1.5">📥 Import manuel en 3 étapes :</div>
-                  <div className="mb-1">1. Téléchargez le fichier CSV de {e.commune} :</div>
-                  <a
-                    href={`https://files.data.gouv.fr/geo-dvf/latest/csv/${INSEE[e.commune]?.slice(0,3)}/communes/${INSEE[e.commune]}.csv`}
-                    target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded border border-primary/30 bg-primary-soft px-3 py-1.5 text-[12px] font-semibold text-primary hover:bg-primary hover:text-white transition-colors mb-2"
-                  >
-                    <Download size={13} /> Télécharger {e.commune}.csv
-                  </a>
-                  <div className="mb-1">2. Ouvrez-le dans Excel, supprimez les colonnes inutiles, sauvegardez en CSV (séparateur ;)</div>
-                  <div>3. Importez-le avec le bouton <b>📥 CSV</b> dans le tableau DVF ci-dessous</div>
-                </div>
-              )}
+              <div className="mt-3 rounded bg-white/60 p-3 text-[11.5px] text-ink-sub">
+                <b>Comment importer :</b> cliquez le bouton ci-dessus → le fichier se télécharge → cliquez <b>📥 CSV</b> dans le tableau DVF ci-dessous → sélectionnez le fichier téléchargé.
+              </div>
             </div>
             <RefTable target="refsAnnonces" label="Références — Annonces actives (leboncoin, domimmo…)" />
             <RefTable target="refsDVF" label="Données DVF — Transactions réelles (DGFiP)" />
             <Field label="Commentaire de marché">
-              <Textarea rows={3} value={e.commentaireMarche} onChange={ev => upd("commentaireMarche", ev.target.value)} placeholder="L'analyse comparative établit une valeur vénale moyenne de X €/m²…" />
+              <Textarea rows={3} value={e.commentaireMarche} onChange={ev => upd("commentaireMarche", ev.target.value)} placeholder="" />
             </Field>
           </div>
         )}
@@ -580,7 +496,7 @@ function EstimationEditor({ initial, onSave, onBack }: {
               {e.criteres.map((c, i) => (
                 <div key={c.id} className={`grid grid-cols-3 gap-2 border-b border-line p-2.5 ${i % 2 === 0 ? "" : "bg-bg"}`}>
                   <Input value={c.critere} onChange={ev => updCritere(i, "critere", ev.target.value)} className="h-8 text-[12px]" />
-                  <Input value={c.analyse} onChange={ev => updCritere(i, "analyse", ev.target.value)} className="h-8 text-[12px]" placeholder="Description…" />
+                  <Input value={c.analyse} onChange={ev => updCritere(i, "analyse", ev.target.value)} className="h-8 text-[12px]" placeholder="" />
                   <Select value={c.impact} onChange={v => updCritere(i, "impact", v)} options={ImpactCritere.options} className="h-8 text-[12px]" />
                 </div>
               ))}
@@ -592,7 +508,7 @@ function EstimationEditor({ initial, onSave, onBack }: {
               <label className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Argumentation de la valeur</label>
               <AiButton label="Générer avec IA" loading={aiLoading === "arg"} onClick={() => withAi("arg", () => genArgumentaireValeur(e, suggestion))} />
             </div>
-            <Textarea rows={5} value={e.argumentaireValeur} onChange={ev => upd("argumentaireValeur", ev.target.value)} placeholder="Compte tenu de la surface habitable, de l'état parfait…" className="mb-4" />
+            <Textarea rows={5} value={e.argumentaireValeur} onChange={ev => upd("argumentaireValeur", ev.target.value)} placeholder="" className="mb-4" />
 
             {/* Valeur vénale */}
             <div className="card mb-5 border-l-4 border-l-primary bg-primary-soft p-5">
