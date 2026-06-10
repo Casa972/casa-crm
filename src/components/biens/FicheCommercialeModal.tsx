@@ -12,7 +12,7 @@ function newFiche(bien: Bien): FicheCommerciale {
   return {
     bienId: bien.id,
     titreFiche: `${bien.type} – ${bien.commune}`,
-    descriptionCommerciale: "",
+    descriptionCommerciale: bien.desc || "",
     pointsForts: [],
     photoPrincipale: "",
     photos: [],
