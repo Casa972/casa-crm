@@ -1,5 +1,5 @@
 import {
-  Document, Page, Text, View, StyleSheet, Line, Svg,
+  Document, Page, Text, View, StyleSheet,
 } from "@react-pdf/renderer";
 import type { AgencyData } from "../types/domain";
 import type { Financials } from "../hooks/useFinancials";
@@ -641,8 +641,8 @@ function ActesPage({ fin }: { fin: Financials }) {
                   <Text style={s.txBien}>{c.bienRef ? `${c.bienRef} · ` : ""}{c.bienDesc || "—"}</Text>
                   <View style={{ flexDirection: "row", gap: 10, marginTop: 3 }}>
                     {c.notaire && <Text style={s.txMeta}>Me {c.notaire}</Text>}
-                    {c.dateActeSigne && (
-                      <Text style={s.txMeta}>Acte signé le {fd(c.dateActeSigne)}</Text>
+                    {c.dateActePrev && (
+                      <Text style={s.txMeta}>Acte le {fd(c.dateActePrev)}</Text>
                     )}
                   </View>
                 </View>
