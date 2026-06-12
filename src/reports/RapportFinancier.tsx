@@ -419,37 +419,6 @@ const s = StyleSheet.create({
     fontSize: 8.5,
   },
 
-  // Agent performance
-  agentRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderBottom: `1 solid ${C.lineSoft}`,
-  },
-  agentDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  agentName: {
-    fontSize: 9,
-    fontFamily: BOLD,
-    width: 60,
-    color: C.ink,
-  },
-  agentStat: {
-    fontSize: 8,
-    color: C.mid,
-    flex: 1,
-  },
-  agentAmount: {
-    fontSize: 10,
-    fontFamily: BOLD,
-    color: C.navyLight,
-  },
-
   // Empty state
   empty: {
     padding: 16,
@@ -488,8 +457,12 @@ const s = StyleSheet.create({
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const E = (n: number) =>
-  `${(n || 0).toLocaleString("fr-FR", { minimumFractionDigits: 0 })} €`;
+// toLocaleString produit des barres parasites dans @react-pdf — formatage manuel
+const E = (n: number): string => {
+  const abs = Math.abs(Math.round(n || 0));
+  const str = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return (n < 0 ? "-" : "") + str + " EUR";
+};
 
 const fd = (d?: string | null) =>
   d ? new Date(d + "T12:00").toLocaleDateString("fr-FR") : "—";
@@ -794,7 +767,7 @@ function CompromisPage({ fin }: { fin: Financials }) {
   );
 }
 
-// ─── PAGE 4 — MANDATS + AGENTS ────────────────────────────────────────────────
+// ─── PAGE 4 — MANDATS ─────────────────────────────────────────────────────────
 function MandatsPage({ fin, data }: { fin: Financials; data: AgencyData }) {
   const sorted = [...fin.mandatsEnCours].sort((a, b) =>
     (a.dateFin || "").localeCompare(b.dateFin || "")
@@ -802,7 +775,7 @@ function MandatsPage({ fin, data }: { fin: Financials; data: AgencyData }) {
 
   return (
     <Page size="A4" style={s.page}>
-      <PageHeader title="Mandats & performances" page={4} total={4} />
+      <PageHeader title="Mandats actifs" page={4} total={4} />
       <View style={s.body}>
 
         <Text style={s.sectionLabel}>Mandats actifs · {fin.mandatsEnCours.length} en cours</Text>
@@ -815,10 +788,10 @@ function MandatsPage({ fin, data }: { fin: Financials; data: AgencyData }) {
             <View style={s.tableHead}>
               <Text style={[s.th, { width: "18%" }]}>Réf.</Text>
               <Text style={[s.th, { width: "12%" }]}>Type</Text>
-              <Text style={[s.th, { width: "28%" }]}>Mandant</Text>
+              <Text style={[s.th, { width: "26%" }]}>Mandant</Text>
               <Text style={[s.th, { width: "20%" }]}>Bien / Commune</Text>
-              <Text style={[s.th, { width: "8%", textAlign: "center" }]}>Hon.</Text>
-              <Text style={[s.th, { width: "14%", textAlign: "right" }]}>Échéance</Text>
+              <Text style={[s.th, { width: "12%", textAlign: "right" }]}>Honoraires</Text>
+              <Text style={[s.th, { width: "12%", textAlign: "right" }]}>Échéance</Text>
             </View>
             {sorted.map((m, i) => {
               const d = dd(m.dateFin);
@@ -828,6 +801,9 @@ function MandatsPage({ fin, data }: { fin: Financials; data: AgencyData }) {
               const cl = exp ? "#C0420A" : soon ? C.amber : C.teal;
               const lbl = exp ? `Expiré (${Math.abs(d!)}j)` : soon ? `${d}j` : fd(m.dateFin);
               const bien = data.biens.find((b) => b.id === m.bienId || b.ref === m.bienId);
+              // Calcul montant honoraires : prix * taux / 100
+              const prix = bien?.prix ?? 0;
+              const montantHon = prix > 0 ? Math.round(prix * (m.honoraires / 100)) : null;
 
               return (
                 <View
@@ -837,14 +813,14 @@ function MandatsPage({ fin, data }: { fin: Financials; data: AgencyData }) {
                 >
                   <Text style={[s.td, { width: "18%", fontFamily: BOLD, color: C.navy }]}>{m.ref || "—"}</Text>
                   <Text style={[s.td, { width: "12%", color: C.mid }]}>{m.type}</Text>
-                  <Text style={[s.td, { width: "28%" }]}>{m.mandant}</Text>
+                  <Text style={[s.td, { width: "26%" }]}>{m.mandant}</Text>
                   <Text style={[s.td, { width: "20%", color: C.mid }]}>
                     {bien ? bien.commune : m.bienId || "—"}
                   </Text>
-                  <Text style={[s.td, { width: "8%", textAlign: "center", fontFamily: BOLD }]}>
-                    {m.honoraires}%
+                  <Text style={[s.td, { width: "12%", textAlign: "right", fontFamily: BOLD, color: C.navy }]}>
+                    {montantHon !== null ? E(montantHon) : `${m.honoraires}%`}
                   </Text>
-                  <View style={{ width: "14%", alignItems: "flex-end" }}>
+                  <View style={{ width: "12%", alignItems: "flex-end" }}>
                     <Text style={[s.pill, { backgroundColor: bg, color: cl }]}>{lbl}</Text>
                   </View>
                 </View>
@@ -853,45 +829,30 @@ function MandatsPage({ fin, data }: { fin: Financials; data: AgencyData }) {
           </View>
         )}
 
-        <Text style={[s.sectionLabel, { marginTop: 20 }]}>Performances par négociateur</Text>
-
-        <View style={{ border: `1 solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
-          {fin.agentPerformance.map((a, i) => (
-            <View
-              key={a.id}
-              style={[s.agentRow, i % 2 === 1 ? { backgroundColor: C.pageGray } : {}]}
-            >
-              <View style={[s.agentDot, { backgroundColor: a.color }]} />
-              <Text style={s.agentName}>{a.name}</Text>
-              <Text style={s.agentStat}>
-                {a.compromis} dossier{a.compromis > 1 ? "s" : ""} · {a.clients} client{a.clients > 1 ? "s" : ""}
-              </Text>
-              <Text style={s.agentAmount}>{E(a.caVentes)}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* Récapitulatif financier en bas de dernière page */}
-        <View style={{ marginTop: 18 }}>
+        <View style={{ marginTop: 24 }}>
           <Text style={s.sectionLabel}>Récapitulatif financier</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <View style={{ flex: 1, backgroundColor: C.tealBg, borderRadius: 6, padding: 10 }}>
-              <Text style={{ fontSize: 7, fontFamily: BOLD, color: C.teal, textTransform: "uppercase", marginBottom: 3 }}>Encaissé</Text>
-              <Text style={{ fontSize: 15, fontFamily: BOLD, color: C.teal }}>{E(fin.globalEncaisse)}</Text>
+            <View style={{ flex: 1, backgroundColor: C.tealBg, borderRadius: 6, padding: 12 }}>
+              <Text style={{ fontSize: 7, fontFamily: BOLD, color: C.teal, textTransform: "uppercase", marginBottom: 4 }}>Commissions encaissées</Text>
+              <Text style={{ fontSize: 17, fontFamily: BOLD, color: C.teal }}>{E(fin.globalEncaisse)}</Text>
+              <Text style={{ fontSize: 7, color: C.teal, marginTop: 3 }}>{fin.actesEncaisses.length} acte{fin.actesEncaisses.length > 1 ? "s" : ""} signé{fin.actesEncaisses.length > 1 ? "s" : ""}</Text>
             </View>
-            <View style={{ flex: 1, backgroundColor: C.amberBg, borderRadius: 6, padding: 10 }}>
-              <Text style={{ fontSize: 7, fontFamily: BOLD, color: C.amber, textTransform: "uppercase", marginBottom: 3 }}>À encaisser</Text>
-              <Text style={{ fontSize: 15, fontFamily: BOLD, color: C.amber }}>{E(fin.globalAEncaisser)}</Text>
+            <View style={{ flex: 1, backgroundColor: C.amberBg, borderRadius: 6, padding: 12 }}>
+              <Text style={{ fontSize: 7, fontFamily: BOLD, color: C.amber, textTransform: "uppercase", marginBottom: 4 }}>À encaisser</Text>
+              <Text style={{ fontSize: 17, fontFamily: BOLD, color: C.amber }}>{E(fin.globalAEncaisser)}</Text>
+              <Text style={{ fontSize: 7, color: C.amber, marginTop: 3 }}>{fin.compromisAEncaisser.length} compromis sécurisé{fin.compromisAEncaisser.length > 1 ? "s" : ""}</Text>
             </View>
-            <View style={{ flex: 1, backgroundColor: C.slateBg, borderRadius: 6, padding: 10 }}>
-              <Text style={{ fontSize: 7, fontFamily: BOLD, color: C.slate, textTransform: "uppercase", marginBottom: 3 }}>Total potentiel</Text>
-              <Text style={{ fontSize: 15, fontFamily: BOLD, color: C.slate }}>{E(fin.totalPotentiel)}</Text>
+            <View style={{ flex: 1, backgroundColor: C.slateBg, borderRadius: 6, padding: 12 }}>
+              <Text style={{ fontSize: 7, fontFamily: BOLD, color: C.slate, textTransform: "uppercase", marginBottom: 4 }}>Volume mandats actifs</Text>
+              <Text style={{ fontSize: 17, fontFamily: BOLD, color: C.slate }}>{E(fin.totalPotentiel)}</Text>
+              <Text style={{ fontSize: 7, color: C.slate, marginTop: 3 }}>{fin.mandatsEnCours.length} mandat{fin.mandatsEnCours.length > 1 ? "s" : ""} en cours</Text>
             </View>
           </View>
         </View>
 
       </View>
-      <Footer label="Mandats & performances" />
+      <Footer label="Mandats actifs" />
     </Page>
   );
 }
