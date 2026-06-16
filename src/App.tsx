@@ -17,6 +17,8 @@ import { EstimationView } from "./components/estimation/EstimationView";
 import { CompteRenduView } from "./components/compteRendu/CompteRenduView";
 import { CalculatriceView } from "./components/tools/CalculatriceView";
 import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
+import { KanbanView } from "./components/kanban/KanbanView";
+import { MatchingView } from "./components/matching/MatchingView";
 import { daysDiff } from "./lib/format";
 
 /** Vues réservées au directeur — un agent est redirigé vers son tableau de bord. */
@@ -41,6 +43,9 @@ function CurrentView(): ReactElement {
     case "agenda": return <AgendaView />;
     case "taches": return <TachesView />;
     case "calculatrice": return <CalculatriceView />;
+    case "kanban": return <KanbanView />;
+    case "matching": return <MatchingView />;
+    case "import": return <TodayView />;
     default: return <TodayView />;
   }
 }

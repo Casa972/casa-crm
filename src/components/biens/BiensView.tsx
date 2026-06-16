@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload } from "lucide-react";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
@@ -10,6 +10,7 @@ import { FicheCommercialeModal } from "./FicheCommercialeModal";
 import { eur, fdate, daysDiff } from "../../lib/format";
 import { useAgencyData, useSaveBien, useDeleteBien, useSaveMandat, useDeleteMandat } from "../../hooks/queries/useAgencyData";
 import { useFiltersStore } from "../../store/filters.store";
+import { ImportCSVModal } from "../import/ImportCSVModal";
 import type { Bien, Mandat } from "../../types/domain";
 
 type Tab = "biens" | "mandats";
@@ -26,6 +27,7 @@ export function BiensView() {
   const [tab, setTab] = useState<Tab>("biens");
   const [modal, setModal] = useState<Modal_>(null);
   const [ficheBien, setFicheBien] = useState<Bien | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const mandatsExpSoon = data.mandats.filter((m) => {
     const d = daysDiff(m.dateFin);
@@ -76,9 +78,14 @@ export function BiensView() {
           <TabBtn active={tab === "biens"} onClick={() => setTab("biens")}>🏠 Biens ({data.biens.length})</TabBtn>
           <TabBtn active={tab === "mandats"} onClick={() => setTab("mandats")}>📋 Mandats ({data.mandats.length})</TabBtn>
         </div>
-        <button className="btn-primary" onClick={() => setModal({ kind: tab })}>
-          <Plus size={14} /> {tab === "biens" ? "Nouveau bien" : "Nouveau mandat"}
-        </button>
+        <div className="flex gap-2">
+          {tab === "biens" && (
+            <button className="btn-ghost" onClick={() => setImportOpen(true)}><Upload size={14} /> Importer CSV</button>
+          )}
+          <button className="btn-primary" onClick={() => setModal({ kind: tab })}>
+            <Plus size={14} /> {tab === "biens" ? "Nouveau bien" : "Nouveau mandat"}
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 max-w-sm">
@@ -107,6 +114,9 @@ export function BiensView() {
       )}
       {ficheBien && (
         <FicheCommercialeModal bien={ficheBien} onClose={() => setFicheBien(null)} />
+      )}
+      {importOpen && (
+        <ImportCSVModal type="biens" onClose={() => setImportOpen(false)} />
       )}
     </div>
   );

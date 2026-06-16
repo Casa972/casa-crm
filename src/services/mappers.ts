@@ -6,8 +6,12 @@
  */
 import type {
   BienRow, MandatRow, CompromisRow, ClientRow, RevenuRow,
+  RdvRow, TacheRow, ActiviteRow,
 } from "../types/database";
-import type { Bien, Mandat, Compromis, Client, Revenu } from "../types/domain";
+import type { Bien, Mandat, Compromis, Client, Revenu, Rdv, Tache, Activite } from "../types/domain";
+import type { TypeRdv, StatutRdv } from "../schemas/rdv.schema";
+import type { PrioriteTache } from "../schemas/tache.schema";
+import type { TypeActivite } from "../schemas/activite.schema";
 import type {
   TypeBien, CategorieBien, StatutBien, TypeMandat, StatutMandat,
   StatutCompromis, StatutCommission, TypeHonoraires, TypeClient,
@@ -194,4 +198,71 @@ export const revenuToRow = (r: Revenu): Partial<RevenuRow> => ({
   statut: r.statut,
   source: r.source ?? null,
   source_id: r.sourceId ?? null,
+});
+
+/* ── Rdv ── */
+export const rdvFromRow = (r: RdvRow): Rdv => ({
+  id: r.id,
+  agentId: r.agent_id ?? undefined,
+  titre: r.titre,
+  clientId: r.client_id ?? undefined,
+  bienRef: r.bien_ref ?? undefined,
+  date: r.date,
+  heureDebut: r.heure_debut,
+  heureFin: r.heure_fin,
+  typeRdv: r.type_rdv as TypeRdv,
+  notes: r.notes ?? undefined,
+  statut: r.statut as StatutRdv,
+});
+
+export const rdvToRow = (rdv: Rdv, agentId?: string): Partial<RdvRow> => ({
+  id: rdv.id,
+  agent_id: agentId ?? rdv.agentId ?? null,
+  titre: rdv.titre,
+  client_id: rdv.clientId ?? null,
+  bien_ref: rdv.bienRef ?? null,
+  date: rdv.date,
+  heure_debut: rdv.heureDebut,
+  heure_fin: rdv.heureFin,
+  type_rdv: rdv.typeRdv,
+  notes: rdv.notes ?? null,
+  statut: rdv.statut,
+});
+
+/* ── Tache ── */
+export const tacheFromRow = (r: TacheRow): Tache => ({
+  id: r.id,
+  agentId: r.agent_id ?? undefined,
+  texte: r.texte,
+  done: r.done,
+  priorite: r.priorite as PrioriteTache,
+  dateEcheance: r.date_echeance ?? undefined,
+});
+
+export const tacheToRow = (t: Tache, agentId?: string): Partial<TacheRow> => ({
+  id: t.id,
+  agent_id: agentId ?? t.agentId ?? null,
+  texte: t.texte,
+  done: t.done,
+  priorite: t.priorite,
+  date_echeance: t.dateEcheance ?? null,
+});
+
+/* ── Activite ── */
+export const activiteFromRow = (r: ActiviteRow): Activite => ({
+  id: r.id,
+  clientId: r.client_id,
+  agentId: r.agent_id ?? undefined,
+  typeActivite: r.type_activite as TypeActivite,
+  note: r.note,
+  date: r.date,
+});
+
+export const activiteToRow = (a: Activite, agentId?: string): Partial<ActiviteRow> => ({
+  id: a.id,
+  client_id: a.clientId,
+  agent_id: agentId ?? a.agentId ?? null,
+  type_activite: a.typeActivite,
+  note: a.note,
+  date: a.date,
 });

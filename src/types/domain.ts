@@ -7,6 +7,9 @@ export type { Mandat, MandatForm } from "../schemas/mandat.schema";
 export type { Compromis, CompromisForm } from "../schemas/compromis.schema";
 export type { Client, ClientForm } from "../schemas/client.schema";
 export type { Revenu, RevenuForm } from "../schemas/client.schema";
+export type { Rdv, RdvForm } from "../schemas/rdv.schema";
+export type { Tache, TacheForm } from "../schemas/tache.schema";
+export type { Activite, ActiviteForm } from "../schemas/activite.schema";
 
 export type {
   TypeBien, CategorieBien, StatutBien, TypeMandat, StatutMandat,

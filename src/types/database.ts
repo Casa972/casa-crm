@@ -97,6 +97,41 @@ export interface RevenuRow {
   created_at?: string;
 }
 
+export interface RdvRow {
+  id: string;
+  agent_id: string | null;
+  titre: string;
+  client_id: string | null;
+  bien_ref: string | null;
+  date: string;
+  heure_debut: string;
+  heure_fin: string;
+  type_rdv: string;
+  notes: string | null;
+  statut: string;
+  created_at?: string;
+}
+
+export interface TacheRow {
+  id: string;
+  agent_id: string | null;
+  texte: string;
+  done: boolean;
+  priorite: string;
+  date_echeance: string | null;
+  created_at?: string;
+}
+
+export interface ActiviteRow {
+  id: string;
+  client_id: string;
+  agent_id: string | null;
+  type_activite: string;
+  note: string;
+  date: string;
+  created_at?: string;
+}
+
 /** Nom logique → nom de table Supabase. */
 export const TABLES = {
   biens: "biens",
@@ -104,6 +139,9 @@ export const TABLES = {
   compromis: "compromis",
   clients: "clients",
   revenus: "revenus",
+  rdv: "rdv",
+  taches: "taches",
+  activites: "activites",
 } as const;
 
 export type TableName = (typeof TABLES)[keyof typeof TABLES];

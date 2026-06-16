@@ -1,6 +1,7 @@
 import {
   Sun, Users, Building2, FileText, Target, TrendingUp, Home, ClipboardList,
-  BarChart2, Calendar, CheckCircle, Calculator, LogOut, type LucideIcon,
+  BarChart2, Calendar, CheckCircle, Calculator, LogOut, Kanban, Shuffle,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useUiStore, type ViewId } from "../../store/ui.store";
@@ -11,10 +12,14 @@ interface NavItem { id: ViewId; label: string; Icon: LucideIcon; }
 const NAV_DIR: NavItem[] = [
   { id: "today", label: "Aujourd'hui", Icon: Sun },
   { id: "clients", label: "Clients", Icon: Users },
+  { id: "kanban", label: "Pipeline Kanban", Icon: Kanban },
+  { id: "matching", label: "Matching", Icon: Shuffle },
   { id: "biens", label: "Biens & Mandats", Icon: Building2 },
   { id: "estimation", label: "Estimations", Icon: Home },
   { id: "compte_rendu", label: "Comptes rendus", Icon: ClipboardList },
   { id: "redacteur", label: "Rédacteur Actes", Icon: FileText },
+  { id: "agenda", label: "Agenda", Icon: Calendar },
+  { id: "taches", label: "Tâches", Icon: CheckCircle },
   { id: "pilotage", label: "Pilotage", Icon: Target },
   { id: "revenus", label: "Revenus", Icon: TrendingUp },
   { id: "reporting", label: "Reporting", Icon: BarChart2 },
@@ -23,6 +28,8 @@ const NAV_DIR: NavItem[] = [
 const NAV_AGENT: NavItem[] = [
   { id: "pilotage_agent", label: "Mon tableau de bord", Icon: Target },
   { id: "clients", label: "Mes clients", Icon: Users },
+  { id: "kanban", label: "Pipeline Kanban", Icon: Kanban },
+  { id: "matching", label: "Matching", Icon: Shuffle },
   { id: "biens", label: "Biens & Mandats", Icon: Building2 },
   { id: "estimation", label: "Estimations", Icon: Home },
   { id: "compte_rendu", label: "Comptes rendus", Icon: ClipboardList },
