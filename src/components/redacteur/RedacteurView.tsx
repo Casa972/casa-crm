@@ -2,7 +2,7 @@ import { useState, Suspense, lazy, useCallback } from "react";
 import { Plus, Trash2, ChevronLeft, ChevronRight, Lock, FileDown } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
-import { mandatVenteFullSchema, calcMandatVente, type MandatVenteFull, type Mandant } from "../../schemas/redacteur/mandatVenteFull.schema";
+import { mandatVenteFullSchema, calcMandatVente, isTerrain, isFonds, needsDPE, type MandatVenteFull, type Mandant } from "../../schemas/redacteur/mandatVenteFull.schema";
 import { compromisVenteSchema, calcCompromis, type CompromisVente, type PartieCompromis } from "../../schemas/redacteur/compromisVente.schema";
 import { COMMUNES_MARTINIQUE } from "../../schemas/enums";
 import { eur } from "../../lib/format";
@@ -23,12 +23,18 @@ function defaultMandat(): MandatVenteFull {
     date: today(), lieu: "Fort-de-France",
     mandants: [newMandant()],
     residence: "", adresseBien: "", commune: "", codePostal: "", typeBien: "Appartement",
-    surfaceTotale: 0, surfaceCarrez: 0, nbPieces: "", refCadastrale: "",
-    descriptionBien: "", lots: "", infosCopro: "", nomsLots: "", syndic: "",
-    chargesAnnuelles: 0, occupation: "Libre",
+    surfaceTotale: 0, surfaceCarrez: 0, surfaceHabitable: 0, surfaceTerrain: 0,
+    surfacePiscine: 0, surfaceFonciere: 0, nbPieces: "", refCadastrale: "",
+    descriptionBien: "", lots: "", tantiemes: "", infosCopro: "", nomsLots: "", syndic: "",
+    chargesAnnuelles: 0, enCopropriete: false, occupation: "Libre",
+    bailType: "Loi 89 (résidentiel)", loyerMensuel: 0, datFinBail: "", nomLocataire: "",
+    chiffreAffaires: 0, servitudes: "",
+    classeDPE: "", classeGES: "", dateDDT: "", diagnostiqueur: "",
+    etatTermites: "Non réalisé", anomaliesElec: "", ernmt: "", risquesNaturels: true,
     prixFAI: 0, honorairesPct: 6, chargeHonoraires: "vendeur", tvaApplicable: true,
     typeMandat: "Semi-exclusif", dureeAns: 1, dateDebut: today(),
     avecApportDirect: true, avecSousMandat: false, avecInterAgence: true,
+    avecPanneau: true, bienIndivision: false,
     redacteur: "M. Luc CLEMENTE",
   };
 }
@@ -57,7 +63,11 @@ function defaultCompromis(): CompromisVente {
 }
 
 // ─── Formulaire Mandat ────────────────────────────────────────────────────────
-const MANDAT_STEPS = ["Parties", "Bien", "Prix & Mandat", "Options"];
+const MANDAT_STEPS = ["Parties", "Bien", "Diagnostics", "Prix & Mandat", "Options"];
+
+const TYPE_BIEN_OPTIONS = ["Appartement", "Villa", "Maison", "Terrain", "Local commercial", "Fonds de commerce"];
+const DPE_OPTIONS = ["A", "B", "C", "D", "E", "F", "G", "Non réalisé", "Non soumis"];
+const BAIL_OPTIONS = ["Loi 89 (résidentiel)", "Bail commercial", "Bail saisonnier", "Bail rural", "Autre"];
 
 function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull) => void }) {
   const [step, setStep] = useState(0);
@@ -69,6 +79,7 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
 
   const c = calcMandatVente(f);
   const parsedOk = mandatVenteFullSchema.safeParse(f).success;
+  const t = f.typeBien;
 
   // Pré-remplir depuis mandat CRM
   const prefillFromMandat = (mandatId: string) => {
@@ -96,7 +107,7 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
       <div className="mb-5 flex gap-1">
         {MANDAT_STEPS.map((s, i) => (
           <button key={i} onClick={() => setStep(i)}
-            className={`flex-1 rounded py-2 text-[12px] font-medium transition-colors ${step === i ? "bg-primary text-white" : "bg-line text-ink-sub hover:bg-line2"}`}>
+            className={`flex-1 rounded py-2 text-[11px] font-medium transition-colors ${step === i ? "bg-primary text-white" : "bg-line text-ink-sub hover:bg-line2"}`}>
             {s}
           </button>
         ))}
@@ -156,34 +167,188 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
       {/* Étape 1 — Bien */}
       {step === 1 && (
         <div>
+          {/* Champs toujours affichés */}
           <Grid2>
-            <Field label="Type de bien"><Input value={f.typeBien} onChange={e => upd("typeBien", e.target.value)} placeholder="Appartement, Maison…" /></Field>
+            <Field label="Type de bien">
+              <Select value={f.typeBien} onChange={v => upd("typeBien", v)} options={TYPE_BIEN_OPTIONS} />
+            </Field>
             <Field label="Résidence / Lotissement"><Input value={f.residence} onChange={e => upd("residence", e.target.value)} placeholder="Résidence ALTICA" /></Field>
             <Field label="Adresse du bien"><Input value={f.adresseBien} onChange={e => upd("adresseBien", e.target.value)} /></Field>
             <Field label="Commune"><Select value={f.commune} onChange={v => upd("commune", v)} options={[...COMMUNES_MARTINIQUE]} /></Field>
             <Field label="Code postal"><Input value={f.codePostal} onChange={e => upd("codePostal", e.target.value)} /></Field>
             <Field label="Réf. cadastrale"><Input value={f.refCadastrale} onChange={e => upd("refCadastrale", e.target.value)} placeholder="Section C, N° 1952" /></Field>
-            <Field label="Surface totale (m²)"><Input type="number" value={String(f.surfaceTotale || "")} onChange={e => upd("surfaceTotale", +e.target.value)} /></Field>
-            <Field label="Surface Carrez (m²)"><Input type="number" value={String(f.surfaceCarrez || "")} onChange={e => upd("surfaceCarrez", +e.target.value)} /></Field>
-            <Field label="Nombre de pièces"><Input value={f.nbPieces} onChange={e => upd("nbPieces", e.target.value)} placeholder="3 pièces (T3)" /></Field>
             <Field label="Occupation"><Select value={f.occupation} onChange={v => upd("occupation", v as MandatVenteFull["occupation"])} options={["Libre", "Occupé"]} /></Field>
           </Grid2>
-          <Field label="Description du bien">
-            <Textarea rows={4} value={f.descriptionBien} onChange={e => upd("descriptionBien", e.target.value)} placeholder="" />
-          </Field>
-          <Field label="Désignation des lots (copropriété)">
-            <Textarea rows={3} value={f.lots} onChange={e => upd("lots", e.target.value)} placeholder="Lot 43 : appartement T3 au 1er étage…" />
-          </Field>
-          <Grid2>
-            <Field label="Syndic"><Input value={f.syndic} onChange={e => upd("syndic", e.target.value)} /></Field>
-            <Field label="Charges annuelles (€)"><Input type="number" value={String(f.chargesAnnuelles || "")} onChange={e => upd("chargesAnnuelles", +e.target.value)} /></Field>
-            <Field label="N° des lots"><Input value={f.nomsLots} onChange={e => upd("nomsLots", e.target.value)} placeholder="Lot 36, 43, 92" /></Field>
-          </Grid2>
+
+          {/* Appartement */}
+          {t === "Appartement" && (
+            <div>
+              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Surfaces & Composition</div>
+              <Grid2>
+                <Field label="Surface loi Carrez (m²)*"><Input type="number" value={String(f.surfaceCarrez || "")} onChange={e => upd("surfaceCarrez", +e.target.value)} /></Field>
+                <Field label="Surface totale (m²)"><Input type="number" value={String(f.surfaceTotale || "")} onChange={e => upd("surfaceTotale", +e.target.value)} /></Field>
+                <Field label="Nombre de pièces"><Input value={f.nbPieces} onChange={e => upd("nbPieces", e.target.value)} placeholder="3 pièces (T3)" /></Field>
+              </Grid2>
+              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Copropriété</div>
+              <Grid2>
+                <Field label="N° de lots"><Input value={f.nomsLots} onChange={e => upd("nomsLots", e.target.value)} placeholder="Lot 36, 43, 92" /></Field>
+                <Field label="Tantièmes"><Input value={f.tantiemes} onChange={e => upd("tantiemes", e.target.value)} placeholder="413/10 000 èmes" /></Field>
+                <Field label="Syndic"><Input value={f.syndic} onChange={e => upd("syndic", e.target.value)} /></Field>
+                <Field label="Charges annuelles (€)"><Input type="number" value={String(f.chargesAnnuelles || "")} onChange={e => upd("chargesAnnuelles", +e.target.value)} /></Field>
+              </Grid2>
+            </div>
+          )}
+
+          {/* Villa ou Maison */}
+          {(t === "Villa" || t === "Maison") && (
+            <div>
+              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Surfaces</div>
+              <Grid2>
+                <Field label="Surface habitable (m²)"><Input type="number" value={String(f.surfaceHabitable || "")} onChange={e => upd("surfaceHabitable", +e.target.value)} /></Field>
+                <Field label="Surface terrain (m²)"><Input type="number" value={String(f.surfaceTerrain || "")} onChange={e => upd("surfaceTerrain", +e.target.value)} /></Field>
+                <Field label="Nombre de pièces"><Input value={f.nbPieces} onChange={e => upd("nbPieces", e.target.value)} placeholder="4 pièces (T4)" /></Field>
+                {t === "Villa" && (
+                  <Field label="Surface piscine (m²)"><Input type="number" value={String(f.surfacePiscine || "")} onChange={e => upd("surfacePiscine", +e.target.value)} /></Field>
+                )}
+              </Grid2>
+            </div>
+          )}
+
+          {/* Terrain */}
+          {isTerrain(t) && (
+            <div>
+              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Surface</div>
+              <Grid2>
+                <Field label="Surface foncière (m²)"><Input type="number" value={String(f.surfaceFonciere || "")} onChange={e => upd("surfaceFonciere", +e.target.value)} /></Field>
+              </Grid2>
+            </div>
+          )}
+
+          {/* Local commercial */}
+          {t === "Local commercial" && (
+            <div>
+              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Surfaces</div>
+              <Grid2>
+                <Field label="Surface totale (m²)"><Input type="number" value={String(f.surfaceTotale || "")} onChange={e => upd("surfaceTotale", +e.target.value)} /></Field>
+                <Field label="Surface Carrez (m²) (optionnel)"><Input type="number" value={String(f.surfaceCarrez || "")} onChange={e => upd("surfaceCarrez", +e.target.value)} /></Field>
+              </Grid2>
+              <div className="mt-3">
+                <label className="flex items-center gap-2 cursor-pointer text-[13px] text-ink">
+                  <input type="checkbox" checked={f.enCopropriete} onChange={e => upd("enCopropriete", e.target.checked)} className="size-4 accent-primary" />
+                  En copropriété ?
+                </label>
+              </div>
+              {f.enCopropriete && (
+                <Grid2>
+                  <Field label="Syndic"><Input value={f.syndic} onChange={e => upd("syndic", e.target.value)} /></Field>
+                  <Field label="Charges annuelles (€)"><Input type="number" value={String(f.chargesAnnuelles || "")} onChange={e => upd("chargesAnnuelles", +e.target.value)} /></Field>
+                </Grid2>
+              )}
+            </div>
+          )}
+
+          {/* Fonds de commerce */}
+          {isFonds(t) && (
+            <div>
+              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Fonds de commerce</div>
+              <Field label="Description du fonds">
+                <Textarea rows={3} value={f.descriptionBien} onChange={e => upd("descriptionBien", e.target.value)} placeholder="Activité, emplacement, équipements…" />
+              </Field>
+              <Grid2>
+                <Field label="Chiffre d'affaires annuel HT (€)"><Input type="number" value={String(f.chiffreAffaires || "")} onChange={e => upd("chiffreAffaires", +e.target.value)} /></Field>
+              </Grid2>
+            </div>
+          )}
+
+          {/* Section Occupation — si Occupé */}
+          {f.occupation === "Occupé" && (
+            <div className="mt-4 card border-l-4 border-l-amber-400 bg-amber-50 p-4">
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-amber-700">Occupation — Détails du bail</div>
+              <Grid2>
+                <Field label="Type de bail">
+                  <Select value={f.bailType} onChange={v => upd("bailType", v as MandatVenteFull["bailType"])} options={BAIL_OPTIONS} />
+                </Field>
+                <Field label="Nom du locataire"><Input value={f.nomLocataire} onChange={e => upd("nomLocataire", e.target.value)} /></Field>
+                <Field label="Loyer mensuel (€)"><Input type="number" value={String(f.loyerMensuel || "")} onChange={e => upd("loyerMensuel", +e.target.value)} /></Field>
+                <Field label="Date de fin de bail"><Input type="date" value={f.datFinBail} onChange={e => upd("datFinBail", e.target.value)} /></Field>
+              </Grid2>
+            </div>
+          )}
+
+          {/* Description & servitudes — toujours (sauf Fonds qui a déjà sa description) */}
+          {!isFonds(t) && (
+            <div className="mt-3">
+              <Field label="Description du bien">
+                <Textarea rows={4} value={f.descriptionBien} onChange={e => upd("descriptionBien", e.target.value)} placeholder="Composition détaillée, vue, équipements…" />
+              </Field>
+            </div>
+          )}
+          <div className="mt-2">
+            <Field label="Servitudes connues (optionnel)">
+              <Textarea rows={2} value={f.servitudes} onChange={e => upd("servitudes", e.target.value)} placeholder="Ex : servitude de passage, de vue…" />
+            </Field>
+          </div>
         </div>
       )}
 
-      {/* Étape 2 — Prix & Mandat */}
+      {/* Étape 2 — Diagnostics */}
       {step === 2 && (
+        <div>
+          {/* Encart d'info Martinique */}
+          <div className="card border-l-4 border-l-blue-500 bg-blue-50 p-4 mb-4">
+            <div className="text-[12px] font-semibold text-blue-700 mb-1">Diagnostics obligatoires en Martinique</div>
+            <p className="text-[11.5px] text-blue-800 leading-relaxed">
+              En Martinique, les diagnostics obligatoires pour la vente sont : <strong>DPE</strong>, <strong>Termites</strong> (obligatoire sur l'ensemble du territoire), <strong>ERNMT</strong>, <strong>État de l'installation électrique</strong> (si &gt;15 ans), <strong>CREP</strong> (si avant 1949). Frais à la charge du vendeur.
+            </p>
+          </div>
+
+          {/* DPE — si le type de bien le nécessite */}
+          {needsDPE(t) && (
+            <div>
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">DPE — Diagnostic de Performance Énergétique</div>
+              <Grid2>
+                <Field label="Classe DPE">
+                  <Select value={f.classeDPE || "Non réalisé"} onChange={v => upd("classeDPE", v)} options={DPE_OPTIONS} />
+                </Field>
+                <Field label="Classe GES">
+                  <Select value={f.classeGES || "Non réalisé"} onChange={v => upd("classeGES", v)} options={DPE_OPTIONS} />
+                </Field>
+                <Field label="Date du DDT"><Input type="date" value={f.dateDDT} onChange={e => upd("dateDDT", e.target.value)} /></Field>
+                <Field label="Diagnostiqueur"><Input value={f.diagnostiqueur} onChange={e => upd("diagnostiqueur", e.target.value)} /></Field>
+              </Grid2>
+            </div>
+          )}
+
+          {/* Termites — toujours en Martinique */}
+          <div className="mt-4">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Termites (obligatoire — Martinique)</div>
+            <Grid2>
+              <Field label="État parasitaire termites">
+                <Select value={f.etatTermites} onChange={v => upd("etatTermites", v as MandatVenteFull["etatTermites"])} options={["Absence", "Présence", "Non réalisé"]} />
+              </Field>
+            </Grid2>
+          </div>
+
+          {/* ERNMT */}
+          <div className="mt-4">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">ERNMT — Risques naturels (Martinique)</div>
+            <Field label="Informations ERNMT">
+              <Textarea rows={2} value={f.ernmt} onChange={e => upd("ernmt", e.target.value)} placeholder="Zone sismique 4 — Martinique — État des risques et pollutions à joindre au dossier" />
+            </Field>
+          </div>
+
+          {/* Anomalies électriques */}
+          <div className="mt-4">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Installation électrique</div>
+            <Field label="Anomalies électriques constatées">
+              <Textarea rows={2} value={f.anomaliesElec} onChange={e => upd("anomaliesElec", e.target.value)} placeholder="Si aucune anomalie constatée, laisser vide" />
+            </Field>
+          </div>
+        </div>
+      )}
+
+      {/* Étape 3 — Prix & Mandat */}
+      {step === 3 && (
         <div>
           <Grid2>
             <Field label="Prix FAI (€)"><Input type="number" value={String(f.prixFAI || "")} onChange={e => upd("prixFAI", +e.target.value)} /></Field>
@@ -213,16 +378,18 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
         </div>
       )}
 
-      {/* Étape 3 — Options */}
-      {step === 3 && (
+      {/* Étape 4 — Options */}
+      {step === 4 && (
         <div className="space-y-3">
-          {[
+          {([
             ["avecApportDirect", "Clause apport direct (honoraires /2 si acquéreur présenté par le vendeur)"],
             ["avecSousMandat", "Autoriser le sous-mandat"],
             ["avecInterAgence", "Autoriser l'inter-agence"],
-          ].map(([k, lbl]) => (
+            ["avecPanneau", "Autoriser la pose d'un panneau de vente sur le bien"],
+            ["bienIndivision", "Bien en indivision"],
+          ] as [keyof MandatVenteFull, string][]).map(([k, lbl]) => (
             <label key={k} className="card flex cursor-pointer items-center gap-3 p-3.5">
-              <input type="checkbox" checked={Boolean(f[k as keyof MandatVenteFull])} onChange={e => upd(k as keyof MandatVenteFull, e.target.checked as never)} className="size-4 accent-primary" />
+              <input type="checkbox" checked={Boolean(f[k])} onChange={e => upd(k, e.target.checked as never)} className="size-4 accent-primary" />
               <span className="text-[13.5px] text-ink">{lbl}</span>
             </label>
           ))}

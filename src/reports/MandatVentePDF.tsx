@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { MandatVenteFull, Mandant } from "../schemas/redacteur/mandatVenteFull.schema";
-import { calcMandatVente } from "../schemas/redacteur/mandatVenteFull.schema";
+import { calcMandatVente, isCopro, isTerrain, isFonds, needsCarrez, needsDPE } from "../schemas/redacteur/mandatVenteFull.schema";
 
 const P = "#1A3A52";
 const LINE = "#E4E4E0";
@@ -42,6 +42,8 @@ const s = StyleSheet.create({
   tableVal: { flex: 1, fontSize: 9.5, fontFamily: BF, color: INK, textAlign: "right" },
   highlight: { backgroundColor: "#EBF1F6", borderRadius: 4, padding: "8 12", marginVertical: 6 },
   highlightTxt: { fontSize: 9.5, color: P, fontFamily: BF, textAlign: "center" },
+  infoCard: { backgroundColor: "#EBF1F6", borderRadius: 4, padding: "8 12", marginVertical: 6, borderLeft: `3 solid ${P}` },
+  infoCardTxt: { fontSize: 9, color: P, lineHeight: 1.6 },
   // Signatures
   sigRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
   sigBlock: { flex: 1, borderTop: `0.5 solid ${INK}`, paddingTop: 8, marginHorizontal: 6 },
@@ -50,13 +52,15 @@ const s = StyleSheet.create({
   sigLine: { height: 30 },
   // Footer
   footer: { position: "absolute", bottom: "10mm", left: "18mm", right: "18mm", borderTop: `0.5 solid ${LINE}`, paddingTop: 6 },
-  footerTxt: { fontSize: 7.5, color: SUB, textAlign: "center" },
+  footerTxt: { fontSize: 7, color: SUB, textAlign: "center" },
 });
 
 const E = (n: number) => `${Math.round(n || 0).toLocaleString("fr-FR")} €`;
 const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "……………………";
 const fdShort = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR") : "……………";
 const dash = "……………………………………";
+
+const FOOTER_TXT = "Casa Caraïbes SARL — RCS Fort-de-France 928 647 981 — Carte pro T n°CPI97212024000000007 — Garant : GALIAN — RCP : MMA IARD n° 120 137 405 — contact@casacaraibes.com";
 
 function MandantBlock({ m }: { m: Mandant }) {
   const name = [m.civilite, m.prenom, m.nom].filter(Boolean).join(" ");
@@ -74,15 +78,154 @@ function MandantBlock({ m }: { m: Mandant }) {
   );
 }
 
+/** Tableau de désignation adapté selon le type de bien */
+function DesignationTable({ f }: { f: MandatVenteFull }) {
+  const t = f.typeBien;
+
+  if (isFonds(t)) {
+    return (
+      <View>
+        <Text style={[s.body, { marginTop: 4 }]}>
+          <Text style={s.bold}>Description du fonds : </Text>{f.descriptionBien || dash}
+        </Text>
+        {f.chiffreAffaires > 0 && (
+          <Text style={s.body}>
+            <Text style={s.bold}>Chiffre d'affaires annuel HT : </Text>{E(f.chiffreAffaires)}
+          </Text>
+        )}
+        {f.commune && (
+          <Text style={s.body}>
+            <Text style={s.bold}>Commune : </Text>{f.commune}{f.codePostal ? ` (${f.codePostal})` : ""}
+          </Text>
+        )}
+        {f.refCadastrale && (
+          <Text style={s.body}>
+            <Text style={s.bold}>Réf. cadastrale : </Text>{f.refCadastrale}
+          </Text>
+        )}
+      </View>
+    );
+  }
+
+  if (isTerrain(t)) {
+    const rows: [string, string][] = [
+      ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
+      ["Type", "Terrain"],
+      ...(f.surfaceFonciere > 0 ? [["Surface foncière", `${f.surfaceFonciere} m²`] as [string, string]] : []),
+      ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
+    ];
+    return (
+      <View style={s.tableBox}>
+        {rows.map((row, i) => (
+          <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
+            <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  if (t === "Appartement") {
+    const rows: [string, string][] = [
+      ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
+      ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
+      ["Type de bien", f.typeBien],
+      ...(f.nomsLots ? [["N° de lot(s)", f.nomsLots] as [string, string]] : []),
+      ...(f.tantiemes ? [["Tantièmes", f.tantiemes] as [string, string]] : []),
+      ...(f.surfaceCarrez > 0 ? [["Surface loi Carrez (m²)*", `${f.surfaceCarrez} m²`] as [string, string]] : []),
+      ...(f.surfaceTotale > 0 ? [["Surface totale (m²)", `${f.surfaceTotale} m²`] as [string, string]] : []),
+      ...(f.nbPieces ? [["Nombre de pièces", f.nbPieces] as [string, string]] : []),
+      ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
+    ];
+    return (
+      <View>
+        <View style={s.tableBox}>
+          {rows.map((row, i) => (
+            <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
+              <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+              <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
+            </View>
+          ))}
+        </View>
+        {(f.nomsLots || f.residence) && (
+          <Text style={s.body}>
+            Lot(s) N°{f.nomsLots || dash} de la copropriété {f.residence || dash}{f.descriptionBien ? `, comprenant ${f.descriptionBien}` : ""}.
+          </Text>
+        )}
+        {(f.syndic || f.chargesAnnuelles > 0) && (
+          <View>
+            <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Informations de copropriété</Text></Text>
+            {f.syndic && <Text style={s.body}><Text style={s.bold}>Syndic : </Text>{f.syndic}</Text>}
+            {f.chargesAnnuelles > 0 && <Text style={s.body}><Text style={s.bold}>Charges annuelles : </Text>{E(f.chargesAnnuelles)}</Text>}
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  if (t === "Local commercial") {
+    const rows: [string, string][] = [
+      ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
+      ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
+      ["Type de bien", f.typeBien],
+      ...(f.surfaceTotale > 0 ? [["Surface totale (m²)", `${f.surfaceTotale} m²`] as [string, string]] : []),
+      ...(needsCarrez(t) || f.surfaceCarrez > 0 ? (f.surfaceCarrez > 0 ? [["Surface loi Carrez (m²)", `${f.surfaceCarrez} m²`] as [string, string]] : []) : []),
+      ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
+    ];
+    return (
+      <View>
+        <View style={s.tableBox}>
+          {rows.map((row, i) => (
+            <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
+              <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+              <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
+            </View>
+          ))}
+        </View>
+        {f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
+        {isCopro(t) && (f.syndic || f.chargesAnnuelles > 0) && (
+          <View>
+            <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Informations de copropriété</Text></Text>
+            {f.syndic && <Text style={s.body}><Text style={s.bold}>Syndic : </Text>{f.syndic}</Text>}
+            {f.chargesAnnuelles > 0 && <Text style={s.body}><Text style={s.bold}>Charges annuelles : </Text>{E(f.chargesAnnuelles)}</Text>}
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // Villa / Maison (et tout autre type par défaut)
+  const rows: [string, string][] = [
+    ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
+    ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
+    ["Type de bien", f.typeBien],
+    ...(f.surfaceHabitable > 0 ? [["Surface habitable (m²)", `${f.surfaceHabitable} m²`] as [string, string]] : f.surfaceTotale > 0 ? [["Surface (m²)", `${f.surfaceTotale} m²`] as [string, string]] : []),
+    ...(f.surfaceTerrain > 0 ? [["Surface terrain (m²)", `${f.surfaceTerrain} m²`] as [string, string]] : []),
+    ...(t === "Villa" && f.surfacePiscine > 0 ? [["Piscine (m²)", `${f.surfacePiscine} m²`] as [string, string]] : []),
+    ...(f.nbPieces ? [["Nombre de pièces", f.nbPieces] as [string, string]] : []),
+    ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
+  ];
+  return (
+    <View>
+      <View style={s.tableBox}>
+        {rows.map((row, i) => (
+          <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
+            <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
+          </View>
+        ))}
+      </View>
+      {f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
+    </View>
+  );
+}
+
 export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
   const c = calcMandatVente(f);
   const honorairesMention = f.chargeHonoraires === "vendeur" ? "vendeur" : "l'acquéreur";
   const dureeDebut = f.dateDebut ? fdShort(f.dateDebut) : dash;
-  const dureeFin = f.dateDebut ? (() => {
-    const d = new Date(f.dateDebut + "T12:00");
-    d.setFullYear(d.getFullYear() + Math.round(f.dureeAns));
-    return d.toLocaleDateString("fr-FR");
-  })() : dash;
+  const dureeFin = c.dateFin || dash;
 
   return (
     <Document>
@@ -111,7 +254,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
           </View>
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1, padding: "10 12", borderRight: `0.5 solid ${LINE}` }}>
-              {f.mandants.map((m: import("../schemas/redacteur/mandatVenteFull.schema").Mandant, i: number) => (
+              {f.mandants.map((m: Mandant, i: number) => (
                 <View key={i} style={i > 0 ? { marginTop: 10, paddingTop: 10, borderTop: `0.5 solid ${LINE}` } : {}}>
                   <MandantBlock m={m} />
                 </View>
@@ -132,43 +275,62 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
           </View>
         </View>
 
+        {/* Paraphes bas de page 1 */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+          <Text style={{ fontSize: 8, color: SUB }}>Paraphes mandant(s) : ………………</Text>
+          <Text style={{ fontSize: 8, color: SUB }}>Paraphes mandataire : ………………</Text>
+        </View>
+
         {/* Article 1 */}
         <Text style={s.articleTitle}>ARTICLE 1 — OBJET ET DÉSIGNATION DU BIEN</Text>
         <Text style={s.body}>Le mandant confie à Casa Caraïbes le mandat de vendre le bien immobilier suivant :</Text>
-        <View style={s.tableBox}>
-          {[
-            ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
-            ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
-            ["Type de bien", f.typeBien],
-            ...(f.surfaceTotale > 0 ? [["Surface totale", `${f.surfaceTotale} m²`]] : []),
-            ...(f.surfaceCarrez > 0 ? [["Surface loi Carrez", `${f.surfaceCarrez} m²`]] : []),
-            ...(f.nbPieces ? [["Nombre de pièces", f.nbPieces]] : []),
-            ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale]] : []),
-          ].map((row, i, arr) => (
-            <View key={i} style={i === arr.length - 1 ? s.tableRowLast : s.tableRow}>
-              <Text style={[s.tableLbl, { fontFamily: BF }]}>{(row as string[])[0]}</Text>
-              <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{(row as string[])[1] || dash}</Text>
-            </View>
-          ))}
-        </View>
-        {f.descriptionBien ? <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text> : null}
-        {f.lots ? <Text style={s.body}>{f.lots}</Text> : null}
-        {f.infosCopro || f.syndic ? (
-          <View>
-            <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Informations de copropriété</Text></Text>
-            {f.nomsLots && <Text style={s.body}><Text style={s.bold}>Numéros de lots : </Text>{f.nomsLots}</Text>}
-            {f.syndic && <Text style={s.body}><Text style={s.bold}>Syndic de copropriété : </Text>{f.syndic}</Text>}
-            {f.chargesAnnuelles > 0 && <Text style={s.body}><Text style={s.bold}>Charges annuelles (tout inclus) : </Text>{E(f.chargesAnnuelles)}</Text>}
-          </View>
-        ) : null}
-        <Text style={s.body}><Text style={s.bold}>OCCUPATION : </Text>Bien {f.occupation === "Libre" ? "libre à la vente" : "occupé"}.</Text>
+
+        <DesignationTable f={f} />
+
+        {/* Occupation */}
+        <Text style={[s.body, { marginTop: 4 }]}>
+          <Text style={s.bold}>OCCUPATION : </Text>Bien {f.occupation === "Libre" ? "libre à la vente" : "occupé"}.
+        </Text>
+        {f.occupation === "Occupé" && (
+          <Text style={s.body}>
+            Le bien est actuellement occupé en vertu d'un {f.bailType} consenti à {f.nomLocataire || dash} moyennant un loyer mensuel de {E(f.loyerMensuel)}, venant à expiration le {f.datFinBail ? fdShort(f.datFinBail) : dash}. La vente sera consentie avec maintien dans les lieux de l'occupant, sauf accord contraire entre les parties.
+          </Text>
+        )}
+
+        {/* Servitudes */}
+        {f.servitudes && (
+          <Text style={[s.body, { marginTop: 4 }]}>
+            <Text style={s.bold}>SERVITUDES : </Text>{f.servitudes}
+          </Text>
+        )}
+
+        {/* Article 1 bis — Diagnostics */}
+        <Text style={s.articleTitle}>ARTICLE 1 BIS — DIAGNOSTICS TECHNIQUES OBLIGATOIRES</Text>
+        <Text style={s.body}>
+          Le mandant déclare avoir été informé que la vente est soumise à la fourniture d'un Dossier de Diagnostic Technique (DDT) comprenant notamment :{"\n"}
+          {needsDPE(f.typeBien) ? `  • Diagnostic de Performance Énergétique (DPE) — Classe ${f.classeDPE || "à réaliser"} / GES ${f.classeGES || "à réaliser"}\n` : ""}
+          {"  "}• État parasitaire relatif aux termites — {f.etatTermites} [obligatoire sur l'ensemble du territoire de la Martinique (Arrêté préfectoral)]{"\n"}
+          {"  "}• État des risques et pollutions (ERNMT) — Martinique : zone de sismicité 4, zone exposée aux cyclones et aléas naturels{"\n"}
+          {"  "}• Constat de risque d'exposition au plomb (CREP) — si bien construit avant 1949{"\n"}
+          {"  "}• État de l'installation intérieure d'électricité et de gaz (si installation de plus de 15 ans){"\n"}
+          {"  "}• Certificat de conformité de l'assainissement
+        </Text>
+        <Text style={s.body}>
+          Le diagnostiqueur mandaté est : {f.diagnostiqueur || "à désigner"}. Les frais de diagnostic sont à la charge exclusive du vendeur.
+        </Text>
+        {f.ernmt && (
+          <Text style={s.body}><Text style={s.bold}>ERNMT — Informations : </Text>{f.ernmt}</Text>
+        )}
+        {f.anomaliesElec && (
+          <Text style={s.body}><Text style={s.bold}>Anomalies électriques constatées : </Text>{f.anomaliesElec}</Text>
+        )}
 
         <View style={s.footer}>
-          <Text style={s.footerTxt}>Casa Caraïbes SARL — RCS Fort-de-France 928 647 981 — Carte pro N° CPI97212024000000007 — RCP : MMA IARD — Police n° 120 137 405</Text>
+          <Text style={s.footerTxt}>{FOOTER_TXT}</Text>
         </View>
       </Page>
 
-      {/* Page 2 — Articles 2 à 6 */}
+      {/* Page 2 — Articles 2 à 3 */}
       <Page size="A4" style={s.page}>
         {/* Article 2 */}
         <Text style={s.articleTitle}>ARTICLE 2 — PRIX ET CONDITIONS FINANCIÈRES</Text>
@@ -212,7 +374,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         {f.avecInterAgence && <Text style={s.body}><Text style={s.bold}>Inter-agence : </Text>Casa Caraïbes se réserve la faculté de collaborer avec d'autres agences immobilières dans le cadre d'un inter-agence, afin d'élargir la diffusion du bien. Dans ce cadre, Casa Caraïbes demeure l'interlocuteur unique et exclusif du mandant. Le partage éventuel des honoraires entre agences est réglé entre professionnels et ne modifie en aucun cas le montant des honoraires dus par le vendeur.</Text>}
 
         <View style={s.footer}>
-          <Text style={s.footerTxt}>Casa Caraïbes SARL — RCS Fort-de-France 928 647 981 — Carte pro N° CPI97212024000000007 — RCP : MMA IARD — Police n° 120 137 405</Text>
+          <Text style={s.footerTxt}>{FOOTER_TXT}</Text>
         </View>
       </Page>
 
@@ -220,16 +382,18 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
       <Page size="A4" style={s.page}>
         {/* Article 4 */}
         <Text style={s.articleTitle}>ARTICLE 4 — OBLIGATIONS DE CASA CARAÏBES</Text>
-        <Text style={s.body}>Dans le cadre du présent mandat, Casa Caraïbes s'engage à :{"\n"}
-          {"  "}• Effectuer la prospection active et assurer la publicité du bien (portails immobiliers, réseaux sociaux){"\n"}
+        <Text style={s.body}>
+          Casa Caraïbes s'engage à :{"\n"}
+          {"  "}• Inscrire le présent mandat au registre des mandats sous le numéro {f.numero}{"\n"}
+          {"  "}• Effectuer la prospection active et assurer la publicité du bien sur les portails immobiliers (SeLoger, Le Bon Coin, Logic-Immo...), les réseaux sociaux et le site internet de l'agence{"\n"}
           {"  "}• Organiser, planifier et accompagner les visites du bien avec les acquéreurs potentiels{"\n"}
           {"  "}• Procéder à la vérification de la solvabilité des acquéreurs potentiels avant toute transmission d'offre{"\n"}
           {"  "}• Assister le mandant dans les négociations et le conseiller sur les conditions de la vente{"\n"}
-          {"  "}• Respecter l'ensemble des obligations d'information, de conseil et de transparence conformément à la loi Hoguet du 2 janvier 1970 et à la loi ALUR du 24 mars 2014{"\n"}
-          {"  "}• Établir et remettre les offres d'achat au mandant{"\n"}
-          {"  "}• Contribuer à la finalisation de la vente jusqu'à la signature de l'acte authentique devant notaire{"\n"}
-          {"  "}• Coordonner la réalisation de l'ensemble des diagnostics techniques obligatoires (DPE, termites, ERNMT, électricité) auprès de prestataires agréés, les frais y afférents étant à la charge du vendeur{"\n"}
-          {"  "}• Pose de panneau
+          {"  "}• Remettre toute offre d'achat au mandant dans les meilleurs délais{"\n"}
+          {"  "}• Coordonner la réalisation des diagnostics techniques obligatoires auprès de prestataires agréés, les frais restant à la charge du vendeur{"\n"}
+          {"  "}• Respecter le secret professionnel et les obligations de confidentialité{"\n"}
+          {f.avecPanneau ? "  • Poser et maintenir un panneau de vente sur le bien pendant toute la durée du mandat\n" : ""}
+          {"  "}• Contribuer à la finalisation de la vente jusqu'à la signature de l'acte authentique devant notaire
         </Text>
 
         {/* Article 5 */}
@@ -241,7 +405,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         <Text style={s.articleTitle}>ARTICLE 6 — RÉSILIATION</Text>
         <Text style={s.body}>Passée la période de trois (3) mois, chacune des parties pourra résilier le présent mandat par lettre recommandée avec accusé de réception, moyennant un préavis de quinze (15) jours ouvrés avant l'échéance de la période mensuelle en cours. En cas de résiliation anticipée du mandat par le mandant pendant la période initiale ferme, sans motif légitime reconnu, le mandant pourra être redevable d'une indemnité forfaitaire égale aux frais effectivement engagés et justifiés par Casa Caraïbes dans le cadre de l'exécution du présent mandat.</Text>
 
-        {/* Articles 7-10 condensés */}
+        {/* Articles 7-10 */}
         <Text style={s.articleTitle}>ARTICLE 7 — REPRÉSENTATION ET POUVOIRS</Text>
         <Text style={s.body}>Le mandant autorise Casa Caraïbes à le représenter auprès des acquéreurs potentiels, de l'étude notariale désignée et de tout tiers intervenant dans le cadre de la réalisation de la vente. Casa Caraïbes est habilitée à recueillir et transmettre les offres d'achat, à signer tout document préalable à la vente au nom et pour le compte du mandant, dans les strictes limites des conditions financières et des modalités définies au présent mandat.</Text>
 
@@ -261,10 +425,15 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         {/* Signatures */}
         <View style={{ marginTop: 16 }}>
           <Text style={[s.body, { fontFamily: BF, marginBottom: 10 }]}>LES MANDANTS</Text>
-          {f.mandants.map((m: import("../schemas/redacteur/mandatVenteFull.schema").Mandant, i: number) => (
-            <View key={i} style={{ marginBottom: 16 }}>
+          {f.mandants.map((m: Mandant, i: number) => (
+            <View key={i} style={{ marginBottom: 18 }}>
               <Text style={[s.body, { fontFamily: BF }]}>{m.civilite} {m.prenom} {m.nom}</Text>
-              <Text style={[s.body, { color: SUB, fontStyle: "italic" }]}>Lu et approuvé{"\n"}Bon pour mandat {f.typeMandat.toLowerCase()} de vente{"\n"}{"\n"}Signature</Text>
+              <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5 }]}>
+                Paraphes sur chaque page : ………………
+              </Text>
+              <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5 }]}>
+                Lu et approuvé — Bon pour mandat {f.typeMandat.toLowerCase()} de vente
+              </Text>
               <View style={{ height: 30, borderBottom: `0.5 solid ${LINE}`, marginTop: 8, width: 160 }} />
             </View>
           ))}
@@ -276,7 +445,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         </View>
 
         <View style={s.footer}>
-          <Text style={s.footerTxt}>Casa Caraïbes SARL — RCS Fort-de-France 928 647 981 — Carte pro N° CPI97212024000000007 — RCP : MMA IARD — Police n° 120 137 405</Text>
+          <Text style={s.footerTxt}>{FOOTER_TXT}</Text>
         </View>
       </Page>
     </Document>
