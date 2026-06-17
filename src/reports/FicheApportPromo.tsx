@@ -23,112 +23,121 @@ const C = {
   ink:     "#1C1C1A",
   sub:     "#5A6478",
   line:    "#DDE3EC",
-  green:   "#059669",
 };
 
 const PAD = 26;
 
 const S = StyleSheet.create({
+  // Page avec padding global — s'applique à toutes les pages (y compris page 2+)
   page: {
     fontFamily: "Montserrat",
     fontWeight: 400,
-    fontSize: 10,
+    fontSize: 11,
     color: C.ink,
     backgroundColor: C.white,
+    paddingTop: PAD,
+    paddingBottom: 16,
+    paddingHorizontal: PAD,
   },
 
-  // TOP BAR
-  topBar: { height: 5, flexDirection: "row" },
+  // TOP BAR — sort du padding de la page pour rester bord-à-bord
+  topBar: { height: 6, flexDirection: "row", marginTop: -PAD, marginHorizontal: -PAD },
   topA: { flex: 2, backgroundColor: C.teal },
   topB: { flex: 1, backgroundColor: C.gold },
   topC: { flex: 3, backgroundColor: C.navy },
 
-  // HERO
-  hero: { backgroundColor: C.navy, paddingHorizontal: PAD, paddingTop: 22, paddingBottom: 20 },
-  heroLogo: { width: 110, height: 34, objectFit: "contain", marginBottom: 14 },
-  heroTitle: { color: C.white, fontWeight: 700, fontSize: 22, lineHeight: 1.25, marginBottom: 8 },
+  // HERO — sort du padding horizontal pour rester pleine largeur
+  hero: {
+    backgroundColor: C.navy,
+    paddingHorizontal: PAD,
+    paddingTop: 22,
+    paddingBottom: 22,
+    marginHorizontal: -PAD,
+  },
+  heroLogo: { width: 120, height: 37, objectFit: "contain", marginBottom: 14 },
+  heroTitle: { color: C.white, fontWeight: 700, fontSize: 23, lineHeight: 1.25, marginBottom: 9 },
   heroAccent: { color: C.teal },
-  heroSub: { color: "#8BA5BF", fontSize: 10, lineHeight: 1.6, marginBottom: 14 },
-  heroBadgeRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  heroBadge: { backgroundColor: C.teal, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 9, alignItems: "center" },
-  heroBadgePct: { color: C.white, fontWeight: 700, fontSize: 28 },
-  heroBadgeLabel: { color: "#B2EEE8", fontSize: 8, fontWeight: 500, textAlign: "center", marginTop: 1 },
-  heroBadgeSub: { color: "#8BA5BF", fontSize: 9.5, lineHeight: 1.55, flex: 1 },
+  heroSub: { color: "#8BA5BF", fontSize: 11, lineHeight: 1.6, marginBottom: 16 },
+  heroBadgeRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  heroBadge: { backgroundColor: C.teal, borderRadius: 8, paddingHorizontal: 18, paddingVertical: 10, alignItems: "center" },
+  heroBadgePct: { color: C.white, fontWeight: 700, fontSize: 30 },
+  heroBadgeLabel: { color: "#B2EEE8", fontSize: 9, fontWeight: 500, textAlign: "center", marginTop: 2 },
+  heroBadgeSub: { color: "#8BA5BF", fontSize: 11, lineHeight: 1.55, flex: 1 },
 
-  // BODY
-  body: { paddingHorizontal: PAD, paddingTop: 16, paddingBottom: 14 },
+  // BODY — juste un espaceur vertical, le padding horiz est géré par la page
+  body: { paddingTop: 16, paddingBottom: 0 },
 
   // SECTION LABEL
-  sectionLabel: { fontSize: 7.5, fontWeight: 700, letterSpacing: 2, color: C.teal, marginBottom: 10, marginTop: 18 },
+  sectionLabel: { fontSize: 8.5, fontWeight: 700, letterSpacing: 2, color: C.teal, marginBottom: 11, marginTop: 20 },
 
-  // ÉTAPES — compactes
-  stepRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 8, gap: 12 },
-  stepCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.teal, alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 },
-  stepNum: { color: C.white, fontWeight: 700, fontSize: 12 },
+  // ÉTAPES
+  stepRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 9, gap: 13 },
+  stepCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: C.teal, alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 },
+  stepNum: { color: C.white, fontWeight: 700, fontSize: 13 },
   stepContent: { flex: 1 },
-  stepTitle: { fontWeight: 700, fontSize: 10.5, color: C.navy, marginBottom: 1 },
-  stepText: { fontSize: 9, color: C.sub, lineHeight: 1.5 },
+  stepTitle: { fontWeight: 700, fontSize: 12, color: C.navy, marginBottom: 2 },
+  stepText: { fontSize: 10.5, color: C.sub, lineHeight: 1.5 },
 
-  // CARDS GÉNÉRIQUES
-  card: { borderRadius: 7, borderWidth: 1, borderColor: C.line, overflow: "hidden", marginBottom: 9 },
-  cardHeadNavy: { backgroundColor: C.navyMid, paddingHorizontal: 13, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 9 },
-  cardHeadGold: { backgroundColor: C.goldSoft, paddingHorizontal: 13, paddingVertical: 9, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#EDD9A3" },
-  cardTag: { backgroundColor: C.teal, borderRadius: 4, paddingHorizontal: 7, paddingVertical: 2 },
-  cardTagTxt: { color: C.white, fontWeight: 700, fontSize: 8.5 },
-  cardTitle: { color: C.white, fontWeight: 700, fontSize: 11.5 },
-  cardTitleGold: { color: C.gold, fontWeight: 700, fontSize: 11.5 },
-  cardSub: { color: "#8BA5BF", fontSize: 8, marginTop: 1 },
-  cardBody: { padding: 11, backgroundColor: C.white },
-  pill: { backgroundColor: C.teal, borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
-  pillGold: { backgroundColor: C.gold, borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3 },
-  pillTxt: { color: C.white, fontWeight: 700, fontSize: 8.5 },
+  // CARDS
+  card: { borderRadius: 7, borderWidth: 1, borderColor: C.line, overflow: "hidden", marginBottom: 10 },
+  cardHeadNavy: { backgroundColor: C.navyMid, paddingHorizontal: 14, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10 },
+  cardHeadGold: { backgroundColor: C.goldSoft, paddingHorizontal: 14, paddingVertical: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#EDD9A3" },
+  cardTag: { backgroundColor: C.teal, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 },
+  cardTagTxt: { color: C.white, fontWeight: 700, fontSize: 10 },
+  cardTitle: { color: C.white, fontWeight: 700, fontSize: 13 },
+  cardTitleGold: { color: C.gold, fontWeight: 700, fontSize: 13 },
+  cardSub: { color: "#8BA5BF", fontSize: 9.5, marginTop: 1 },
+  cardBody: { padding: 12, backgroundColor: C.white },
+  pill: { backgroundColor: C.teal, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  pillGold: { backgroundColor: C.gold, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  pillTxt: { color: C.white, fontWeight: 700, fontSize: 10 },
 
-  // ITEMS LISTE
-  item: { flexDirection: "row", marginBottom: 4 },
-  itemDot: { width: 11, color: C.teal, fontWeight: 700, fontSize: 10 },
-  itemDotGold: { width: 11, color: C.gold, fontWeight: 700, fontSize: 10 },
-  itemTxt: { flex: 1, fontSize: 9.5, color: C.sub, lineHeight: 1.5 },
+  // ITEMS
+  item: { flexDirection: "row", marginBottom: 5 },
+  itemDot: { width: 12, color: C.teal, fontWeight: 700, fontSize: 11 },
+  itemDotGold: { width: 12, color: C.gold, fontWeight: 700, fontSize: 11 },
+  itemTxt: { flex: 1, fontSize: 11, color: C.sub, lineHeight: 1.5 },
   itemBold: { fontWeight: 600, color: C.ink },
 
   // NOTE LÉGALE
-  legalNote: { marginTop: 7, backgroundColor: C.offWhite, borderRadius: 4, padding: 7, borderLeftWidth: 2, borderLeftColor: C.gold },
-  legalNoteTxt: { fontSize: 8, color: C.sub, lineHeight: 1.55 },
+  legalNote: { marginTop: 8, backgroundColor: C.offWhite, borderRadius: 4, padding: 8, borderLeftWidth: 2, borderLeftColor: C.gold },
+  legalNoteTxt: { fontSize: 9.5, color: C.sub, lineHeight: 1.55 },
   legalNoteBold: { fontWeight: 600, color: C.gold },
 
   // TABLEAU
-  tableSection: { marginTop: 18 },
-  tableTitle: { fontWeight: 700, fontSize: 10.5, color: C.navy, marginBottom: 7 },
+  tableSection: { marginTop: 20 },
+  tableTitle: { fontWeight: 700, fontSize: 12, color: C.navy, marginBottom: 8 },
   tableWrap: { borderRadius: 6, overflow: "hidden", borderWidth: 1, borderColor: C.line },
   tableHead: { flexDirection: "row", backgroundColor: C.navy },
-  thCell: { color: C.white, fontWeight: 600, fontSize: 9, paddingHorizontal: 10, paddingVertical: 7, textAlign: "center" },
+  thCell: { color: C.white, fontWeight: 600, fontSize: 10.5, paddingHorizontal: 10, paddingVertical: 8, textAlign: "center" },
   th1: { width: "42%" }, th2: { width: "20%" }, th3: { width: "38%" },
   tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: C.line },
   tableRowAlt: { backgroundColor: C.offWhite },
-  td: { fontSize: 9.5, paddingHorizontal: 10, paddingVertical: 6, textAlign: "center" },
+  td: { fontSize: 11, paddingHorizontal: 10, paddingVertical: 7, textAlign: "center" },
   td1: { width: "42%", fontWeight: 700, color: C.navy },
   td2: { width: "20%", color: C.sub, fontWeight: 600 },
   td3: { width: "38%", fontWeight: 700, color: C.teal },
 
   // CONDITIONS
-  condBox: { backgroundColor: C.offWhite, borderRadius: 8, padding: 13, marginTop: 18, borderWidth: 1, borderColor: C.line },
-  condTitle: { fontWeight: 700, fontSize: 10.5, color: C.navy, marginBottom: 8 },
-  condRow: { flexDirection: "row", marginBottom: 5 },
-  condNum: { width: 16, fontWeight: 700, fontSize: 9.5, color: C.teal },
-  condTxt: { flex: 1, fontSize: 9.5, color: C.sub, lineHeight: 1.55 },
+  condBox: { backgroundColor: C.offWhite, borderRadius: 8, padding: 14, marginTop: 20, borderWidth: 1, borderColor: C.line },
+  condTitle: { fontWeight: 700, fontSize: 12, color: C.navy, marginBottom: 9 },
+  condRow: { flexDirection: "row", marginBottom: 6 },
+  condNum: { width: 18, fontWeight: 700, fontSize: 11, color: C.teal },
+  condTxt: { flex: 1, fontSize: 11, color: C.sub, lineHeight: 1.55 },
   condBold: { fontWeight: 600, color: C.ink },
 
   // CTA
-  ctaBox: { backgroundColor: C.navy, borderRadius: 10, padding: 18, marginTop: 18 },
-  ctaTitle: { color: C.white, fontWeight: 700, fontSize: 13, marginBottom: 5, textAlign: "center" },
-  ctaSub: { color: "#8BA5BF", fontSize: 9.5, lineHeight: 1.6, textAlign: "center", marginBottom: 14 },
-  ctaItem: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
-  ctaDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.teal },
-  ctaVal: { color: C.white, fontWeight: 600, fontSize: 11 },
+  ctaBox: { backgroundColor: C.navy, borderRadius: 10, padding: 20, marginTop: 20 },
+  ctaTitle: { color: C.white, fontWeight: 700, fontSize: 15, marginBottom: 6, textAlign: "center" },
+  ctaSub: { color: "#8BA5BF", fontSize: 11, lineHeight: 1.6, textAlign: "center", marginBottom: 16 },
+  ctaItem: { flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 7 },
+  ctaDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.teal },
+  ctaVal: { color: C.white, fontWeight: 600, fontSize: 13 },
 
   // FOOTER
-  footer: { paddingHorizontal: PAD, paddingVertical: 9, borderTopWidth: 1, borderTopColor: C.line, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  footerBrand: { fontWeight: 700, fontSize: 8.5, color: C.navy },
-  footerLegal: { fontSize: 6.5, color: "#9AA3B0", textAlign: "right", lineHeight: 1.5 },
+  footer: { paddingTop: 9, borderTopWidth: 1, borderTopColor: C.line, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  footerBrand: { fontWeight: 700, fontSize: 10, color: C.navy },
+  footerLegal: { fontSize: 8, color: "#9AA3B0", textAlign: "right", lineHeight: 1.5 },
 });
 
 function Item({ bold, text, gold }: { bold: string; text: string; gold?: boolean }) {
@@ -152,6 +161,7 @@ export function FicheApportPromo() {
     <Document title="Apport d'affaires — Casa Caraibes" author="Casa Caraibes">
       <Page size="A4" style={S.page}>
 
+        {/* Barre colorée — marges négatives pour couvrir le padding de la page */}
         <View style={S.topBar}>
           <View style={S.topA} /><View style={S.topB} /><View style={S.topC} />
         </View>
@@ -231,7 +241,7 @@ export function FicheApportPromo() {
           </View>
 
           {/* ── RÉTRIBUTION ── */}
-          <Text style={[S.sectionLabel, { marginTop: 32 }]}>VOTRE RETRIBUTION — 10 % DE NOS HONORAIRES</Text>
+          <Text style={S.sectionLabel}>VOTRE RETRIBUTION — 10 % DE NOS HONORAIRES</Text>
 
           <View wrap={false} style={S.card}>
             <View style={S.cardHeadNavy}>
