@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export type ViewId =
-  | "today" | "clients" | "biens" | "redacteur"
+  | "today" | "clients" | "biens" | "redacteur" | "documents"
   | "pilotage" | "revenus" | "reporting" | "estimation"
   | "pilotage_agent" | "agenda" | "taches" | "calculatrice" | "compte_rendu"
   | "kanban" | "matching" | "import";

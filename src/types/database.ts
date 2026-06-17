@@ -132,6 +132,19 @@ export interface ActiviteRow {
   created_at?: string;
 }
 
+export interface DocumentRow {
+  id: string;
+  agent_id: string;
+  type_doc: "mandat" | "compromis";
+  nom: string;
+  numero: string | null;
+  parties: string | null;
+  bien: string | null;
+  storage_path: string;
+  taille: number | null;
+  created_at?: string;
+}
+
 /** Nom logique → nom de table Supabase. */
 export const TABLES = {
   biens: "biens",

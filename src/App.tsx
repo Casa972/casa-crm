@@ -19,6 +19,7 @@ import { CalculatriceView } from "./components/tools/CalculatriceView";
 import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
 import { KanbanView } from "./components/kanban/KanbanView";
 import { MatchingView } from "./components/matching/MatchingView";
+import { DocumentsView } from "./components/documents/DocumentsView";
 import { daysDiff } from "./lib/format";
 
 /** Vues réservées au directeur — un agent est redirigé vers son tableau de bord. */
@@ -45,6 +46,7 @@ function CurrentView(): ReactElement {
     case "calculatrice": return <CalculatriceView />;
     case "kanban": return <KanbanView />;
     case "matching": return <MatchingView />;
+    case "documents": return <DocumentsView />;
     case "import": return <TodayView />;
     default: return <TodayView />;
   }

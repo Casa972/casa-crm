@@ -1,6 +1,6 @@
 import {
   Sun, Users, Building2, FileText, Target, TrendingUp, Home, ClipboardList,
-  BarChart2, Calendar, CheckCircle, Calculator, LogOut, Kanban, Shuffle,
+  BarChart2, Calendar, CheckCircle, Calculator, LogOut, Kanban, Shuffle, Library,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
@@ -18,6 +18,7 @@ const NAV_DIR: NavItem[] = [
   { id: "estimation", label: "Estimations", Icon: Home },
   { id: "compte_rendu", label: "Comptes rendus", Icon: ClipboardList },
   { id: "redacteur", label: "Rédacteur Actes", Icon: FileText },
+  { id: "documents", label: "Documents", Icon: Library },
   { id: "agenda", label: "Agenda", Icon: Calendar },
   { id: "taches", label: "Tâches", Icon: CheckCircle },
   { id: "pilotage", label: "Pilotage", Icon: Target },
@@ -34,6 +35,7 @@ const NAV_AGENT: NavItem[] = [
   { id: "estimation", label: "Estimations", Icon: Home },
   { id: "compte_rendu", label: "Comptes rendus", Icon: ClipboardList },
   { id: "redacteur", label: "Rédacteur Actes", Icon: FileText },
+  { id: "documents", label: "Documents", Icon: Library },
   { id: "agenda", label: "Agenda", Icon: Calendar },
   { id: "taches", label: "Tâches", Icon: CheckCircle },
   { id: "calculatrice", label: "Calculatrice", Icon: Calculator },

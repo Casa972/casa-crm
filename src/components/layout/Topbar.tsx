@@ -21,6 +21,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   compte_rendu: "Comptes rendus de visite",
   kanban: "Pipeline Kanban",
   matching: "Matching clients ↔ biens",
+  documents: "Bibliothèque de documents",
   import: "Import CSV",
 };
 
