@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { FileText, Download, Trash2, Library, AlertCircle, Loader2, Pencil, Check, X } from "lucide-react";
+import { FileText, Trash2, Library, AlertCircle, Loader2, Pencil, Check, X } from "lucide-react";
 import { useDocuments, useDeleteDocument, useUpdateDocument } from "../../hooks/queries/useDocuments";
-import { getSignedUrl } from "../../services/documents.service";
 import type { DocumentRow } from "../../types/database";
 
 type Filter = "tous" | "mandat" | "compromis" | "offre";
@@ -31,36 +30,18 @@ function fmtTaille(bytes?: number | null) {
 }
 
 function DocumentCard({ doc }: { doc: DocumentRow }) {
-  const [downloading, setDownloading] = useState(false);
-  const [editing, setEditing]         = useState(false);
-  const [nom, setNom]                 = useState(doc.nom);
-  const [numero, setNumero]           = useState(doc.numero ?? "");
-  const [parties, setParties]         = useState(doc.parties ?? "");
-  const [bien, setBien]               = useState(doc.bien ?? "");
+  const [editing, setEditing]   = useState(false);
+  const [nom, setNom]           = useState(doc.nom);
+  const [numero, setNumero]     = useState(doc.numero ?? "");
+  const [parties, setParties]   = useState(doc.parties ?? "");
+  const [bien, setBien]         = useState(doc.bien ?? "");
 
   const deleteMut = useDeleteDocument();
   const updateMut = useUpdateDocument();
 
-  const handleDownload = async () => {
-    setDownloading(true);
-    try {
-      const url = await getSignedUrl(doc.storage_path);
-      const a   = document.createElement("a");
-      a.href    = url;
-      a.download = doc.nom;
-      a.target  = "_blank";
-      a.click();
-    } catch (e) {
-      console.error("Téléchargement échoué:", e);
-      alert("Impossible de télécharger ce document. Vérifiez votre connexion.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   const handleDelete = () => {
     if (!confirm(`Supprimer "${doc.nom}" définitivement ?`)) return;
-    deleteMut.mutate({ id: doc.id, storagePath: doc.storage_path });
+    deleteMut.mutate({ id: doc.id });
   };
 
   const handleSave = () => {
@@ -186,15 +167,6 @@ function DocumentCard({ doc }: { doc: DocumentRow }) {
             </>
           ) : (
             <>
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="flex items-center gap-1.5 rounded px-3 py-1.5 text-[12px] font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-60"
-                title="Télécharger"
-              >
-                {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-                Ouvrir
-              </button>
               <button
                 onClick={() => setEditing(true)}
                 className="rounded p-1.5 text-ink-muted hover:bg-line hover:text-ink transition-colors"

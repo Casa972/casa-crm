@@ -21,8 +21,8 @@ export function useUpdateDocument() {
 export function useDeleteDocument() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, storagePath }: { id: string; storagePath: string }) =>
-      deleteDocument(id, storagePath),
+    mutationFn: ({ id }: { id: string }) =>
+      deleteDocument(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["documents"] }),
   });
 }
