@@ -8,7 +8,7 @@ import { offreAchatSchema, type OffreAchat, type PartieOffre } from "../../schem
 import { COMMUNES_MARTINIQUE } from "../../schemas/enums";
 import { eur } from "../../lib/format";
 
-import { MandatPDFDownload, CompromisPDFDownload, OffrePDFDownload } from "./DocPDFDownloads";
+import { MandatPDFDownload, MandatDOCXDownload, CompromisPDFDownload, CompromisDOCXDownload, OffrePDFDownload, OffreDOCXDownload } from "./DocPDFDownloads";
 
 type DocType = "mandat" | "compromis" | "offre";
 
@@ -461,7 +461,7 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
           {step < MANDAT_STEPS.length - 1
             ? <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Suivant <ChevronRight size={14} /></button>
             : parsedOk
-              ? <MandatPDFDownload f={f} />
+              ? <><MandatPDFDownload f={f} /><MandatDOCXDownload f={f} /></>
               : <button className="btn-ghost opacity-60 cursor-not-allowed"><Lock size={14} /> Compléter les champs requis</button>
           }
         </div>
@@ -671,7 +671,7 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
           {step < COMPROMIS_STEPS.length - 1
             ? <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Suivant <ChevronRight size={14} /></button>
             : parsedOk
-              ? <CompromisPDFDownload f={f} />
+              ? <><CompromisPDFDownload f={f} /><CompromisDOCXDownload f={f} /></>
               : <button className="btn-ghost opacity-60 cursor-not-allowed"><Lock size={14} /> Compléter les champs requis</button>
           }
         </div>
@@ -853,7 +853,7 @@ function OffreForm({ f, setF }: { f: OffreAchat; setF: (v: OffreAchat) => void }
           {step < OFFRE_STEPS.length - 1
             ? <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Suivant <ChevronRight size={14} /></button>
             : parsedOk
-              ? <OffrePDFDownload f={f} />
+              ? <><OffrePDFDownload f={f} /><OffreDOCXDownload f={f} /></>
               : <button className="btn-ghost opacity-60 cursor-not-allowed"><Lock size={14} /> Compléter les champs requis</button>
           }
         </div>
