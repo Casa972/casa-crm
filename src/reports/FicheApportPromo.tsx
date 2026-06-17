@@ -231,7 +231,7 @@ export function FicheApportPromo() {
           </View>
 
           {/* ── RÉTRIBUTION ── */}
-          <Text style={S.sectionLabel}>VOTRE RETRIBUTION — 10 % DE NOS HONORAIRES</Text>
+          <Text style={[S.sectionLabel, { marginTop: 32 }]}>VOTRE RETRIBUTION — 10 % DE NOS HONORAIRES</Text>
 
           <View wrap={false} style={S.card}>
             <View style={S.cardHeadNavy}>
