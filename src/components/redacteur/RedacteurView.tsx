@@ -10,6 +10,8 @@ import { COMMUNES_MARTINIQUE } from "../../schemas/enums";
 import { eur } from "../../lib/format";
 
 import { MandatPDFDownload, MandatDOCXDownload, CompromisPDFDownload, CompromisDOCXDownload, OffrePDFDownload, OffreDOCXDownload } from "./DocPDFDownloads";
+import { downloadFicheApportAffaires } from "../../reports/FicheApportAffairesPDF";
+import { downloadFicheApportPromo } from "../../reports/FicheApportPromo";
 
 type DocType = "mandat" | "compromis" | "offre";
 
@@ -947,6 +949,23 @@ export function RedacteurView() {
         <div className="mt-4 border-t border-line pt-3">
           <button className="btn-ghost w-full justify-center text-[12px]" onClick={resetDoc}>
             Nouveau document
+          </button>
+        </div>
+        <div className="mt-4 border-t border-line pt-3">
+          <div className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Modèles</div>
+          <button
+            onClick={() => downloadFicheApportPromo()}
+            className="flex w-full flex-col items-start gap-0.5 rounded px-3 py-2.5 text-left mb-1 hover:bg-line/50"
+          >
+            <span className="text-[13px] font-medium text-ink-sub">🌴 Flyer apport</span>
+            <span className="text-[10px] text-ink-muted">Fiche commerciale · PDF</span>
+          </button>
+          <button
+            onClick={() => downloadFicheApportAffaires()}
+            className="flex w-full flex-col items-start gap-0.5 rounded px-3 py-2.5 text-left mb-1 hover:bg-line/50"
+          >
+            <span className="text-[13px] font-medium text-ink-sub">📄 Fiche déclaration</span>
+            <span className="text-[10px] text-ink-muted">Contrat à signer · PDF</span>
           </button>
         </div>
       </aside>
