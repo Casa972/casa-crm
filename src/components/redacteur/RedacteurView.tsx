@@ -946,13 +946,9 @@ export function RedacteurView() {
             <span className="text-[10px] text-ink-muted">{d.sub}</span>
           </button>
         ))}
-        <div className="mt-4 border-t border-line pt-3">
-          <button className="btn-ghost w-full justify-center text-[12px]" onClick={resetDoc}>
-            Nouveau document
-          </button>
-        </div>
-        <div className="mt-4 border-t border-line pt-3">
-          <div className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Modèles</div>
+
+        <div className="mt-3 border-t border-line pt-3">
+          <div className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Modèles PDF</div>
           <button
             onClick={() => downloadFicheApportPromo()}
             className="flex w-full flex-col items-start gap-0.5 rounded px-3 py-2.5 text-left mb-1 hover:bg-line/50"
@@ -966,6 +962,12 @@ export function RedacteurView() {
           >
             <span className="text-[13px] font-medium text-ink-sub">📄 Fiche déclaration</span>
             <span className="text-[10px] text-ink-muted">Contrat à signer · PDF</span>
+          </button>
+        </div>
+
+        <div className="mt-3 border-t border-line pt-3">
+          <button className="btn-ghost w-full justify-center text-[12px]" onClick={resetDoc}>
+            Nouveau document
           </button>
         </div>
       </aside>
