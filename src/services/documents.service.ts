@@ -66,6 +66,18 @@ export async function getSignedUrl(storagePath: string): Promise<string> {
   return data.signedUrl;
 }
 
+// ── Mise à jour des métadonnées ───────────────────────────────────────────────
+
+export async function updateDocument(id: string, patch: {
+  nom?: string;
+  numero?: string | null;
+  parties?: string | null;
+  bien?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.from("documents").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
 // ── Suppression ───────────────────────────────────────────────────────────────
 
 export async function deleteDocument(id: string, storagePath: string): Promise<void> {

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { FileText, Download, Trash2, Library, AlertCircle, Loader2 } from "lucide-react";
-import { useDocuments, useDeleteDocument } from "../../hooks/queries/useDocuments";
+import { FileText, Download, Trash2, Library, AlertCircle, Loader2, Pencil, Check, X } from "lucide-react";
+import { useDocuments, useDeleteDocument, useUpdateDocument } from "../../hooks/queries/useDocuments";
 import { getSignedUrl } from "../../services/documents.service";
 import type { DocumentRow } from "../../types/database";
 
@@ -32,7 +32,14 @@ function fmtTaille(bytes?: number | null) {
 
 function DocumentCard({ doc }: { doc: DocumentRow }) {
   const [downloading, setDownloading] = useState(false);
+  const [editing, setEditing]         = useState(false);
+  const [nom, setNom]                 = useState(doc.nom);
+  const [numero, setNumero]           = useState(doc.numero ?? "");
+  const [parties, setParties]         = useState(doc.parties ?? "");
+  const [bien, setBien]               = useState(doc.bien ?? "");
+
   const deleteMut = useDeleteDocument();
+  const updateMut = useUpdateDocument();
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -56,64 +63,156 @@ function DocumentCard({ doc }: { doc: DocumentRow }) {
     deleteMut.mutate({ id: doc.id, storagePath: doc.storage_path });
   };
 
+  const handleSave = () => {
+    updateMut.mutate({
+      id: doc.id,
+      patch: {
+        nom:     nom.trim() || doc.nom,
+        numero:  numero.trim() || null,
+        parties: parties.trim() || null,
+        bien:    bien.trim() || null,
+      },
+    }, {
+      onSuccess: () => setEditing(false),
+      onError: (e) => alert(`Erreur lors de la modification : ${e instanceof Error ? e.message : String(e)}`),
+    });
+  };
+
+  const handleCancel = () => {
+    setNom(doc.nom);
+    setNumero(doc.numero ?? "");
+    setParties(doc.parties ?? "");
+    setBien(doc.bien ?? "");
+    setEditing(false);
+  };
+
   return (
-    <div className="card flex items-start gap-4 p-4 hover:shadow-sm transition-shadow">
-      {/* Icône */}
-      <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-        <FileText size={20} className="text-primary" />
-      </div>
+    <div className="card p-4 hover:shadow-sm transition-shadow">
+      <div className="flex items-start gap-4">
+        {/* Icône */}
+        <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <FileText size={20} className="text-primary" />
+        </div>
 
-      {/* Infos */}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2 mb-1">
-          <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${TYPE_COLOR[doc.type_doc] ?? "bg-line text-ink-sub"}`}>
-            {TYPE_LABEL[doc.type_doc] ?? doc.type_doc}
-          </span>
-          {doc.numero && (
-            <span className="text-[11px] font-mono text-ink-muted bg-line rounded px-1.5 py-0.5">{doc.numero}</span>
+        {/* Infos */}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${TYPE_COLOR[doc.type_doc] ?? "bg-line text-ink-sub"}`}>
+              {TYPE_LABEL[doc.type_doc] ?? doc.type_doc}
+            </span>
+            {doc.nom.endsWith(".docx") && (
+              <span className="text-[10px] font-medium text-ink-muted bg-line rounded px-1.5 py-0.5">DOCX</span>
+            )}
+          </div>
+
+          {editing ? (
+            <div className="flex flex-col gap-2 mt-2">
+              <div>
+                <label className="text-[11px] text-ink-muted mb-0.5 block">Nom du fichier</label>
+                <input
+                  className="input text-[12.5px] w-full"
+                  value={nom}
+                  onChange={e => setNom(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[11px] text-ink-muted mb-0.5 block">Numéro</label>
+                  <input
+                    className="input text-[12.5px] w-full"
+                    value={numero}
+                    onChange={e => setNumero(e.target.value)}
+                    placeholder="ex : MV-2026-001"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] text-ink-muted mb-0.5 block">Bien</label>
+                  <input
+                    className="input text-[12.5px] w-full"
+                    value={bien}
+                    onChange={e => setBien(e.target.value)}
+                    placeholder="adresse — commune"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[11px] text-ink-muted mb-0.5 block">Parties</label>
+                <input
+                  className="input text-[12.5px] w-full"
+                  value={parties}
+                  onChange={e => setParties(e.target.value)}
+                  placeholder="Vendeur → Acquéreur"
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-[13.5px] font-semibold text-ink truncate">{doc.nom}</p>
+              {doc.numero && (
+                <span className="text-[11px] font-mono text-ink-muted bg-line rounded px-1.5 py-0.5 mr-1">{doc.numero}</span>
+              )}
+              {doc.parties && (
+                <p className="text-[12px] text-ink-sub mt-0.5 truncate">{doc.parties}</p>
+              )}
+              {doc.bien && (
+                <p className="text-[11.5px] text-ink-muted mt-0.5 truncate">{doc.bien}</p>
+              )}
+              <div className="mt-2 flex items-center gap-3 text-[11px] text-ink-muted">
+                <span>{fmtDate(doc.created_at)}</span>
+                {doc.taille && <><span>·</span><span>{fmtTaille(doc.taille)}</span></>}
+              </div>
+            </>
           )}
         </div>
-        <p className="text-[13.5px] font-semibold text-ink truncate">
-          {doc.nom}
-          {doc.nom.endsWith(".docx") && (
-            <span className="ml-2 text-[10px] font-medium text-ink-muted bg-line rounded px-1.5 py-0.5">DOCX</span>
-          )}
-        </p>
-        {doc.parties && (
-          <p className="text-[12px] text-ink-sub mt-0.5 truncate">{doc.parties}</p>
-        )}
-        {doc.bien && (
-          <p className="text-[11.5px] text-ink-muted mt-0.5 truncate">{doc.bien}</p>
-        )}
-        <div className="mt-2 flex items-center gap-3 text-[11px] text-ink-muted">
-          <span>{fmtDate(doc.created_at)}</span>
-          {doc.taille && <span>·</span>}
-          {doc.taille && <span>{fmtTaille(doc.taille)}</span>}
-        </div>
-      </div>
 
-      {/* Actions */}
-      <div className="flex shrink-0 items-center gap-1">
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="flex items-center gap-1.5 rounded px-3 py-1.5 text-[12px] font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-60"
-          title="Télécharger"
-        >
-          {downloading
-            ? <Loader2 size={13} className="animate-spin" />
-            : <Download size={13} />
-          }
-          Ouvrir
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={deleteMut.isPending}
-          className="rounded p-1.5 text-ink-muted hover:bg-danger-soft hover:text-danger transition-colors disabled:opacity-60"
-          title="Supprimer"
-        >
-          <Trash2 size={14} />
-        </button>
+        {/* Actions */}
+        <div className="flex shrink-0 items-center gap-1">
+          {editing ? (
+            <>
+              <button
+                onClick={handleSave}
+                disabled={updateMut.isPending}
+                className="flex items-center gap-1 rounded px-3 py-1.5 text-[12px] font-medium text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-60"
+              >
+                {updateMut.isPending ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                Enregistrer
+              </button>
+              <button
+                onClick={handleCancel}
+                className="rounded p-1.5 text-ink-muted hover:bg-line transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="flex items-center gap-1.5 rounded px-3 py-1.5 text-[12px] font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-60"
+                title="Télécharger"
+              >
+                {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                Ouvrir
+              </button>
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded p-1.5 text-ink-muted hover:bg-line hover:text-ink transition-colors"
+                title="Modifier"
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteMut.isPending}
+                className="rounded p-1.5 text-ink-muted hover:bg-danger-soft hover:text-danger transition-colors disabled:opacity-60"
+                title="Supprimer"
+              >
+                <Trash2 size={14} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -121,7 +220,7 @@ function DocumentCard({ doc }: { doc: DocumentRow }) {
 
 export function DocumentsView() {
   const [filter, setFilter] = useState<Filter>("tous");
-  const { data: docs = [], isLoading, isError } = useDocuments();
+  const { data: docs = [], isLoading, isError, error } = useDocuments();
 
   const filtered = filter === "tous" ? docs : docs.filter(d => d.type_doc === filter);
 
@@ -140,12 +239,12 @@ export function DocumentsView() {
           <Library size={20} className="text-primary" />
           <div>
             <h2 className="font-heading text-lg font-semibold text-ink">Bibliothèque de documents</h2>
-            <p className="text-[12px] text-ink-muted">Mandats et compromis générés depuis le Rédacteur</p>
+            <p className="text-[12px] text-ink-muted">Mandats, compromis et offres générés depuis le Rédacteur</p>
           </div>
         </div>
 
         {/* Filtres */}
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           {(["tous", "mandat", "compromis", "offre"] as Filter[]).map(f => (
             <button
               key={f}
@@ -174,9 +273,14 @@ export function DocumentsView() {
         )}
 
         {isError && (
-          <div className="flex items-center gap-2 rounded-lg border border-danger/30 bg-danger-soft p-4 text-danger">
-            <AlertCircle size={16} />
-            <span className="text-[13px]">Impossible de charger les documents. Vérifiez que la migration SQL a été exécutée.</span>
+          <div className="flex flex-col gap-2 rounded-lg border border-danger/30 bg-danger-soft p-4 text-danger">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={16} />
+              <span className="text-[13px] font-medium">Impossible de charger les documents</span>
+            </div>
+            <p className="text-[12px] pl-6">
+              {error instanceof Error ? error.message : "Vérifiez que la table \"documents\" et le bucket Storage \"documents\" existent dans Supabase."}
+            </p>
           </div>
         )}
 

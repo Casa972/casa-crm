@@ -25,6 +25,19 @@ function triggerDownload(blob: Blob, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 200);
 }
 
+async function saveToLibrary(
+  params: Parameters<typeof uploadDocument>[0],
+  qc: ReturnType<typeof useQueryClient>,
+) {
+  try {
+    await uploadDocument(params);
+    await qc.invalidateQueries({ queryKey: ["documents"] });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    alert(`Bibliothèque : impossible de sauvegarder le document.\n\nErreur : ${msg}\n\nVérifiez que la table "documents" et le bucket Storage "documents" existent dans Supabase.`);
+  }
+}
+
 // ── Mandat ────────────────────────────────────────────────────────────────────
 
 export function MandatPDFDownload({ f }: { f: MandatVenteFull }) {
@@ -41,9 +54,7 @@ export function MandatPDFDownload({ f }: { f: MandatVenteFull }) {
       triggerDownload(blob, fileName);
       const parties = f.mandants.map(m => [m.civilite, m.prenom, m.nom].filter(Boolean).join(" ")).join(", ");
       const bien = [f.adresseBien, f.commune].filter(Boolean).join(" — ");
-      uploadDocument({ agentId, typeDoc: "mandat", nom: fileName, numero: f.numero, parties, bien, blob })
-        .then(() => qc.invalidateQueries({ queryKey: ["documents"] }))
-        .catch(e => console.warn("Bibliothèque : sauvegarde échouée", e));
+      await saveToLibrary({ agentId, typeDoc: "mandat", nom: fileName, numero: f.numero, parties, bien, blob }, qc);
     } catch (e) {
       console.error("Erreur génération PDF mandat:", e);
       alert("Erreur lors de la génération du PDF. Vérifiez la console.");
@@ -73,9 +84,7 @@ export function MandatDOCXDownload({ f }: { f: MandatVenteFull }) {
       triggerDownload(blob, fileName);
       const parties = f.mandants.map(m => [m.civilite, m.prenom, m.nom].filter(Boolean).join(" ")).join(", ");
       const bien = [f.adresseBien, f.commune].filter(Boolean).join(" — ");
-      uploadDocument({ agentId, typeDoc: "mandat", nom: fileName, numero: f.numero, parties, bien, blob })
-        .then(() => qc.invalidateQueries({ queryKey: ["documents"] }))
-        .catch(e => console.warn("Bibliothèque : sauvegarde échouée", e));
+      await saveToLibrary({ agentId, typeDoc: "mandat", nom: fileName, numero: f.numero, parties, bien, blob }, qc);
     } catch (e) {
       console.error("Erreur génération DOCX mandat:", e);
       alert("Erreur lors de la génération du fichier Word. Vérifiez la console.");
@@ -97,13 +106,13 @@ export function CompromisPDFDownload({ f }: { f: CompromisVente }) {
   const [loading, setLoading] = useState(false);
   const agentId = useSessionStore(s => s.user?.id ?? "");
   const qc = useQueryClient();
-  const v = f.vendeurs[0];
-  const a = f.acquereurs[0];
 
   const handleDownload = async () => {
     if (loading) return;
     setLoading(true);
     try {
+      const v = f.vendeurs[0];
+      const a = f.acquereurs[0];
       const blob     = await pdf(<CompromisVentePDF f={f} />).toBlob();
       const fileName = `Compromis_${v?.nom || "vendeur"}_${a?.nom || "acquereur"}_${f.date || "2026"}.pdf`;
       triggerDownload(blob, fileName);
@@ -112,9 +121,7 @@ export function CompromisPDFDownload({ f }: { f: CompromisVente }) {
         a ? [a.civilite, a.prenom, a.nom].filter(Boolean).join(" ") : null,
       ].filter(Boolean).join(" → ");
       const bien = [f.adresseBien, f.commune].filter(Boolean).join(" — ");
-      uploadDocument({ agentId, typeDoc: "compromis", nom: fileName, numero: f.mandatRef || undefined, parties, bien, blob })
-        .then(() => qc.invalidateQueries({ queryKey: ["documents"] }))
-        .catch(e => console.warn("Bibliothèque : sauvegarde échouée", e));
+      await saveToLibrary({ agentId, typeDoc: "compromis", nom: fileName, numero: f.mandatRef || undefined, parties, bien, blob }, qc);
     } catch (e) {
       console.error("Erreur génération PDF compromis:", e);
       alert("Erreur lors de la génération du PDF. Vérifiez la console.");
@@ -139,8 +146,8 @@ export function CompromisDOCXDownload({ f }: { f: CompromisVente }) {
     if (loading) return;
     setLoading(true);
     try {
-      const v        = f.vendeurs[0];
-      const a        = f.acquereurs[0];
+      const v = f.vendeurs[0];
+      const a = f.acquereurs[0];
       const blob     = await generateCompromisDOCX(f);
       const fileName = `Compromis_${v?.nom || "vendeur"}_${a?.nom || "acquereur"}_${f.date || "2026"}.docx`;
       triggerDownload(blob, fileName);
@@ -149,9 +156,7 @@ export function CompromisDOCXDownload({ f }: { f: CompromisVente }) {
         a ? [a.civilite, a.prenom, a.nom].filter(Boolean).join(" ") : null,
       ].filter(Boolean).join(" → ");
       const bien = [f.adresseBien, f.commune].filter(Boolean).join(" — ");
-      uploadDocument({ agentId, typeDoc: "compromis", nom: fileName, numero: f.mandatRef || undefined, parties, bien, blob })
-        .then(() => qc.invalidateQueries({ queryKey: ["documents"] }))
-        .catch(e => console.warn("Bibliothèque : sauvegarde échouée", e));
+      await saveToLibrary({ agentId, typeDoc: "compromis", nom: fileName, numero: f.mandatRef || undefined, parties, bien, blob }, qc);
     } catch (e) {
       console.error("Erreur génération DOCX compromis:", e);
       alert("Erreur lors de la génération du fichier Word. Vérifiez la console.");
@@ -178,18 +183,16 @@ export function OffrePDFDownload({ f }: { f: OffreAchat }) {
     if (loading) return;
     setLoading(true);
     try {
-      const blob     = await pdf(<OffreAchatPDF f={f} />).toBlob();
       const acq      = f.acquereurs[0];
+      const blob     = await pdf(<OffreAchatPDF f={f} />).toBlob();
       const fileName = `OffreAchat_${acq?.nom || "acquereur"}_${f.date || "2026"}.pdf`;
       triggerDownload(blob, fileName);
-      uploadDocument({
+      await saveToLibrary({
         agentId, typeDoc: "offre", nom: fileName, numero: f.numero,
         parties: f.acquereurs.map(a => [a.civilite, a.prenom, a.nom].filter(Boolean).join(" ")).join(", "),
         bien: [f.adresseBien, f.commune].filter(Boolean).join(" — "),
         blob,
-      })
-        .then(() => qc.invalidateQueries({ queryKey: ["documents"] }))
-        .catch(e => console.warn("Bibliothèque : sauvegarde échouée", e));
+      }, qc);
     } catch (e) {
       console.error("Erreur génération PDF offre:", e);
       alert("Erreur lors de la génération du PDF. Vérifiez la console.");
@@ -218,14 +221,12 @@ export function OffreDOCXDownload({ f }: { f: OffreAchat }) {
       const blob     = await generateOffreDOCX(f);
       const fileName = `OffreAchat_${acq?.nom || "acquereur"}_${f.date || "2026"}.docx`;
       triggerDownload(blob, fileName);
-      uploadDocument({
+      await saveToLibrary({
         agentId, typeDoc: "offre", nom: fileName, numero: f.numero,
         parties: f.acquereurs.map(a => [a.civilite, a.prenom, a.nom].filter(Boolean).join(" ")).join(", "),
         bien: [f.adresseBien, f.commune].filter(Boolean).join(" — "),
         blob,
-      })
-        .then(() => qc.invalidateQueries({ queryKey: ["documents"] }))
-        .catch(e => console.warn("Bibliothèque : sauvegarde échouée", e));
+      }, qc);
     } catch (e) {
       console.error("Erreur génération DOCX offre:", e);
       alert("Erreur lors de la génération du fichier Word. Vérifiez la console.");
