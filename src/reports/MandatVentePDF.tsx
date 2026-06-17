@@ -139,7 +139,7 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
       <View>
         {!!f.descriptionBien && <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Description du fonds : </Text>{f.descriptionBien}</Text>}
         {f.chiffreAffaires > 0 && <Text style={s.body}><Text style={s.bold}>Chiffre d'affaires annuel HT : </Text>{E(f.chiffreAffaires)}</Text>}
-        {!!f.commune && <Text style={s.body}><Text style={s.bold}>Commune : </Text>{f.commune}{f.codePostal ? ` (${f.codePostal})` : ""}</Text>}
+        {!!f.commune && <Text style={s.body}><Text style={s.bold}>Commune : </Text>{f.commune}{!!f.codePostal ? ` (${f.codePostal})` : null}</Text>}
         {!!f.refCadastrale && <Text style={s.body}><Text style={s.bold}>Réf. cadastrale : </Text>{f.refCadastrale}</Text>}
       </View>
     );
@@ -186,9 +186,9 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
             </View>
           ))}
         </View>
-        {(f.nomsLots || f.residence) && (
+        {!!(f.nomsLots || f.residence) && (
           <Text style={s.body}>
-            Lot(s) N°{f.nomsLots || dash} de la copropriété {f.residence || dash}{f.descriptionBien ? `, comprenant ${f.descriptionBien}` : ""}.
+            Lot(s) N°{f.nomsLots || dash} de la copropriété {f.residence || dash}{!!f.descriptionBien ? `, comprenant ${f.descriptionBien}` : ""}.
           </Text>
         )}
         <CoproTable f={f} />
@@ -360,7 +360,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         <Text style={s.articleTitle}>ARTICLE 3 — TYPE, DURÉE ET CONDITIONS DU MANDAT</Text>
         <Text style={s.body}>
           <Text style={s.bold}>Nature : </Text>
-          Mandat {f.typeMandat.toLowerCase()} {f.typeMandat === "Semi-exclusif" ? "avec clause de présentation directe, " : ""}enregistré sous le numéro {f.numero} au registre des mandats de Casa Caraïbes.
+          Mandat {f.typeMandat.toLowerCase()} {f.typeMandat === "Semi-exclusif" ? "avec clause de présentation directe, " : null}enregistré sous le numéro {f.numero} au registre des mandats de Casa Caraïbes.
         </Text>
         {f.typeMandat === "Semi-exclusif" && (
           <>
