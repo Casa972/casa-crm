@@ -153,11 +153,29 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
             Lot(s) N°{f.nomsLots || dash} de la copropriété {f.residence || dash}{f.descriptionBien ? `, comprenant ${f.descriptionBien}` : ""}.
           </Text>
         )}
-        {(f.syndic || f.chargesAnnuelles > 0) && (
-          <View>
-            <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Informations de copropriété</Text></Text>
-            {f.syndic && <Text style={s.body}><Text style={s.bold}>Syndic : </Text>{f.syndic}</Text>}
-            {f.chargesAnnuelles > 0 && <Text style={s.body}><Text style={s.bold}>Charges annuelles : </Text>{E(f.chargesAnnuelles)}</Text>}
+        {(f.nomsLots || f.syndic || f.chargesAnnuelles > 0) && (
+          <View style={{ marginTop: 6 }}>
+            <Text style={[s.body, { fontFamily: BF, marginBottom: 4 }]}>Informations de copropriété</Text>
+            <View style={s.tableBox}>
+              {f.nomsLots && (
+                <View style={s.tableRow}>
+                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Numéros de lots</Text>
+                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.nomsLots}</Text>
+                </View>
+              )}
+              {f.syndic && (
+                <View style={s.tableRow}>
+                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Syndic de copropriété</Text>
+                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.syndic}</Text>
+                </View>
+              )}
+              {f.chargesAnnuelles > 0 && (
+                <View style={s.tableRowLast}>
+                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Charges annuelles (tout inclus)</Text>
+                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{E(f.chargesAnnuelles)}</Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
       </View>
@@ -185,10 +203,22 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
         </View>
         {f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
         {isCopro(t) && (f.syndic || f.chargesAnnuelles > 0) && (
-          <View>
-            <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Informations de copropriété</Text></Text>
-            {f.syndic && <Text style={s.body}><Text style={s.bold}>Syndic : </Text>{f.syndic}</Text>}
-            {f.chargesAnnuelles > 0 && <Text style={s.body}><Text style={s.bold}>Charges annuelles : </Text>{E(f.chargesAnnuelles)}</Text>}
+          <View style={{ marginTop: 6 }}>
+            <Text style={[s.body, { fontFamily: BF, marginBottom: 4 }]}>Informations de copropriété</Text>
+            <View style={s.tableBox}>
+              {f.syndic && (
+                <View style={s.tableRow}>
+                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Syndic de copropriété</Text>
+                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.syndic}</Text>
+                </View>
+              )}
+              {f.chargesAnnuelles > 0 && (
+                <View style={s.tableRowLast}>
+                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Charges annuelles (tout inclus)</Text>
+                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{E(f.chargesAnnuelles)}</Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
       </View>
@@ -335,14 +365,19 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         {/* Article 2 */}
         <Text style={s.articleTitle}>ARTICLE 2 — PRIX ET CONDITIONS FINANCIÈRES</Text>
         <View style={s.tableBox}>
+          {/* Header */}
+          <View style={{ flexDirection: "row", backgroundColor: P, padding: "5 8" }}>
+            <Text style={{ flex: 2, fontSize: 9, color: "#fff", fontFamily: BF }}>Désignation</Text>
+            <Text style={{ flex: 1, fontSize: 9, color: "#fff", fontFamily: BF, textAlign: "right" }}>Montant</Text>
+          </View>
           {[
-            ["Prix de vente FAI (frais d'agence inclus)", E(f.prixFAI)],
-            [`Honoraires Casa Caraïbes TTC (${f.honorairesPct}% — TVA ${f.tvaApplicable ? "8,5% DOM" : "non applicable"})`, E(c.honorairesTTC)],
-            ["Prix net vendeur", E(c.prixNetVendeur)],
-          ].map(([l, v], i, arr) => (
+            ["Prix de vente FAI (frais d'agence inclus)", E(f.prixFAI), true],
+            [`Honoraires Casa Caraïbes TTC (${f.honorairesPct}% — TVA ${f.tvaApplicable ? "8,5% DOM" : "non applicable"})`, E(c.honorairesTTC), false],
+            ["Prix net vendeur", E(c.prixNetVendeur), true],
+          ].map(([l, v, bold], i, arr) => (
             <View key={i} style={i === arr.length - 1 ? s.tableRowLast : s.tableRow}>
-              <Text style={s.tableLbl}>{l}</Text>
-              <Text style={[s.tableVal, i === arr.length - 1 ? { color: P } : {}]}>{v}</Text>
+              <Text style={[s.tableLbl, bold ? { fontFamily: BF, color: INK } : {}]}>{l as string}</Text>
+              <Text style={[s.tableVal, bold ? { color: P } : {}]}>{v as string}</Text>
             </View>
           ))}
         </View>
@@ -371,7 +406,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         </Text>
         <Text style={s.body}><Text style={s.bold}>Droit de suite : </Text>Casa Caraïbes conserve un droit à commission pendant douze (12) mois suivant l'expiration ou la résiliation du présent mandat, pour tout acquéreur présenté ou mis en relation par ses soins durant la période de validité du mandat, dès lors que la vente viendrait à se réaliser avec cet acquéreur.</Text>
         {!f.avecSousMandat && <Text style={s.body}><Text style={s.bold}>Sous-mandat : </Text>Le recours à un sous-mandataire n'est pas autorisé sauf accord écrit préalable et exprès du mandant.</Text>}
-        {f.avecInterAgence && <Text style={s.body}><Text style={s.bold}>Inter-agence : </Text>Casa Caraïbes se réserve la faculté de collaborer avec d'autres agences immobilières dans le cadre d'un inter-agence, afin d'élargir la diffusion du bien. Dans ce cadre, Casa Caraïbes demeure l'interlocuteur unique et exclusif du mandant. Le partage éventuel des honoraires entre agences est réglé entre professionnels et ne modifie en aucun cas le montant des honoraires dus par le vendeur.</Text>}
+        {f.avecInterAgence && <Text style={s.body}><Text style={s.bold}>Inter-agence : </Text>Casa Caraïbes se réserve la faculté de collaborer avec d'autres agences immobilières dans le cadre d'un inter-agence, afin d'élargir la diffusion du bien et d'optimiser les chances de vente. Dans ce cadre, Casa Caraïbes demeure l'interlocuteur unique et exclusif du mandant pour toute question relative à la commercialisation, aux visites, aux offres et à la négociation. Le mandant n'aura aucun contact direct avec les agences partenaires. Le partage éventuel des honoraires entre agences est réglé entre professionnels et ne modifie en aucun cas le montant des honoraires dus par le vendeur tel que prévu à l'Article 2 et à l'Article 5 du présent mandat.</Text>}
 
         <View style={s.footer}>
           <Text style={s.footerTxt}>{FOOTER_TXT}</Text>
@@ -410,38 +445,52 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         <Text style={s.body}>Le mandant autorise Casa Caraïbes à le représenter auprès des acquéreurs potentiels, de l'étude notariale désignée et de tout tiers intervenant dans le cadre de la réalisation de la vente. Casa Caraïbes est habilitée à recueillir et transmettre les offres d'achat, à signer tout document préalable à la vente au nom et pour le compte du mandant, dans les strictes limites des conditions financières et des modalités définies au présent mandat.</Text>
 
         <Text style={s.articleTitle}>ARTICLE 8 — LUTTE ANTI-BLANCHIMENT (LCB-FT)</Text>
-        <Text style={s.body}>Conformément aux articles L.561-1 et suivants du Code monétaire et financier, Casa Caraïbes est assujettie aux obligations de vigilance en matière de lutte contre le blanchiment de capitaux et le financement du terrorisme (LCB-FT). À ce titre, le mandant s'engage à fournir tout justificatif d'identité, de domicile et d'origine des fonds requis par la réglementation en vigueur.</Text>
+        <Text style={s.body}>Conformément aux articles L.561-1 et suivants du Code monétaire et financier, Casa Caraïbes est assujettie aux obligations de vigilance en matière de lutte contre le blanchiment de capitaux et le financement du terrorisme (LCB-FT). À ce titre, le mandant s'engage à fournir tout justificatif d'identité, de domicile et d'origine des fonds requis par la réglementation en vigueur. Casa Caraïbes est légalement tenue de déclarer à l'organisme TRACFIN tout soupçon avéré de blanchiment de capitaux ou de financement du terrorisme, et ce sans obligation d'en informer préalablement les parties concernées.</Text>
 
         <Text style={s.articleTitle}>ARTICLE 9 — PROTECTION DES DONNÉES PERSONNELLES (RGPD)</Text>
-        <Text style={s.body}>Les données personnelles collectées dans le cadre du présent mandat sont traitées par Casa Caraïbes SARL, en qualité de responsable de traitement, pour les finalités suivantes : exécution du présent mandat de vente, prospection commerciale, respect des obligations légales. Conformément au RGPD (UE) 2016/679, le mandant dispose d'un droit d'accès, de rectification, d'effacement et de portabilité de ses données. Contact : contact@casacaraibes.com.</Text>
+        <Text style={s.body}>Les données personnelles collectées dans le cadre du présent mandat sont traitées par Casa Caraïbes SARL, en qualité de responsable de traitement, pour les finalités suivantes : exécution du présent mandat de vente, prospection commerciale, respect des obligations légales et réglementaires. Conformément au Règlement (UE) 2016/679 du 27 avril 2016 (RGPD) et à la loi Informatique et Libertés modifiée, le mandant dispose d'un droit d'accès, de rectification, d'effacement, de limitation du traitement et de portabilité de ses données personnelles. Pour exercer ces droits : contact@casacaraibes.com. Le mandant dispose également du droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).</Text>
 
         <Text style={s.articleTitle}>ARTICLE 10 — DROIT DE RÉTRACTATION</Text>
-        <Text style={s.body}>Si le présent mandat est conclu hors des locaux commerciaux de Casa Caraïbes, le mandant dispose d'un délai de rétractation de <Text style={s.bold}>quatorze (14) jours calendaires</Text> à compter de la date de signature, conformément aux articles L.221-18 et suivants du Code de la consommation. Durant ce délai, Casa Caraïbes ne pourra entreprendre aucune démarche active sans accord écrit et exprès du mandant.</Text>
+        <Text style={s.body}>Si le présent mandat est conclu hors des locaux commerciaux de Casa Caraïbes (à domicile, sur le lieu de travail du mandant, par voie électronique ou tout autre lieu ne constituant pas l'établissement habituel du mandataire), le mandant dispose d'un délai de rétractation de <Text style={s.bold}>quatorze (14) jours calendaires</Text> à compter de la date de signature, conformément aux articles L.221-18 et suivants du Code de la consommation. Durant ce délai, Casa Caraïbes ne pourra entreprendre aucune démarche active (publicité, visites, démarchage) sans accord écrit et exprès du mandant. Le mandant souhaitant exercer son droit de rétractation devra en informer Casa Caraïbes par lettre recommandée avec accusé de réception ou par tout autre moyen permettant d'attester de la date d'envoi.</Text>
 
         <Text style={[s.body, { marginTop: 6, fontStyle: "italic", color: SUB, fontSize: 8.5 }]}>
           Le présent mandat est établi conformément à la loi n° 70-9 du 2 janvier 1970 (loi Hoguet), au décret n° 72-678 du 20 juillet 1972, à la loi n° 2014-366 du 24 mars 2014 (loi ALUR) et à l'arrêté du 10 janvier 2017. Tout litige relatif au présent mandat sera soumis à la compétence des juridictions de Fort-de-France.
         </Text>
 
-        {/* Signatures */}
-        <View style={{ marginTop: 16 }}>
-          <Text style={[s.body, { fontFamily: BF, marginBottom: 10 }]}>LES MANDANTS</Text>
-          {f.mandants.map((m: Mandant, i: number) => (
-            <View key={i} style={{ marginBottom: 18 }}>
-              <Text style={[s.body, { fontFamily: BF }]}>{m.civilite} {m.prenom} {m.nom}</Text>
-              <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5 }]}>
-                Paraphes sur chaque page : ………………
-              </Text>
-              <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5 }]}>
-                Lu et approuvé — Bon pour mandat {f.typeMandat.toLowerCase()} de vente
-              </Text>
-              <View style={{ height: 30, borderBottom: `0.5 solid ${LINE}`, marginTop: 8, width: 160 }} />
+        {/* Signatures — 2 colonnes */}
+        <View style={{ marginTop: 20, border: `0.5 solid ${LINE}` }}>
+          <View style={{ flexDirection: "row" }}>
+            {/* Colonne mandants */}
+            <View style={{ flex: 1, padding: "10 12", borderRight: `0.5 solid ${LINE}` }}>
+              <Text style={[s.body, { fontFamily: BF, marginBottom: 8, textAlign: "center" }]}>LES MANDANTS</Text>
+              {f.mandants.map((m: Mandant, i: number) => (
+                <View key={i} style={i > 0 ? { marginTop: 14, paddingTop: 10, borderTop: `0.5 solid ${LINE}` } : { marginBottom: 6 }}>
+                  <Text style={[s.body, { fontFamily: BF, textAlign: "center" }]}>{m.civilite} {m.prenom} {m.nom}</Text>
+                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 4 }]}>
+                    Lu et approuvé
+                  </Text>
+                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center" }]}>
+                    Bon pour mandat {f.typeMandat.toLowerCase()} de vente
+                  </Text>
+                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 2 }]}>
+                    Signature
+                  </Text>
+                  <View style={{ height: 35 }} />
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <Text style={[s.body, { fontFamily: BF, marginBottom: 6 }]}>LE MANDATAIRE</Text>
-          <Text style={s.body}>{f.redacteur}{"\n"}Pour Casa Caraïbes SARL{"\n"}À Fort-de-France, le {fd(f.date)}</Text>
-          <View style={{ height: 30, borderBottom: `0.5 solid ${LINE}`, marginTop: 8, width: 160 }} />
+            {/* Colonne mandataire */}
+            <View style={{ flex: 1, padding: "10 12" }}>
+              <Text style={[s.body, { fontFamily: BF, marginBottom: 8, textAlign: "center" }]}>LE MANDATAIRE</Text>
+              <Text style={[s.body, { fontFamily: BF, textAlign: "center" }]}>{f.redacteur}</Text>
+              <Text style={[s.body, { textAlign: "center" }]}>Pour Casa Caraïbes SARL</Text>
+              <Text style={[s.body, { textAlign: "center" }]}>À Fort-de-France, le {fd(f.date)}</Text>
+              <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 8 }]}>
+                Signature
+              </Text>
+              <View style={{ height: 35 }} />
+            </View>
+          </View>
         </View>
 
         <View style={s.footer}>
