@@ -937,7 +937,7 @@ export function RedacteurView() {
   return (
     <div className="flex h-full">
       {/* Sidebar docs */}
-      <aside className="w-52 shrink-0 border-r border-line bg-surface p-3">
+      <aside className="w-52 shrink-0 border-r border-line bg-surface p-3 overflow-y-auto">
         <div className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Documents</div>
         {DOC_LIST.map(d => (
           <button key={d.id} onClick={() => setDocType(d.id)}
