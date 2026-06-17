@@ -57,10 +57,11 @@ function BarreObjectif({ obj }: { obj: Objectif }) {
   );
 }
 
-function ObjectifsPanel({ userId, data, activites }: {
+function ObjectifsPanel({ userId, data, activites, rdvList }: {
   userId: string;
   data: ReturnType<typeof useAgencyData>["data"];
   activites: ReturnType<typeof useActivites>["data"];
+  rdvList: ReturnType<typeof useRdv>["data"];
 }) {
   const now = new Date();
   const moisLabel = `${MOIS_FR[now.getMonth()]} ${now.getFullYear()}`;
@@ -71,23 +72,31 @@ function ObjectifsPanel({ userId, data, activites }: {
     return `${now.getFullYear()}-${String(m).padStart(2, "0")}`;
   });
 
-  // Activités de l'agent ce mois
-  const actMois = activites.filter((a) => a.agentId === userId && a.date.startsWith(moisKey));
-  const appels   = actMois.filter((a) => a.typeActivite === "Appel").length;
-  const rdvMois  = actMois.filter((a) => a.typeActivite === "RDV").length;
-  const visites  = actMois.filter((a) => a.typeActivite === "Visite").length;
-  const offres   = actMois.filter((a) => a.typeActivite === "Offre").length;
+  // Clients de l'agent (inclut les données legacy sans agentId)
+  const mesClients = data.clients.filter((c) => c.agentId === userId || !c.agentId);
+  const agentClientIds = new Set(mesClients.map((c) => c.id));
 
-  // Mandats pris ce mois par cet agent (agentId maintenant disponible)
+  // Activités de l'agent ce mois (agentId match ou client appartenant à l'agent)
+  const actMois = activites.filter((a) =>
+    a.date.startsWith(moisKey) &&
+    (a.agentId === userId || agentClientIds.has(a.clientId))
+  );
+  const appels  = actMois.filter((a) => a.typeActivite === "Appel").length;
+  const visites = actMois.filter((a) => a.typeActivite === "Visite").length;
+  const offres  = actMois.filter((a) => a.typeActivite === "Offre").length;
+
+  // RDV ce mois : source agenda (officielle)
+  const rdvMois = rdvList.filter((r) => (r.agentId === userId || !r.agentId) && r.date.startsWith(moisKey)).length;
+
+  // Mandats pris ce mois (inclut legacy sans agentId)
   const mandatsMois = data.mandats.filter((m) =>
-    m.agentId === userId && m.dateDebut.startsWith(moisKey)
+    (m.agentId === userId || !m.agentId) && m.dateDebut.startsWith(moisKey)
   ).length;
 
-  // Clients de l'agent par statut
-  const mesClients  = data.clients.filter((c) => c.agentId === userId);
+  // Pipeline
   const enCompromis = mesClients.filter((c) => c.statut === "Compromis").length;
   const actesTrim   = data.compromis.filter((c) =>
-    c.agentId === userId && trimMois.some((m) => c.dateActeReel?.startsWith(m))
+    (c.agentId === userId || !c.agentId) && trimMois.some((m) => c.dateActeReel?.startsWith(m))
   ).length;
 
   const objectifsMois: Objectif[] = [
@@ -124,6 +133,7 @@ function ObjectifsPanel({ userId, data, activites }: {
           <div className="text-[11px] font-bold uppercase tracking-wide text-ink-muted mb-0.5">Période en cours</div>
           <div className="text-[15px] font-bold text-ink">{moisLabel}</div>
           <div className="text-[11px] text-ink-muted mt-0.5">Objectifs mensuels · niveau débutant</div>
+          <div className="text-[11px] text-ink-muted mt-1">{mesClients.length} client(s) actif(s) · Les données sans agent assigné sont incluses automatiquement</div>
         </div>
         <div className="flex shrink-0 flex-col items-center justify-center size-14 rounded-full border-2 border-primary bg-primary/5">
           <span className="text-[16px] font-bold text-primary leading-none">{totalPct}%</span>
@@ -212,7 +222,7 @@ export function PilotageAgentView() {
 
       {/* ── Onglet Objectifs ── */}
       {tab === "objectifs" && (
-        <ObjectifsPanel userId={user.id} data={data} activites={activites} />
+        <ObjectifsPanel userId={user.id} data={data} activites={activites} rdvList={rdvList} />
       )}
 
       {/* ── Onglet Dashboard ── */}

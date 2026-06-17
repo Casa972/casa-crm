@@ -83,7 +83,7 @@ export const activiteService = {
   async list(clientId?: string, agentId?: string): Promise<Activite[]> {
     let q = supabase.from(TABLES.activites).select("*").order("date", { ascending: false });
     if (clientId) q = q.eq("client_id", clientId);
-    if (agentId) q = q.eq("agent_id", agentId);
+    if (agentId) q = q.or(`agent_id.eq.${agentId},agent_id.is.null`);
     const { data, error } = await q;
     if (error) throw new ApiError("Lecture activités impossible", TABLES.activites, "list", error);
     return (data ?? []).map(r => activiteFromRow(r as ActiviteRow));
