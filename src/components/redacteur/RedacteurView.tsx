@@ -4,12 +4,13 @@ import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { mandatVenteFullSchema, calcMandatVente, isTerrain, isFonds, needsDPE, type MandatVenteFull, type Mandant, type LotCopro } from "../../schemas/redacteur/mandatVenteFull.schema";
 import { compromisVenteSchema, calcCompromis, type CompromisVente, type PartieCompromis } from "../../schemas/redacteur/compromisVente.schema";
+import { offreAchatSchema, type OffreAchat, type PartieOffre } from "../../schemas/redacteur/offreAchat.schema";
 import { COMMUNES_MARTINIQUE } from "../../schemas/enums";
 import { eur } from "../../lib/format";
 
-import { MandatPDFDownload, CompromisPDFDownload } from "./DocPDFDownloads";
+import { MandatPDFDownload, CompromisPDFDownload, OffrePDFDownload } from "./DocPDFDownloads";
 
-type DocType = "mandat" | "compromis";
+type DocType = "mandat" | "compromis" | "offre";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -58,6 +59,24 @@ function defaultCompromis(): CompromisVente {
     travauxVotesRestants: 0, detailTravauxVotes: "",
     taxeFonciere: 0, anneeRef: String(new Date().getFullYear() - 1),
     redacteur: "M. Luc CLEMENTE", mandatRef: "",
+  };
+}
+
+const newAcquereur = (): PartieOffre => ({ civilite: "M.", prenom: "", nom: "", nationalite: "française", dateNaissance: "", lieuNaissance: "", adresse: "", codePostal: "", ville: "", etatCivil: "célibataire", email: "", tel: "" });
+
+function defaultOffre(): OffreAchat {
+  return {
+    numero: `OA-${new Date().getFullYear()}-`,
+    date: today(), lieu: "Fort-de-France", redacteur: "",
+    acquereurs: [newAcquereur()],
+    typeBien: "Appartement", adresseBien: "", commune: "", codePostal: "97200",
+    descriptionBien: "", mandatRef: "", nomVendeur: "",
+    prixOffert: 0,
+    typeFinancement: "Prêt bancaire", montantPret: 0, apportPersonnel: 0,
+    banqueSollicitee: "", tauxMax: 4.5, dureePretMois: 300,
+    conditionPret: true, conditionVenteBien: false, descriptionBienVente: "",
+    autresConditions: "",
+    validiteJours: 5, dateEntreeJouissance: "", sequestre: 0, notaire: "",
   };
 }
 
@@ -661,21 +680,217 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
   );
 }
 
+// ─── Formulaire Offre d'achat ─────────────────────────────────────────────────
+const OFFRE_STEPS = ["Acquéreurs", "Bien", "Offre & Conditions"];
+
+function OffreForm({ f, setF }: { f: OffreAchat; setF: (v: OffreAchat) => void }) {
+  const [step, setStep] = useState(0);
+  const { data } = useAgencyData();
+  const upd = useCallback(<K extends keyof OffreAchat>(k: K, v: OffreAchat[K]) =>
+    setF({ ...f, [k]: v }), [f, setF]);
+  const updAcq = (i: number, k: keyof PartieOffre, v: string) =>
+    setF({ ...f, acquereurs: f.acquereurs.map((a, j) => j === i ? { ...a, [k]: v } : a) });
+
+  const parsedOk = offreAchatSchema.safeParse(f).success;
+
+  // Pré-remplir depuis un mandat CRM
+  const prefillFromMandat = (mandatId: string) => {
+    const mandat = data.mandats.find(m => m.id === mandatId);
+    const bien = mandat ? data.biens.find(b => b.id === mandat.bienId || b.ref === mandat.bienId) : null;
+    if (mandat) {
+      setF({
+        ...f,
+        mandatRef: mandat.ref,
+        nomVendeur: mandat.mandant,
+        adresseBien: bien?.adresse || "",
+        commune: bien?.commune || "",
+        typeBien: bien?.type || "Appartement",
+        prixOffert: bien?.prix || 0,
+        descriptionBien: bien?.desc || "",
+      });
+    }
+  };
+
+  return (
+    <div>
+      {/* Step nav */}
+      <div className="mb-5 flex gap-1 overflow-x-auto">
+        {OFFRE_STEPS.map((s, i) => (
+          <button key={i} onClick={() => setStep(i)}
+            className={`flex-1 min-w-[80px] rounded py-2 text-[11px] font-medium transition-colors ${step === i ? "bg-primary text-white" : "bg-line text-ink-sub hover:bg-line2"}`}>
+            {s}
+          </button>
+        ))}
+      </div>
+
+      {/* Étape 0 — Acquéreurs */}
+      {step === 0 && (
+        <div>
+          <Grid2>
+            <Field label="N° de l'offre"><Input value={f.numero} onChange={e => upd("numero", e.target.value)} placeholder="OA-2026-001" /></Field>
+            <Field label="Date"><Input type="date" value={f.date} onChange={e => upd("date", e.target.value)} /></Field>
+            <Field label="Lieu"><Input value={f.lieu} onChange={e => upd("lieu", e.target.value)} /></Field>
+            <Field label="Rédacteur"><Input value={f.redacteur} onChange={e => upd("redacteur", e.target.value)} /></Field>
+          </Grid2>
+          <div className="mt-4 border-t border-line pt-4">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Acquéreur(s)</div>
+            {f.acquereurs.map((a, i) => (
+              <div key={i} className={`card p-4 mb-3 ${i > 0 ? "border-l-4 border-l-primary/30" : ""}`}>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">Acquéreur {f.acquereurs.length > 1 ? i + 1 : ""}</span>
+                  {i > 0 && <button onClick={() => setF({ ...f, acquereurs: f.acquereurs.filter((_, j) => j !== i) })} className="text-danger hover:bg-danger-soft rounded p-1"><Trash2 size={13} /></button>}
+                </div>
+                <Grid2>
+                  <Field label="Civilité"><Select value={a.civilite} onChange={v => updAcq(i, "civilite", v)} options={["M.", "Mme", "M. et Mme"]} /></Field>
+                  <Field label="Prénom"><Input value={a.prenom} onChange={e => updAcq(i, "prenom", e.target.value)} /></Field>
+                  <Field label="Nom"><Input value={a.nom} onChange={e => updAcq(i, "nom", e.target.value)} /></Field>
+                  <Field label="Date de naissance"><Input type="date" value={a.dateNaissance} onChange={e => updAcq(i, "dateNaissance", e.target.value)} /></Field>
+                  <Field label="Lieu de naissance"><Input value={a.lieuNaissance} onChange={e => updAcq(i, "lieuNaissance", e.target.value)} /></Field>
+                  <Field label="Nationalité"><Input value={a.nationalite} onChange={e => updAcq(i, "nationalite", e.target.value)} /></Field>
+                  <Field label="État civil"><Select value={a.etatCivil} onChange={v => updAcq(i, "etatCivil", v)} options={["célibataire", "marié(e)", "pacsé(e)", "divorcé(e)", "veuf/veuve"]} /></Field>
+                </Grid2>
+                <Field label="Adresse"><Input value={a.adresse} onChange={e => updAcq(i, "adresse", e.target.value)} /></Field>
+                <Grid2>
+                  <Field label="Code postal"><Input value={a.codePostal} onChange={e => updAcq(i, "codePostal", e.target.value)} /></Field>
+                  <Field label="Ville"><Input value={a.ville} onChange={e => updAcq(i, "ville", e.target.value)} /></Field>
+                  <Field label="Téléphone"><Input value={a.tel} onChange={e => updAcq(i, "tel", e.target.value)} /></Field>
+                  <Field label="Email"><Input type="email" value={a.email} onChange={e => updAcq(i, "email", e.target.value)} /></Field>
+                </Grid2>
+              </div>
+            ))}
+            <button className="btn-ghost text-[12px]" onClick={() => setF({ ...f, acquereurs: [...f.acquereurs, newAcquereur()] })}>
+              <Plus size={13} /> Ajouter un co-acquéreur
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Étape 1 — Bien */}
+      {step === 1 && (
+        <div>
+          {data.mandats.length > 0 && (
+            <div className="card mb-4 border-l-4 border-l-primary bg-primary-soft p-3.5">
+              <div className="mb-1.5 text-[12px] font-semibold text-primary">🔗 Pré-remplir depuis un mandat CRM</div>
+              <select className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px]"
+                onChange={e => prefillFromMandat(e.target.value)} defaultValue="">
+                <option value="">— Sélectionner un mandat —</option>
+                {data.mandats.map(m => <option key={m.id} value={m.id}>{m.ref} — {m.mandant}</option>)}
+              </select>
+            </div>
+          )}
+          <Grid2>
+            <Field label="Type de bien"><Select value={f.typeBien} onChange={v => upd("typeBien", v)} options={["Appartement", "Villa", "Maison", "Terrain", "Local commercial", "Fonds de commerce"]} /></Field>
+            <Field label="Réf. mandat"><Input value={f.mandatRef} onChange={e => upd("mandatRef", e.target.value)} placeholder="MV-2026-001" /></Field>
+            <Field label="Nom du vendeur"><Input value={f.nomVendeur} onChange={e => upd("nomVendeur", e.target.value)} /></Field>
+          </Grid2>
+          <Field label="Adresse du bien"><Input value={f.adresseBien} onChange={e => upd("adresseBien", e.target.value)} /></Field>
+          <Grid2>
+            <Field label="Commune"><Select value={f.commune} onChange={v => upd("commune", v)} options={[...COMMUNES_MARTINIQUE]} /></Field>
+            <Field label="Code postal"><Input value={f.codePostal} onChange={e => upd("codePostal", e.target.value)} /></Field>
+          </Grid2>
+          <Field label="Description du bien">
+            <Textarea rows={3} value={f.descriptionBien} onChange={e => upd("descriptionBien", e.target.value)} placeholder="Surface, pièces, étage, parking…" />
+          </Field>
+        </div>
+      )}
+
+      {/* Étape 2 — Offre & Conditions */}
+      {step === 2 && (
+        <div>
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Prix offert</div>
+          <Grid2>
+            <Field label="Prix offert (€)"><Input type="number" value={String(f.prixOffert || "")} onChange={e => upd("prixOffert", +e.target.value)} /></Field>
+            <Field label="Validité (jours ouvrés)"><Input type="number" value={String(f.validiteJours)} onChange={e => upd("validiteJours", +e.target.value)} /></Field>
+            <Field label="Séquestre (€)"><Input type="number" value={String(f.sequestre || "")} onChange={e => upd("sequestre", +e.target.value)} /></Field>
+            <Field label="Date d'entrée en jouissance"><Input type="date" value={f.dateEntreeJouissance} onChange={e => upd("dateEntreeJouissance", e.target.value)} /></Field>
+          </Grid2>
+          <Field label="Notaire désigné"><Input value={f.notaire} onChange={e => upd("notaire", e.target.value)} /></Field>
+
+          <div className="mt-4 border-t border-line pt-4">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Financement</div>
+            <Grid2>
+              <Field label="Type"><Select value={f.typeFinancement} onChange={v => upd("typeFinancement", v as OffreAchat["typeFinancement"])} options={["Prêt bancaire", "Comptant"]} /></Field>
+            </Grid2>
+            {f.typeFinancement === "Prêt bancaire" && (
+              <Grid2>
+                <Field label="Montant du prêt (€)"><Input type="number" value={String(f.montantPret || "")} onChange={e => upd("montantPret", +e.target.value)} /></Field>
+                <Field label="Apport personnel (€)"><Input type="number" value={String(f.apportPersonnel || "")} onChange={e => upd("apportPersonnel", +e.target.value)} /></Field>
+                <Field label="Banque sollicitée"><Input value={f.banqueSollicitee} onChange={e => upd("banqueSollicitee", e.target.value)} /></Field>
+                <Field label="Taux max (%)"><Input type="number" step="0.1" value={String(f.tauxMax)} onChange={e => upd("tauxMax", +e.target.value)} /></Field>
+                <Field label="Durée max (mois)"><Input type="number" value={String(f.dureePretMois)} onChange={e => upd("dureePretMois", +e.target.value)} /></Field>
+              </Grid2>
+            )}
+          </div>
+
+          <div className="mt-4 border-t border-line pt-4">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Conditions suspensives</div>
+            <div className="flex flex-col gap-2 mb-3">
+              <label className="flex items-center gap-2 text-[13px] text-ink cursor-pointer">
+                <input type="checkbox" checked={f.conditionPret} onChange={e => upd("conditionPret", e.target.checked)} className="rounded" />
+                Obtention d'un prêt bancaire
+              </label>
+              <label className="flex items-center gap-2 text-[13px] text-ink cursor-pointer">
+                <input type="checkbox" checked={f.conditionVenteBien} onChange={e => upd("conditionVenteBien", e.target.checked)} className="rounded" />
+                Vente préalable d'un bien
+              </label>
+            </div>
+            {f.conditionVenteBien && (
+              <Field label="Description du bien à vendre">
+                <Input value={f.descriptionBienVente} onChange={e => upd("descriptionBienVente", e.target.value)} placeholder="Appartement 3 pièces à Fort-de-France…" />
+              </Field>
+            )}
+            <Field label="Autres conditions">
+              <Textarea rows={2} value={f.autresConditions} onChange={e => upd("autresConditions", e.target.value)} placeholder="Conditions particulières éventuelles…" />
+            </Field>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
+        <button className="btn-ghost" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}><ChevronLeft size={14} /> Précédent</button>
+        <div className="flex items-center gap-3">
+          {step < OFFRE_STEPS.length - 1
+            ? <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Suivant <ChevronRight size={14} /></button>
+            : parsedOk
+              ? <OffrePDFDownload f={f} />
+              : <button className="btn-ghost opacity-60 cursor-not-allowed"><Lock size={14} /> Compléter les champs requis</button>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Vue principale ───────────────────────────────────────────────────────────
+const DOC_LIST = [
+  { id: "mandat"   as DocType, label: "Mandat de vente",    icon: "📋", sub: "10 articles · Hoguet/ALUR" },
+  { id: "compromis"as DocType, label: "Compromis de vente", icon: "✍️", sub: "17 articles · Loi ALUR" },
+  { id: "offre"    as DocType, label: "Offre d'achat",      icon: "🤝", sub: "Offre ferme · conditions suspensives" },
+];
+
 export function RedacteurView() {
   const [docType, setDocType] = useState<DocType>("mandat");
   const [mandat, setMandat] = useState<MandatVenteFull>(defaultMandat);
   const [compromis, setCompromis] = useState<CompromisVente>(defaultCompromis);
+  const [offre, setOffre] = useState<OffreAchat>(defaultOffre);
+
+  const resetDoc = () => {
+    if (docType === "mandat") setMandat(defaultMandat());
+    else if (docType === "compromis") setCompromis(defaultCompromis());
+    else setOffre(defaultOffre());
+  };
+
+  const docTitle = docType === "mandat" ? "📋 Mandat de vente"
+    : docType === "compromis" ? "✍️ Compromis de vente"
+    : "🤝 Offre d'achat";
 
   return (
     <div className="flex h-full">
       {/* Sidebar docs */}
       <aside className="w-52 shrink-0 border-r border-line bg-surface p-3">
         <div className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Documents</div>
-        {([
-          { id: "mandat" as DocType, label: "Mandat de vente", icon: "📋", sub: "10 articles · Hoguet/ALUR" },
-          { id: "compromis" as DocType, label: "Compromis de vente", icon: "✍️", sub: "17 articles · Loi ALUR" },
-        ]).map(d => (
+        {DOC_LIST.map(d => (
           <button key={d.id} onClick={() => setDocType(d.id)}
             className={`flex w-full flex-col items-start gap-0.5 rounded px-3 py-2.5 text-left mb-1 ${docType === d.id ? "bg-primary-soft" : "hover:bg-line/50"}`}>
             <span className={`text-[13px] font-medium ${docType === d.id ? "font-semibold text-primary" : "text-ink-sub"}`}>{d.icon} {d.label}</span>
@@ -683,8 +898,7 @@ export function RedacteurView() {
           </button>
         ))}
         <div className="mt-4 border-t border-line pt-3">
-          <button className="btn-ghost w-full justify-center text-[12px]"
-            onClick={() => { if (docType === "mandat") setMandat(defaultMandat()); else setCompromis(defaultCompromis()); }}>
+          <button className="btn-ghost w-full justify-center text-[12px]" onClick={resetDoc}>
             Nouveau document
           </button>
         </div>
@@ -692,13 +906,10 @@ export function RedacteurView() {
 
       {/* Contenu */}
       <div className="flex-1 overflow-y-auto p-6">
-        <h2 className="mb-5 font-heading text-lg font-semibold text-ink">
-          {docType === "mandat" ? "📋 Mandat de vente" : "✍️ Compromis de vente"}
-        </h2>
-        {docType === "mandat"
-          ? <MandatForm f={mandat} setF={setMandat} />
-          : <CompromisForm f={compromis} setF={setCompromis} />
-        }
+        <h2 className="mb-5 font-heading text-lg font-semibold text-ink">{docTitle}</h2>
+        {docType === "mandat"    && <MandatForm    f={mandat}    setF={setMandat} />}
+        {docType === "compromis" && <CompromisForm f={compromis} setF={setCompromis} />}
+        {docType === "offre"     && <OffreForm     f={offre}     setF={setOffre} />}
       </div>
     </div>
   );

@@ -69,6 +69,7 @@ export const mandatFromRow = (r: MandatRow): Mandat => ({
   honoraires: n(r.honoraires),
   statut: r.statut as StatutMandat,
   notes: s(r.notes),
+  agentId: r.agent_id ?? undefined,
 });
 
 export const mandatToRow = (m: Mandat, agentId?: string): Partial<MandatRow> => ({

@@ -78,14 +78,16 @@ function ObjectifsPanel({ userId, data, activites }: {
   const visites  = actMois.filter((a) => a.typeActivite === "Visite").length;
   const offres   = actMois.filter((a) => a.typeActivite === "Offre").length;
 
-  // Mandats pris ce mois (tous agents — pas d'agentId sur mandats)
-  const mandatsMois = data.mandats.filter((m) => m.dateDebut.startsWith(moisKey)).length;
+  // Mandats pris ce mois par cet agent (agentId maintenant disponible)
+  const mandatsMois = data.mandats.filter((m) =>
+    m.agentId === userId && m.dateDebut.startsWith(moisKey)
+  ).length;
 
   // Clients de l'agent par statut
-  const mesClients = data.clients.filter((c) => c.agentId === userId);
+  const mesClients  = data.clients.filter((c) => c.agentId === userId);
   const enCompromis = mesClients.filter((c) => c.statut === "Compromis").length;
   const actesTrim   = data.compromis.filter((c) =>
-    trimMois.some((m) => c.dateActeReel?.startsWith(m))
+    c.agentId === userId && trimMois.some((m) => c.dateActeReel?.startsWith(m))
   ).length;
 
   const objectifsMois: Objectif[] = [
@@ -117,14 +119,14 @@ function ObjectifsPanel({ userId, data, activites }: {
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="card p-4 flex items-center justify-between">
-        <div>
+      <div className="card p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <div className="text-[11px] font-bold uppercase tracking-wide text-ink-muted mb-0.5">Période en cours</div>
           <div className="text-[15px] font-bold text-ink">{moisLabel}</div>
-          <div className="text-[12px] text-ink-muted mt-0.5">Objectifs mensuels · niveau débutant</div>
+          <div className="text-[11px] text-ink-muted mt-0.5">Objectifs mensuels · niveau débutant</div>
         </div>
-        <div className="flex flex-col items-center justify-center size-16 rounded-full border-2 border-primary bg-primary/5">
-          <span className="text-[18px] font-bold text-primary leading-none">{totalPct}%</span>
+        <div className="flex shrink-0 flex-col items-center justify-center size-14 rounded-full border-2 border-primary bg-primary/5">
+          <span className="text-[16px] font-bold text-primary leading-none">{totalPct}%</span>
           <span className="text-[10px] text-ink-muted">atteint</span>
         </div>
       </div>
@@ -189,19 +191,19 @@ export function PilotageAgentView() {
 
   return (
     <div className="mx-auto max-w-[900px] px-4 py-6">
-      <div className="mb-5 flex items-center justify-between gap-4">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-heading text-2xl font-semibold text-ink">Bonjour {user.name} 👋</h1>
         {/* Onglets */}
-        <div className="flex rounded-lg border border-line bg-bg p-0.5 shrink-0">
+        <div className="flex rounded-lg border border-line bg-bg p-0.5 self-start">
           <button
             onClick={() => setTab("dashboard")}
-            className={`px-3 py-1.5 rounded-md text-[12.5px] font-semibold transition-colors ${tab === "dashboard" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors ${tab === "dashboard" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
           >
             Tableau de bord
           </button>
           <button
             onClick={() => setTab("objectifs")}
-            className={`px-3 py-1.5 rounded-md text-[12.5px] font-semibold transition-colors flex items-center gap-1.5 ${tab === "objectifs" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 ${tab === "objectifs" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
           >
             <Target size={13} /> Objectifs
           </button>

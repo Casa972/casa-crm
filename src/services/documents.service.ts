@@ -7,7 +7,7 @@ const BUCKET = "documents";
 
 export async function uploadDocument(params: {
   agentId: string;
-  typeDoc: "mandat" | "compromis";
+  typeDoc: "mandat" | "compromis" | "offre";
   nom: string;
   numero?: string;
   parties?: string;

@@ -35,5 +35,6 @@ export const mandatSchema = z.object({
   honoraires: z.number(),
   statut: StatutMandat,
   notes: z.string(),
+  agentId: z.string().optional(),
 });
 export type Mandat = z.infer<typeof mandatSchema>;
