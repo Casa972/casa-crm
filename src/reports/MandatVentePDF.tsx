@@ -83,17 +83,36 @@ function MandantBlock({ m }: { m: Mandant }) {
 }
 
 function CoproTable({ f }: { f: MandatVenteFull }) {
-  if (!f.nomsLots && !f.syndic && !f.chargesAnnuelles) return null;
+  const hasLots   = f.lotsDetail && f.lotsDetail.length > 0;
+  const hasLegacy = !hasLots && !!f.nomsLots;
+  if (!hasLots && !hasLegacy && !f.syndic && !f.chargesAnnuelles) return null;
+
   return (
     <View wrap={false} style={{ marginTop: 6 }}>
       <Text style={[s.body, { fontFamily: BF, fontWeight: 700, marginBottom: 4 }]}>Informations de copropriété</Text>
       <View style={s.tableBox}>
-        {f.nomsLots ? (
+        {/* En-tête lots */}
+        {hasLots && (
+          <View style={{ flexDirection: "row", backgroundColor: P, padding: "4 8" }}>
+            <Text style={[s.partiesHeadTxt, { flex: 2 }]}>Désignation</Text>
+            <Text style={[s.partiesHeadTxt, { flex: 1 }]}>N° de lot</Text>
+            <Text style={[s.partiesHeadTxt, { flex: 1.5, textAlign: "right" }]}>Tantièmes</Text>
+          </View>
+        )}
+        {hasLots && f.lotsDetail.map((lot, i) => (
+          <View key={i} style={i === f.lotsDetail.length - 1 && !f.syndic && !f.chargesAnnuelles ? s.tableRowLast : s.tableRow}>
+            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{lot.designation || "—"}</Text>
+            <Text style={{ flex: 1, fontSize: 9.5, color: INK }}>{lot.numero || "—"}</Text>
+            <Text style={{ flex: 1.5, fontSize: 9.5, color: INK, textAlign: "right" }}>{lot.tantiemes || "—"}</Text>
+          </View>
+        ))}
+        {/* Legacy: champ texte libre */}
+        {hasLegacy && (
           <View style={s.tableRow}>
             <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700, color: INK }]}>Numéros de lots</Text>
             <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.nomsLots}</Text>
           </View>
-        ) : null}
+        )}
         {f.syndic ? (
           <View style={f.chargesAnnuelles > 0 ? s.tableRow : s.tableRowLast}>
             <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700, color: INK }]}>Syndic de copropriété</Text>

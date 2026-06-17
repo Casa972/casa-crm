@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { isoDate, positiveNumber } from "../enums";
 
+/** Lot de copropriété individuel */
+export const lotCoproSchema = z.object({
+  designation: z.string().default(""),   // "Appartement", "Cave", "Parking", "Box"…
+  numero:      z.string().default(""),   // "Lot 36"
+  tantiemes:   z.string().default(""),   // "413/10 000"
+});
+export type LotCopro = z.infer<typeof lotCoproSchema>;
+
 /** Mandant individuel (le document supporte plusieurs co-propriétaires) */
 export const mandantSchema = z.object({
   civilite: z.string().default("M."),
@@ -44,6 +52,7 @@ export const mandatVenteFullSchema = z.object({
   descriptionBien: z.string().default(""),
   lots: z.string().default(""),
   tantiemes: z.string().default(""),
+  lotsDetail: z.array(lotCoproSchema).default([]),  // lots individuels avec tantièmes
 
   // Copropriété
   infosCopro: z.string().default(""),

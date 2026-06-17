@@ -1,14 +1,13 @@
-import { useState, Suspense, lazy, useCallback } from "react";
-import { Plus, Trash2, ChevronLeft, ChevronRight, Lock, FileDown } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Plus, Trash2, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
-import { mandatVenteFullSchema, calcMandatVente, isTerrain, isFonds, needsDPE, type MandatVenteFull, type Mandant } from "../../schemas/redacteur/mandatVenteFull.schema";
+import { mandatVenteFullSchema, calcMandatVente, isTerrain, isFonds, needsDPE, type MandatVenteFull, type Mandant, type LotCopro } from "../../schemas/redacteur/mandatVenteFull.schema";
 import { compromisVenteSchema, calcCompromis, type CompromisVente, type PartieCompromis } from "../../schemas/redacteur/compromisVente.schema";
 import { COMMUNES_MARTINIQUE } from "../../schemas/enums";
 import { eur } from "../../lib/format";
 
-const MandatPDFDownload = lazy(() => import("./DocPDFDownloads").then(m => ({ default: m.MandatPDFDownload })));
-const CompromisPDFDownload = lazy(() => import("./DocPDFDownloads").then(m => ({ default: m.CompromisPDFDownload })));
+import { MandatPDFDownload, CompromisPDFDownload } from "./DocPDFDownloads";
 
 type DocType = "mandat" | "compromis";
 
@@ -25,17 +24,17 @@ function defaultMandat(): MandatVenteFull {
     residence: "", adresseBien: "", commune: "", codePostal: "", typeBien: "Appartement",
     surfaceTotale: 0, surfaceCarrez: 0, surfaceHabitable: 0, surfaceTerrain: 0,
     surfacePiscine: 0, surfaceFonciere: 0, nbPieces: "", refCadastrale: "",
-    descriptionBien: "", lots: "", tantiemes: "", infosCopro: "", nomsLots: "", syndic: "",
+    descriptionBien: "", lots: "", tantiemes: "", lotsDetail: [], infosCopro: "", nomsLots: "", syndic: "",
     chargesAnnuelles: 0, enCopropriete: false, occupation: "Libre",
     bailType: "Loi 89 (résidentiel)", loyerMensuel: 0, datFinBail: "", nomLocataire: "",
     chiffreAffaires: 0, servitudes: "",
     classeDPE: "", classeGES: "", dateDDT: "", diagnostiqueur: "",
     etatTermites: "Non réalisé", anomaliesElec: "", ernmt: "", risquesNaturels: true,
     prixFAI: 0, honorairesPct: 6, chargeHonoraires: "vendeur", tvaApplicable: true,
-    typeMandat: "Semi-exclusif", dureeAns: 1, dateDebut: today(),
+    typeMandat: "Simple", dureeAns: 1, dateDebut: today(),
     avecApportDirect: true, avecSousMandat: false, avecInterAgence: true,
     avecPanneau: true, bienIndivision: false,
-    redacteur: "M. Luc CLEMENTE",
+    redacteur: "",
   };
 }
 
@@ -60,6 +59,44 @@ function defaultCompromis(): CompromisVente {
     taxeFonciere: 0, anneeRef: String(new Date().getFullYear() - 1),
     redacteur: "M. Luc CLEMENTE", mandatRef: "",
   };
+}
+
+// ─── Éditeur de lots de copropriété ──────────────────────────────────────────
+const LOT_TYPES = ["Appartement", "Cave", "Parking", "Box", "Local", "Terrasse", "Jardin", "Autre"];
+const newLot = (): LotCopro => ({ designation: "Appartement", numero: "", tantiemes: "" });
+
+function LotsEditor({ lots, onChange }: { lots: LotCopro[]; onChange: (lots: LotCopro[]) => void }) {
+  const updLot = (i: number, k: keyof LotCopro, v: string) =>
+    onChange(lots.map((l, j) => j === i ? { ...l, [k]: v } : l));
+  return (
+    <div>
+      {lots.length === 0 && (
+        <p className="mb-2 text-[11.5px] text-ink-muted italic">Aucun lot — cliquer pour ajouter</p>
+      )}
+      {lots.map((l, i) => (
+        <div key={i} className="card mb-2 p-3 flex flex-col gap-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Lot {i + 1}</span>
+            <button onClick={() => onChange(lots.filter((_, j) => j !== i))} className="text-danger hover:bg-danger-soft rounded p-1"><Trash2 size={12} /></button>
+          </div>
+          <Grid2>
+            <Field label="Désignation">
+              <Select value={l.designation} onChange={v => updLot(i, "designation", v)} options={LOT_TYPES} />
+            </Field>
+            <Field label="N° de lot">
+              <Input value={l.numero} onChange={e => updLot(i, "numero", e.target.value)} placeholder="Lot 36" />
+            </Field>
+            <Field label="Tantièmes">
+              <Input value={l.tantiemes} onChange={e => updLot(i, "tantiemes", e.target.value)} placeholder="413/10 000" />
+            </Field>
+          </Grid2>
+        </div>
+      ))}
+      <button className="btn-ghost text-[12px] mt-1" onClick={() => onChange([...lots, newLot()])}>
+        <Plus size={13} /> Ajouter un lot
+      </button>
+    </div>
+  );
 }
 
 // ─── Formulaire Mandat ────────────────────────────────────────────────────────
@@ -189,10 +226,12 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
                 <Field label="Surface totale (m²)"><Input type="number" value={String(f.surfaceTotale || "")} onChange={e => upd("surfaceTotale", +e.target.value)} /></Field>
                 <Field label="Nombre de pièces"><Input value={f.nbPieces} onChange={e => upd("nbPieces", e.target.value)} placeholder="3 pièces (T3)" /></Field>
               </Grid2>
-              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Copropriété</div>
+              <div className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Lots de copropriété</div>
+              <LotsEditor
+                lots={f.lotsDetail}
+                onChange={lots => upd("lotsDetail", lots)}
+              />
               <Grid2>
-                <Field label="N° de lots"><Input value={f.nomsLots} onChange={e => upd("nomsLots", e.target.value)} placeholder="Lot 36, 43, 92" /></Field>
-                <Field label="Tantièmes"><Input value={f.tantiemes} onChange={e => upd("tantiemes", e.target.value)} placeholder="413/10 000 èmes" /></Field>
                 <Field label="Syndic"><Input value={f.syndic} onChange={e => upd("syndic", e.target.value)} /></Field>
                 <Field label="Charges annuelles (€)"><Input type="number" value={String(f.chargesAnnuelles || "")} onChange={e => upd("chargesAnnuelles", +e.target.value)} /></Field>
               </Grid2>
@@ -403,7 +442,7 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
           {step < MANDAT_STEPS.length - 1
             ? <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Suivant <ChevronRight size={14} /></button>
             : parsedOk
-              ? <Suspense fallback={<button className="btn-primary opacity-60"><FileDown size={14} /> Préparation…</button>}><MandatPDFDownload f={f} /></Suspense>
+              ? <MandatPDFDownload f={f} />
               : <button className="btn-ghost opacity-60 cursor-not-allowed"><Lock size={14} /> Compléter les champs requis</button>
           }
         </div>
@@ -613,7 +652,7 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
           {step < COMPROMIS_STEPS.length - 1
             ? <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Suivant <ChevronRight size={14} /></button>
             : parsedOk
-              ? <Suspense fallback={<button className="btn-primary opacity-60"><FileDown size={14} /> Préparation…</button>}><CompromisPDFDownload f={f} /></Suspense>
+              ? <CompromisPDFDownload f={f} />
               : <button className="btn-ghost opacity-60 cursor-not-allowed"><Lock size={14} /> Compléter les champs requis</button>
           }
         </div>
