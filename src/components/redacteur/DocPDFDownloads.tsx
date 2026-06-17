@@ -14,8 +14,10 @@ function triggerDownload(blob: Blob, fileName: string) {
   const a   = document.createElement("a");
   a.href    = url;
   a.download = fileName;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 200);
 }
 
 export function MandatPDFDownload({ f }: { f: MandatVenteFull }) {
