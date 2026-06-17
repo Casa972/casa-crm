@@ -5,6 +5,7 @@ export const mandatFormSchema = z
   .object({
     ref: z.string().min(1, "Référence requise"),
     bienId: z.string().default(""),
+    clientId: z.string().default(""),
     type: TypeMandat,
     mandant: z.string().min(1, "Mandant requis"),
     tel: z.string().default(""),
@@ -26,6 +27,7 @@ export const mandatSchema = z.object({
   id,
   ref: z.string(),
   bienId: z.string(),
+  clientId: z.string().default(""),
   type: TypeMandat,
   mandant: z.string(),
   tel: z.string(),

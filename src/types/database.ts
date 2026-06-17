@@ -36,6 +36,7 @@ export interface MandatRow {
   statut: string;
   notes: string | null;
   agent_id: string | null;
+  client_id: string | null;
   created_at?: string;
 }
 

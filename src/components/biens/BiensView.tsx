@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText } from "lucide-react";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
@@ -10,11 +10,15 @@ import { FicheCommercialeModal } from "./FicheCommercialeModal";
 import { eur, fdate, daysDiff } from "../../lib/format";
 import { useAgencyData, useSaveBien, useDeleteBien, useSaveMandat, useDeleteMandat } from "../../hooks/queries/useAgencyData";
 import { useFiltersStore } from "../../store/filters.store";
+import { useUiStore } from "../../store/ui.store";
 import { ImportCSVModal } from "../import/ImportCSVModal";
 import type { Bien, Mandat } from "../../types/domain";
 
 type Tab = "biens" | "mandats";
-type Modal_ = { kind: Tab; item?: Bien | Mandat } | null;
+type Modal_ =
+  | { kind: "biens"; item?: Bien }
+  | { kind: "mandats"; item?: Mandat; prefillBienId?: string }
+  | null;
 
 export function BiensView() {
   const { data } = useAgencyData();
@@ -23,6 +27,7 @@ export function BiensView() {
   const saveMandat = useSaveMandat();
   const delMandat = useDeleteMandat();
   const { search, setSearch } = useFiltersStore();
+  const { setView, setPrefillRedacteur } = useUiStore();
 
   const [tab, setTab] = useState<Tab>("biens");
   const [modal, setModal] = useState<Modal_>(null);
@@ -42,16 +47,28 @@ export function BiensView() {
     { label: "Mandats actifs", val: data.mandats.filter((m) => m.statut === "Actif").length },
   ];
 
+  const handleGenererMandat = (m: Mandat) => {
+    setPrefillRedacteur({ docType: "mandat", sourceId: m.id });
+    setView("redacteur");
+  };
+
   const bienCols = useBienColumns(
     (b) => setModal({ kind: "biens", item: b }),
     (id) => confirm("Supprimer ce bien ?") && delBien.mutate(id),
     (b) => setFicheBien(b),
+    (b) => setModal({ kind: "mandats", prefillBienId: b.ref }),
   );
   const mandatCols = useMandatColumns(
     data.biens,
     (m) => setModal({ kind: "mandats", item: m }),
     (id) => confirm("Supprimer ce mandat ?") && delMandat.mutate(id),
+    handleGenererMandat,
   );
+
+  // Mandat initial selon contexte (édition ou création depuis un bien)
+  const mandatInitial = modal?.kind === "mandats"
+    ? modal.item ?? (modal.prefillBienId ? { bienId: modal.prefillBienId } as Partial<Mandat> : undefined)
+    : undefined;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-5">
@@ -93,23 +110,29 @@ export function BiensView() {
       </div>
 
       {tab === "biens" ? (
-        <DataTable data={data.biens} columns={bienCols} globalFilter={search}
-          emptyMessage="Aucun bien" />
+        <DataTable data={data.biens} columns={bienCols} globalFilter={search} emptyMessage="Aucun bien" />
       ) : (
-        <DataTable data={data.mandats} columns={mandatCols} globalFilter={search}
-          emptyMessage="Aucun mandat" />
+        <DataTable data={data.mandats} columns={mandatCols} globalFilter={search} emptyMessage="Aucun mandat" />
       )}
 
       {modal?.kind === "biens" && (
         <Modal title={modal.item ? "Modifier le bien" : "Nouveau bien"} wide onClose={() => setModal(null)}>
-          <BienForm initial={modal.item as Bien | undefined}
+          <BienForm initial={modal.item}
             onSave={(b) => { saveBien.mutate(b); setModal(null); }} onClose={() => setModal(null)} />
         </Modal>
       )}
       {modal?.kind === "mandats" && (
-        <Modal title={modal.item ? "Modifier le mandat" : "Nouveau mandat"} wide onClose={() => setModal(null)}>
-          <MandatForm initial={modal.item as Mandat | undefined} biens={data.biens}
-            onSave={(m) => { saveMandat.mutate(m); setModal(null); }} onClose={() => setModal(null)} />
+        <Modal
+          title={modal.item ? "Modifier le mandat" : modal.prefillBienId ? `Nouveau mandat — ${modal.prefillBienId}` : "Nouveau mandat"}
+          wide onClose={() => setModal(null)}
+        >
+          <MandatForm
+            initial={mandatInitial}
+            biens={data.biens}
+            clients={data.clients}
+            onSave={(m) => { saveMandat.mutate(m); setModal(null); }}
+            onClose={() => setModal(null)}
+          />
         </Modal>
       )}
       {ficheBien && (
@@ -134,7 +157,12 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 }
 
 const bh = createColumnHelper<Bien>();
-function useBienColumns(onEdit: (b: Bien) => void, onDelete: (id: string) => void, onFiche: (b: Bien) => void): ColumnDef<Bien, any>[] {
+function useBienColumns(
+  onEdit: (b: Bien) => void,
+  onDelete: (id: string) => void,
+  onFiche: (b: Bien) => void,
+  onMandat: (b: Bien) => void,
+): ColumnDef<Bien, any>[] {
   return useMemo(() => [
     bh.accessor("ref", { header: "Réf.", cell: (c) => <span className="font-semibold">{c.getValue()}</span> }),
     bh.accessor("type", { header: "Type" }),
@@ -147,13 +175,37 @@ function useBienColumns(onEdit: (b: Bien) => void, onDelete: (id: string) => voi
     bh.accessor("prix", { header: "Prix", cell: (c) => <span className="font-semibold tabular-nums">{eur(c.getValue())}</span> }),
     bh.display({
       id: "actions", header: "",
-      cell: (c) => <RowActions onEdit={() => onEdit(c.row.original)} onDelete={() => onDelete(c.row.original.id)} onFiche={() => onFiche(c.row.original)} />,
+      cell: (c) => (
+        <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => onFiche(c.row.original)} title="Fiche commerciale"
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-primary-soft hover:text-primary">
+            <FileText size={13} />
+          </button>
+          <button onClick={() => onMandat(c.row.original)} title="Créer un mandat"
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-emerald-50 hover:text-emerald-600">
+            <ScrollText size={13} />
+          </button>
+          <button onClick={() => onEdit(c.row.original)}
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-line/60 hover:text-ink">
+            <Edit2 size={13} />
+          </button>
+          <button onClick={() => onDelete(c.row.original.id)}
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-danger-soft hover:text-danger">
+            <Trash2 size={13} />
+          </button>
+        </div>
+      ),
     }),
-  ] as ColumnDef<Bien, any>[], [onEdit, onDelete, onFiche]);
+  ] as ColumnDef<Bien, any>[], [onEdit, onDelete, onFiche, onMandat]);
 }
 
 const mh = createColumnHelper<Mandat>();
-function useMandatColumns(biens: Bien[], onEdit: (m: Mandat) => void, onDelete: (id: string) => void): ColumnDef<Mandat, any>[] {
+function useMandatColumns(
+  biens: Bien[],
+  onEdit: (m: Mandat) => void,
+  onDelete: (id: string) => void,
+  onGenerer: (m: Mandat) => void,
+): ColumnDef<Mandat, any>[] {
   return useMemo(() => [
     mh.accessor("ref", { header: "Réf.", cell: (c) => <span className="font-semibold">{c.getValue()}</span> }),
     mh.accessor("type", { header: "Type", cell: (c) => <StatusPill label={c.getValue()} tone="primary" /> }),
@@ -176,19 +228,22 @@ function useMandatColumns(biens: Bien[], onEdit: (m: Mandat) => void, onDelete: 
     }),
     mh.display({
       id: "actions", header: "",
-      cell: (c) => <RowActions onEdit={() => onEdit(c.row.original)} onDelete={() => onDelete(c.row.original.id)} />,
+      cell: (c) => (
+        <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => onGenerer(c.row.original)} title="Générer le document"
+            className="flex items-center gap-1 rounded px-2 py-1 text-[11.5px] font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors">
+            <FileText size={12} /> Générer
+          </button>
+          <button onClick={() => onEdit(c.row.original)}
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-line/60 hover:text-ink">
+            <Edit2 size={13} />
+          </button>
+          <button onClick={() => onDelete(c.row.original.id)}
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-danger-soft hover:text-danger">
+            <Trash2 size={13} />
+          </button>
+        </div>
+      ),
     }),
-  ] as ColumnDef<Mandat, any>[], [biens, onEdit, onDelete]);
-}
-
-function RowActions({ onEdit, onDelete, onFiche }: { onEdit: () => void; onDelete: () => void; onFiche?: () => void }) {
-  return (
-    <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-      {onFiche && (
-        <button onClick={onFiche} title="Générer fiche commerciale" className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-primary-soft hover:text-primary"><FileText size={13} /></button>
-      )}
-      <button onClick={onEdit} className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-line/60 hover:text-ink"><Edit2 size={13} /></button>
-      <button onClick={onDelete} className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-danger-soft hover:text-danger"><Trash2 size={13} /></button>
-    </div>
-  );
+  ] as ColumnDef<Mandat, any>[], [biens, onEdit, onDelete, onGenerer]);
 }

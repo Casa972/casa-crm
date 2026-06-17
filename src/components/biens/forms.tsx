@@ -8,6 +8,7 @@ import {
   COMMUNES_MARTINIQUE,
 } from "../../schemas/enums";
 import type { Bien, Mandat } from "../../types/domain";
+import type { Client } from "../../types/domain";
 
 type Errors = Record<string, string>;
 
@@ -17,7 +18,7 @@ function zodErrors(issues: { path: (string | number)[]; message: string }[]): Er
   return e;
 }
 
-type BienFields = "ref" | "type" | "adresse" | "commune" | "surface" | "chambres" | "prix" | "cat" | "statut" | "desc" | "mandatId";
+type BienFields = "ref" | "type" | "adresse" | "commune" | "surface" | "chambres" | "prix" | "cat" | "statut" | "desc";
 
 export function BienForm({ initial, onSave, onClose }: {
   initial?: Bien; onSave: (b: Bien) => void; onClose: () => void;
@@ -28,7 +29,6 @@ export function BienForm({ initial, onSave, onClose }: {
     surface: String(initial?.surface ?? ""), chambres: String(initial?.chambres ?? ""),
     prix: String(initial?.prix ?? ""), cat: initial?.cat ?? "vente",
     statut: initial?.statut ?? "Disponible", desc: initial?.desc ?? "",
-    mandatId: initial?.mandatId ?? "",
   }));
   const [errors, setErrors] = useState<Errors>({});
   const s = (k: BienFields) => (v: string) => setF((p) => ({ ...p, [k]: v }));
@@ -36,7 +36,7 @@ export function BienForm({ initial, onSave, onClose }: {
   const submit = () => {
     const parsed = bienFormSchema.safeParse(f);
     if (!parsed.success) { setErrors(zodErrors(parsed.error.issues)); return; }
-    onSave({ ...parsed.data, id: initial?.id ?? "" });
+    onSave({ ...parsed.data, id: initial?.id ?? "", mandatId: initial?.mandatId ?? "" });
   };
 
   const statuts = f.cat === "location" ? StatutLocation.options : StatutVente.options;
@@ -60,13 +60,19 @@ export function BienForm({ initial, onSave, onClose }: {
   );
 }
 
-type MandatFields = "ref" | "bienId" | "type" | "mandant" | "tel" | "email" | "dateDebut" | "dateFin" | "honoraires" | "statut" | "notes";
+type MandatFields = "ref" | "bienId" | "clientId" | "type" | "mandant" | "tel" | "email" | "dateDebut" | "dateFin" | "honoraires" | "statut" | "notes";
 
-export function MandatForm({ initial, biens, onSave, onClose }: {
-  initial?: Mandat; biens: Bien[]; onSave: (m: Mandat) => void; onClose: () => void;
+export function MandatForm({ initial, biens, clients, onSave, onClose }: {
+  initial?: Partial<Mandat>;
+  biens: Bien[];
+  clients: Client[];
+  onSave: (m: Mandat) => void;
+  onClose: () => void;
 }) {
   const [f, setF] = useState<Record<MandatFields, string>>(() => ({
-    ref: initial?.ref ?? "", bienId: initial?.bienId ?? "", type: initial?.type ?? "Exclusif",
+    ref: initial?.ref ?? "", bienId: initial?.bienId ?? "",
+    clientId: initial?.clientId ?? "",
+    type: initial?.type ?? "Exclusif",
     mandant: initial?.mandant ?? "", tel: initial?.tel ?? "", email: initial?.email ?? "",
     dateDebut: initial?.dateDebut ?? "", dateFin: initial?.dateFin ?? "",
     honoraires: String(initial?.honoraires ?? ""), statut: initial?.statut ?? "Actif",
@@ -75,21 +81,69 @@ export function MandatForm({ initial, biens, onSave, onClose }: {
   const [errors, setErrors] = useState<Errors>({});
   const s = (k: MandatFields) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
+  // Sélection d'un client vendeur → auto-remplit nom, tel, email
+  const handleClientSelect = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    setF(p => ({
+      ...p,
+      clientId,
+      mandant: client ? `${client.prenom} ${client.nom}`.trim() : p.mandant,
+      tel: client?.tel || p.tel,
+      email: client?.email || p.email,
+    }));
+  };
+
   const submit = () => {
     const parsed = mandatFormSchema.safeParse(f);
     if (!parsed.success) { setErrors(zodErrors(parsed.error.issues)); return; }
-    onSave({ ...parsed.data, id: initial?.id ?? "" });
+    onSave({ ...parsed.data, id: (initial as Mandat | undefined)?.id ?? "" });
   };
+
+  const vendeurs = clients.filter(c => c.type === "Vendeur");
 
   return (
     <>
       <Grid2>
         <Field label="Référence" error={errors.ref}><Input value={f.ref} onChange={(e) => s("ref")(e.target.value)} placeholder="M-2026-XXX" /></Field>
         <Field label="Type de mandat"><Select value={f.type} onChange={s("type")} options={TypeMandat.options} /></Field>
+      </Grid2>
+
+      {/* Sélecteur client vendeur */}
+      <Field label="Vendeur (client CRM)">
+        <select
+          className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+          value={f.clientId}
+          onChange={e => handleClientSelect(e.target.value)}
+        >
+          <option value="">— Saisie manuelle —</option>
+          {vendeurs.map(c => (
+            <option key={c.id} value={c.id}>{c.prenom} {c.nom}{c.tel ? ` · ${c.tel}` : ""}</option>
+          ))}
+          {clients.filter(c => c.type !== "Vendeur").length > 0 && vendeurs.length > 0 && (
+            <option disabled>──────────────</option>
+          )}
+          {clients.filter(c => c.type !== "Vendeur").map(c => (
+            <option key={c.id} value={c.id}>{c.prenom} {c.nom} ({c.type})</option>
+          ))}
+        </select>
+      </Field>
+
+      <Grid2>
         <Field label="Mandant" error={errors.mandant}><Input value={f.mandant} onChange={(e) => s("mandant")(e.target.value)} /></Field>
         <Field label="Téléphone"><Input value={f.tel} onChange={(e) => s("tel")(e.target.value)} /></Field>
         <Field label="Email" error={errors.email}><Input type="email" value={f.email} onChange={(e) => s("email")(e.target.value)} /></Field>
-        <Field label="Bien lié"><Select value={f.bienId} onChange={s("bienId")} options={biens.map((b) => b.ref)} placeholder="— Aucun —" /></Field>
+        <Field label="Bien lié">
+          <select
+            className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+            value={f.bienId}
+            onChange={e => s("bienId")(e.target.value)}
+          >
+            <option value="">— Aucun —</option>
+            {biens.map(b => (
+              <option key={b.id} value={b.ref}>{b.ref} · {b.adresse || b.commune}</option>
+            ))}
+          </select>
+        </Field>
         <Field label="Date début"><Input type="date" value={f.dateDebut} onChange={(e) => s("dateDebut")(e.target.value)} /></Field>
         <Field label="Date fin" error={errors.dateFin}><Input type="date" value={f.dateFin} onChange={(e) => s("dateFin")(e.target.value)} /></Field>
         <Field label="Honoraires (%)" error={errors.honoraires}><Input type="number" value={f.honoraires} onChange={(e) => s("honoraires")(e.target.value)} /></Field>

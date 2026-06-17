@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Check, Trash2, ChevronDown, ChevronUp, AlertTriangle, TrendingUp } from "lucide-react";
+import { Plus, Edit2, Check, Trash2, ChevronDown, ChevronUp, AlertTriangle, TrendingUp, FileText } from "lucide-react";
 import { KpiCard } from "../shared/StatusPill";
 import { EmptyState, Modal } from "../ui/Modal";
 import { FinanceNav } from "../shared/FinanceNav";
@@ -62,7 +62,7 @@ export function PilotageView() {
   const saveCompromis = useSaveCompromis();
   const encaisser = useEncaisserCommission();
   const delCompromis = useDeleteCompromis();
-  const setView = useUiStore(s => s.setView);
+  const { setView, setPrefillRedacteur } = useUiStore();
 
   const [modal, setModal] = useState<{ item?: Compromis } | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
@@ -255,6 +255,9 @@ export function PilotageView() {
                           <Check size={13} /> Marquer encaissée
                         </button>
                       )}
+                      <button className="btn-ghost text-[12px] text-primary" onClick={() => { setPrefillRedacteur({ docType: "compromis", sourceId: c.id }); setView("redacteur"); }}>
+                        <FileText size={13} /> Générer le document
+                      </button>
                       <button className="btn-ghost text-[12px]" onClick={() => setModal({ item: c })}>
                         <Edit2 size={13} /> Modifier
                       </button>

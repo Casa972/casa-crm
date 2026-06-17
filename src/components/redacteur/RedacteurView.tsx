@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useUiStore } from "../../store/ui.store";
 import { Plus, Trash2, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
@@ -874,6 +875,52 @@ export function RedacteurView() {
   const [mandat, setMandat] = useState<MandatVenteFull>(defaultMandat);
   const [compromis, setCompromis] = useState<CompromisVente>(defaultCompromis);
   const [offre, setOffre] = useState<OffreAchat>(defaultOffre);
+
+  const { prefillRedacteur, setPrefillRedacteur } = useUiStore();
+  const { data } = useAgencyData();
+
+  // Appliquer un prefill depuis BiensView ou PilotageView
+  useEffect(() => {
+    if (!prefillRedacteur) return;
+    const { docType: dt, sourceId } = prefillRedacteur;
+    setDocType(dt);
+
+    if (dt === "mandat") {
+      const m = data.mandats.find(x => x.id === sourceId);
+      const b = m ? data.biens.find(x => x.id === m.bienId || x.ref === m.bienId) : null;
+      if (m) {
+        setMandat(prev => ({
+          ...prev,
+          mandants: [{ ...newMandant(), nom: m.mandant.toUpperCase(), tel: m.tel || "", email: m.email || "" }],
+          honorairesPct: m.honoraires || 6,
+          typeMandat: (m.type === "Exclusif" || m.type === "Simple") ? m.type : "Simple",
+          dateDebut: m.dateDebut || today(),
+          prixFAI: b?.prix || 0,
+          adresseBien: b?.adresse || "",
+          commune: b?.commune || "",
+          typeBien: b?.type || "Appartement",
+          surfaceTotale: b?.surface || 0,
+          descriptionBien: b?.desc || "",
+        }));
+      }
+    } else if (dt === "compromis") {
+      const comp = data.compromis.find(x => x.id === sourceId);
+      if (comp) {
+        setCompromis(prev => ({
+          ...prev,
+          prixFAI: comp.prixVente || 0,
+          honorairesTTC: comp.honoraires && comp.prixVente ? Math.round(comp.prixVente * comp.honoraires / 100) : 0,
+          mandatRef: comp.ref || "",
+          notaire: comp.notaire || "",
+          typeFinancement: (comp.financement as CompromisVente["typeFinancement"]) || "Prêt bancaire",
+          vendeurs: [{ ...newPartie(), nom: comp.vendeur?.toUpperCase() || "" }],
+          acquereurs: [{ ...newPartie(), nom: comp.acheteur?.toUpperCase() || "" }],
+        }));
+      }
+    }
+
+    setPrefillRedacteur(null);
+  }, [prefillRedacteur]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetDoc = () => {
     if (docType === "mandat") setMandat(defaultMandat());
