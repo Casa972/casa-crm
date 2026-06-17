@@ -1,4 +1,5 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import logoSrc from "../assets/logo.png";
 import type { MandatVenteFull, Mandant } from "../schemas/redacteur/mandatVenteFull.schema";
 import { calcMandatVente, isCopro, isTerrain, isFonds, needsCarrez, needsDPE } from "../schemas/redacteur/mandatVenteFull.schema";
 
@@ -262,8 +263,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
       <Page size="A4" style={s.page}>
         {/* Logo */}
         <View style={s.logoBox}>
-          <Text style={s.logoTxt}>CASA CARAÏBES</Text>
-          <Text style={s.logoSub}>Agence Immobilière — Martinique</Text>
+          <Image src={logoSrc} style={{ width: 160, height: 60, objectFit: "contain" }} />
         </View>
 
         {/* Titre */}
