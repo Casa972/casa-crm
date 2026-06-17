@@ -1,62 +1,65 @@
-import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer";
 import logoSrc from "../assets/logo.png";
+import MontserratRegular from "../assets/fonts/Montserrat-Regular.ttf";
+import MontserratMedium  from "../assets/fonts/Montserrat-Medium.ttf";
+import MontserratBold    from "../assets/fonts/Montserrat-Bold.ttf";
+import MontserratItalic  from "../assets/fonts/Montserrat-Italic.ttf";
 import type { MandatVenteFull, Mandant } from "../schemas/redacteur/mandatVenteFull.schema";
 import { calcMandatVente, isCopro, isTerrain, isFonds, needsCarrez, needsDPE } from "../schemas/redacteur/mandatVenteFull.schema";
 
-const P = "#1A3A52";
+Font.register({
+  family: "Montserrat",
+  fonts: [
+    { src: MontserratRegular,             fontWeight: 400 },
+    { src: MontserratMedium,              fontWeight: 500 },
+    { src: MontserratBold,                fontWeight: 700 },
+    { src: MontserratItalic, fontStyle: "italic", fontWeight: 400 },
+  ],
+});
+
+const P   = "#1A3A52";
 const LINE = "#E4E4E0";
-const INK = "#1A1A18";
-const SUB = "#6B6B67";
-const BF = "Helvetica-Bold";
+const INK  = "#1A1A18";
+const SUB  = "#6B6B67";
+const BF   = "Montserrat";   // fontWeight 700 = bold
+const MED  = "Montserrat";   // fontWeight 500 = medium
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 9.5, color: INK, padding: "20mm 18mm 16mm" },
+  page: { fontFamily: "Montserrat", fontWeight: 400, fontSize: 9.5, color: INK, padding: "20mm 18mm 16mm" },
   // Header
   logoBox: { alignItems: "center", marginBottom: 16, paddingBottom: 14, borderBottom: `1 solid ${LINE}` },
-  logoTxt: { fontSize: 22, fontFamily: BF, color: INK, letterSpacing: 0.5 },
-  logoSub: { fontSize: 9, color: SUB, marginTop: 2 },
   // Titre doc
-  docTitre: { fontSize: 20, fontFamily: BF, color: INK, textAlign: "center", marginBottom: 3 },
-  docNum: { fontSize: 11, fontFamily: BF, color: P, textAlign: "center", marginBottom: 2 },
-  docLieu: { fontSize: 9, color: SUB, textAlign: "center", fontStyle: "italic", marginBottom: 14 },
-  divider: { height: 1, backgroundColor: LINE, marginBottom: 14 },
+  docTitre: { fontSize: 20, fontFamily: MED, fontWeight: 500, color: INK, textAlign: "center", marginBottom: 3 },
+  docNum:   { fontSize: 11, fontFamily: BF,  fontWeight: 700, color: P,   textAlign: "center", marginBottom: 2 },
+  docLieu:  { fontSize: 9,  color: SUB, textAlign: "center", fontStyle: "italic", marginBottom: 14 },
+  divider:  { height: 1, backgroundColor: LINE, marginBottom: 14 },
   // Tableau parties
-  partiesRow: { flexDirection: "row", border: `0.5 solid ${LINE}`, marginBottom: 16 },
-  partiesHead: { flexDirection: "row" },
+  partiesHead:     { flexDirection: "row" },
   partiesHeadCell: { flex: 1, backgroundColor: P, padding: "6 12", textAlign: "center" },
-  partiesHeadTxt: { color: "#fff", fontFamily: BF, fontSize: 9, textTransform: "uppercase", letterSpacing: 0.5 },
-  partiesBody: { flexDirection: "row" },
-  partiesCell: { flex: 1, padding: "10 12", borderRight: `0.5 solid ${LINE}` },
-  partiesCellLast: { flex: 1, padding: "10 12" },
-  mandantName: { fontFamily: BF, fontSize: 9.5, color: INK, textAlign: "center", marginBottom: 4 },
-  mandantLine: { fontSize: 9, color: SUB, textAlign: "center", fontStyle: "italic", lineHeight: 1.5 },
-  mandantQualite: { color: P, fontFamily: BF, fontSize: 8.5, textAlign: "center", marginTop: 4 },
+  partiesHeadTxt:  { color: "#fff", fontFamily: BF, fontWeight: 700, fontSize: 9, textTransform: "uppercase", letterSpacing: 0.5 },
+  mandantName:    { fontFamily: BF, fontWeight: 700, fontSize: 9.5, color: INK, textAlign: "center", marginBottom: 4 },
+  mandantLine:    { fontSize: 9, color: SUB, textAlign: "center", fontStyle: "italic", lineHeight: 1.5 },
+  mandantQualite: { color: P, fontFamily: BF, fontWeight: 700, fontSize: 8.5, textAlign: "center", marginTop: 4 },
   // Articles
-  articleTitle: { fontSize: 10.5, fontFamily: BF, color: P, marginTop: 14, marginBottom: 6, borderLeft: `3 solid ${P}`, paddingLeft: 8 },
-  body: { fontSize: 9.5, color: INK, lineHeight: 1.6, marginBottom: 6, textAlign: "justify" },
-  bold: { fontFamily: BF },
+  articleTitle: { fontSize: 10.5, fontFamily: BF, fontWeight: 700, color: P, marginTop: 14, marginBottom: 6, borderLeft: `3 solid ${P}`, paddingLeft: 8 },
+  body:  { fontSize: 9.5, color: INK, lineHeight: 1.6, marginBottom: 6, textAlign: "justify" },
+  bold:  { fontFamily: BF, fontWeight: 700 },
   italic: { fontStyle: "italic" },
-  tableBox: { border: `0.5 solid ${LINE}`, borderRadius: 4, marginVertical: 6 },
-  tableRow: { flexDirection: "row", borderBottom: `0.5 solid ${LINE}`, padding: "5 8" },
+  tableBox:     { border: `0.5 solid ${LINE}`, borderRadius: 4, marginVertical: 6 },
+  tableRow:     { flexDirection: "row", borderBottom: `0.5 solid ${LINE}`, padding: "5 8" },
   tableRowLast: { flexDirection: "row", padding: "5 8" },
   tableLbl: { flex: 2, fontSize: 9, color: SUB },
-  tableVal: { flex: 1, fontSize: 9.5, fontFamily: BF, color: INK, textAlign: "right" },
-  highlight: { backgroundColor: "#EBF1F6", borderRadius: 4, padding: "8 12", marginVertical: 6 },
-  highlightTxt: { fontSize: 9.5, color: P, fontFamily: BF, textAlign: "center" },
-  infoCard: { backgroundColor: "#EBF1F6", borderRadius: 4, padding: "8 12", marginVertical: 6, borderLeft: `3 solid ${P}` },
-  infoCardTxt: { fontSize: 9, color: P, lineHeight: 1.6 },
+  tableVal: { flex: 1, fontSize: 9.5, fontFamily: BF, fontWeight: 700, color: INK, textAlign: "right" },
   // Signatures
-  sigRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
-  sigBlock: { flex: 1, borderTop: `0.5 solid ${INK}`, paddingTop: 8, marginHorizontal: 6 },
-  sigTxt: { fontSize: 8.5, color: INK, fontFamily: BF, marginBottom: 2 },
-  sigSub: { fontSize: 8, color: SUB, fontStyle: "italic" },
-  sigLine: { height: 30 },
-  // Footer
-  footer: { position: "absolute", bottom: "10mm", left: "18mm", right: "18mm", borderTop: `0.5 solid ${LINE}`, paddingTop: 6 },
+  footer:    { position: "absolute", bottom: "10mm", left: "18mm", right: "18mm", borderTop: `0.5 solid ${LINE}`, paddingTop: 6 },
   footerTxt: { fontSize: 7, color: SUB, textAlign: "center" },
 });
 
-const E = (n: number) => `${Math.round(n || 0).toLocaleString("fr-FR")} €`;
+// Formateur monétaire — évite le séparateur Unicode U+202F (rendu "/" dans react-pdf)
+const E = (n: number) => {
+  const s = String(Math.round(n || 0));
+  return s.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0") + " €";
+};
 const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "……………………";
 const fdShort = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR") : "……………";
 const dash = "……………………………………";
@@ -79,31 +82,45 @@ function MandantBlock({ m }: { m: Mandant }) {
   );
 }
 
-/** Tableau de désignation adapté selon le type de bien */
+function CoproTable({ f }: { f: MandatVenteFull }) {
+  if (!f.nomsLots && !f.syndic && !f.chargesAnnuelles) return null;
+  return (
+    <View wrap={false} style={{ marginTop: 6 }}>
+      <Text style={[s.body, { fontFamily: BF, fontWeight: 700, marginBottom: 4 }]}>Informations de copropriété</Text>
+      <View style={s.tableBox}>
+        {f.nomsLots ? (
+          <View style={s.tableRow}>
+            <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700, color: INK }]}>Numéros de lots</Text>
+            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.nomsLots}</Text>
+          </View>
+        ) : null}
+        {f.syndic ? (
+          <View style={f.chargesAnnuelles > 0 ? s.tableRow : s.tableRowLast}>
+            <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700, color: INK }]}>Syndic de copropriété</Text>
+            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.syndic}</Text>
+          </View>
+        ) : null}
+        {f.chargesAnnuelles > 0 ? (
+          <View style={s.tableRowLast}>
+            <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700, color: INK }]}>Charges annuelles (tout inclus)</Text>
+            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{E(f.chargesAnnuelles)}</Text>
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 function DesignationTable({ f }: { f: MandatVenteFull }) {
   const t = f.typeBien;
 
   if (isFonds(t)) {
     return (
       <View>
-        <Text style={[s.body, { marginTop: 4 }]}>
-          <Text style={s.bold}>Description du fonds : </Text>{f.descriptionBien || dash}
-        </Text>
-        {f.chiffreAffaires > 0 && (
-          <Text style={s.body}>
-            <Text style={s.bold}>Chiffre d'affaires annuel HT : </Text>{E(f.chiffreAffaires)}
-          </Text>
-        )}
-        {f.commune && (
-          <Text style={s.body}>
-            <Text style={s.bold}>Commune : </Text>{f.commune}{f.codePostal ? ` (${f.codePostal})` : ""}
-          </Text>
-        )}
-        {f.refCadastrale && (
-          <Text style={s.body}>
-            <Text style={s.bold}>Réf. cadastrale : </Text>{f.refCadastrale}
-          </Text>
-        )}
+        {f.descriptionBien && <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Description du fonds : </Text>{f.descriptionBien}</Text>}
+        {f.chiffreAffaires > 0 && <Text style={s.body}><Text style={s.bold}>Chiffre d'affaires annuel HT : </Text>{E(f.chiffreAffaires)}</Text>}
+        {f.commune && <Text style={s.body}><Text style={s.bold}>Commune : </Text>{f.commune}{f.codePostal ? ` (${f.codePostal})` : ""}</Text>}
+        {f.refCadastrale && <Text style={s.body}><Text style={s.bold}>Réf. cadastrale : </Text>{f.refCadastrale}</Text>}
       </View>
     );
   }
@@ -116,10 +133,10 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
       ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
     ];
     return (
-      <View style={s.tableBox}>
+      <View wrap={false} style={s.tableBox}>
         {rows.map((row, i) => (
           <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-            <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+            <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
             <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
           </View>
         ))}
@@ -141,10 +158,10 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
     ];
     return (
       <View>
-        <View style={s.tableBox}>
+        <View wrap={false} style={s.tableBox}>
           {rows.map((row, i) => (
             <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-              <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+              <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
               <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
             </View>
           ))}
@@ -154,31 +171,7 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
             Lot(s) N°{f.nomsLots || dash} de la copropriété {f.residence || dash}{f.descriptionBien ? `, comprenant ${f.descriptionBien}` : ""}.
           </Text>
         )}
-        {(f.nomsLots || f.syndic || f.chargesAnnuelles > 0) && (
-          <View style={{ marginTop: 6 }}>
-            <Text style={[s.body, { fontFamily: BF, marginBottom: 4 }]}>Informations de copropriété</Text>
-            <View style={s.tableBox}>
-              {f.nomsLots && (
-                <View style={s.tableRow}>
-                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Numéros de lots</Text>
-                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.nomsLots}</Text>
-                </View>
-              )}
-              {f.syndic && (
-                <View style={s.tableRow}>
-                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Syndic de copropriété</Text>
-                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.syndic}</Text>
-                </View>
-              )}
-              {f.chargesAnnuelles > 0 && (
-                <View style={s.tableRowLast}>
-                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Charges annuelles (tout inclus)</Text>
-                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{E(f.chargesAnnuelles)}</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
+        <CoproTable f={f} />
       </View>
     );
   }
@@ -189,44 +182,26 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
       ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
       ["Type de bien", f.typeBien],
       ...(f.surfaceTotale > 0 ? [["Surface totale (m²)", `${f.surfaceTotale} m²`] as [string, string]] : []),
-      ...(needsCarrez(t) || f.surfaceCarrez > 0 ? (f.surfaceCarrez > 0 ? [["Surface loi Carrez (m²)", `${f.surfaceCarrez} m²`] as [string, string]] : []) : []),
+      ...(f.surfaceCarrez > 0 ? [["Surface loi Carrez (m²)", `${f.surfaceCarrez} m²`] as [string, string]] : []),
       ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
     ];
     return (
       <View>
-        <View style={s.tableBox}>
+        <View wrap={false} style={s.tableBox}>
           {rows.map((row, i) => (
             <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-              <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+              <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
               <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
             </View>
           ))}
         </View>
         {f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
-        {isCopro(t) && (f.syndic || f.chargesAnnuelles > 0) && (
-          <View style={{ marginTop: 6 }}>
-            <Text style={[s.body, { fontFamily: BF, marginBottom: 4 }]}>Informations de copropriété</Text>
-            <View style={s.tableBox}>
-              {f.syndic && (
-                <View style={s.tableRow}>
-                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Syndic de copropriété</Text>
-                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{f.syndic}</Text>
-                </View>
-              )}
-              {f.chargesAnnuelles > 0 && (
-                <View style={s.tableRowLast}>
-                  <Text style={[s.tableLbl, { fontFamily: BF, color: INK }]}>Charges annuelles (tout inclus)</Text>
-                  <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{E(f.chargesAnnuelles)}</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
+        {isCopro(t) && <CoproTable f={f} />}
       </View>
     );
   }
 
-  // Villa / Maison (et tout autre type par défaut)
+  // Villa / Maison
   const rows: [string, string][] = [
     ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
     ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
@@ -239,10 +214,10 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
   ];
   return (
     <View>
-      <View style={s.tableBox}>
+      <View wrap={false} style={s.tableBox}>
         {rows.map((row, i) => (
           <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-            <Text style={[s.tableLbl, { fontFamily: BF }]}>{row[0]}</Text>
+            <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
             <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
           </View>
         ))}
@@ -256,11 +231,12 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
   const c = calcMandatVente(f);
   const honorairesMention = f.chargeHonoraires === "vendeur" ? "vendeur" : "l'acquéreur";
   const dureeDebut = f.dateDebut ? fdShort(f.dateDebut) : dash;
-  const dureeFin = c.dateFin || dash;
+  const dureeFin   = c.dateFin || dash;
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
+
         {/* Logo */}
         <View style={s.logoBox}>
           <Image src={logoSrc} style={{ width: 160, height: 60, objectFit: "contain" }} />
@@ -273,7 +249,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         <View style={s.divider} />
 
         {/* Tableau parties */}
-        <View style={{ border: `0.5 solid ${LINE}`, marginBottom: 16 }}>
+        <View wrap={false} style={{ border: `0.5 solid ${LINE}`, marginBottom: 16 }}>
           <View style={s.partiesHead}>
             <View style={[s.partiesHeadCell, { borderRight: `0.5 solid rgba(255,255,255,0.3)` }]}>
               <Text style={s.partiesHeadTxt}>MANDANTS</Text>
@@ -291,8 +267,8 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
               ))}
             </View>
             <View style={{ flex: 1, padding: "10 12" }}>
-              <Text style={[s.mandantName]}>Casa Caraïbes SARL</Text>
-              <Text style={[s.mandantLine]}>Représentée par {f.redacteur}</Text>
+              <Text style={s.mandantName}>Casa Caraïbes SARL</Text>
+              <Text style={s.mandantLine}>Représentée par {f.redacteur}</Text>
               <Text style={[s.mandantLine, { marginTop: 6 }]}>RCS Fort-de-France 928 647 981</Text>
               <Text style={s.mandantLine}>Carte professionnelle T</Text>
               <Text style={s.mandantLine}>n°CPI97212024000000007</Text>
@@ -305,16 +281,9 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
           </View>
         </View>
 
-        {/* Paraphes bas de page 1 */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-          <Text style={{ fontSize: 8, color: SUB }}>Paraphes mandant(s) : ………………</Text>
-          <Text style={{ fontSize: 8, color: SUB }}>Paraphes mandataire : ………………</Text>
-        </View>
-
         {/* Article 1 */}
         <Text style={s.articleTitle}>ARTICLE 1 — OBJET ET DÉSIGNATION DU BIEN</Text>
         <Text style={s.body}>Le mandant confie à Casa Caraïbes le mandat de vendre le bien immobilier suivant :</Text>
-
         <DesignationTable f={f} />
 
         {/* Occupation */}
@@ -323,18 +292,14 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         </Text>
         {f.occupation === "Occupé" && (
           <Text style={s.body}>
-            Le bien est actuellement occupé en vertu d'un {f.bailType} consenti à {f.nomLocataire || dash} moyennant un loyer mensuel de {E(f.loyerMensuel)}, venant à expiration le {f.datFinBail ? fdShort(f.datFinBail) : dash}. La vente sera consentie avec maintien dans les lieux de l'occupant, sauf accord contraire entre les parties.
+            Le bien est actuellement occupé en vertu d'un {f.bailType} consenti à {f.nomLocataire || dash} moyennant un loyer mensuel de {E(f.loyerMensuel)}, venant à expiration le {f.datFinBail ? fdShort(f.datFinBail) : dash}.
           </Text>
         )}
-
-        {/* Servitudes */}
         {f.servitudes && (
-          <Text style={[s.body, { marginTop: 4 }]}>
-            <Text style={s.bold}>SERVITUDES : </Text>{f.servitudes}
-          </Text>
+          <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>SERVITUDES : </Text>{f.servitudes}</Text>
         )}
 
-        {/* Article 1 bis — Diagnostics */}
+        {/* Article 1 bis */}
         <Text style={s.articleTitle}>ARTICLE 1 BIS — DIAGNOSTICS TECHNIQUES OBLIGATOIRES</Text>
         <Text style={s.body}>
           Le mandant déclare avoir été informé que la vente est soumise à la fourniture d'un Dossier de Diagnostic Technique (DDT) comprenant notamment :{"\n"}
@@ -348,27 +313,15 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         <Text style={s.body}>
           Le diagnostiqueur mandaté est : {f.diagnostiqueur || "à désigner"}. Les frais de diagnostic sont à la charge exclusive du vendeur.
         </Text>
-        {f.ernmt && (
-          <Text style={s.body}><Text style={s.bold}>ERNMT — Informations : </Text>{f.ernmt}</Text>
-        )}
-        {f.anomaliesElec && (
-          <Text style={s.body}><Text style={s.bold}>Anomalies électriques constatées : </Text>{f.anomaliesElec}</Text>
-        )}
+        {f.ernmt && <Text style={s.body}><Text style={s.bold}>ERNMT — Informations : </Text>{f.ernmt}</Text>}
+        {f.anomaliesElec && <Text style={s.body}><Text style={s.bold}>Anomalies électriques constatées : </Text>{f.anomaliesElec}</Text>}
 
-        <View style={s.footer}>
-          <Text style={s.footerTxt}>{FOOTER_TXT}</Text>
-        </View>
-      </Page>
-
-      {/* Page 2 — Articles 2 à 3 */}
-      <Page size="A4" style={s.page}>
         {/* Article 2 */}
         <Text style={s.articleTitle}>ARTICLE 2 — PRIX ET CONDITIONS FINANCIÈRES</Text>
-        <View style={s.tableBox}>
-          {/* Header */}
+        <View wrap={false} style={s.tableBox}>
           <View style={{ flexDirection: "row", backgroundColor: P, padding: "5 8" }}>
-            <Text style={{ flex: 2, fontSize: 9, color: "#fff", fontFamily: BF }}>Désignation</Text>
-            <Text style={{ flex: 1, fontSize: 9, color: "#fff", fontFamily: BF, textAlign: "right" }}>Montant</Text>
+            <Text style={{ flex: 2, fontSize: 9, color: "#fff", fontFamily: BF, fontWeight: 700 }}>Désignation</Text>
+            <Text style={{ flex: 1, fontSize: 9, color: "#fff", fontFamily: BF, fontWeight: 700, textAlign: "right" }}>Montant</Text>
           </View>
           {[
             ["Prix de vente FAI (frais d'agence inclus)", E(f.prixFAI), true],
@@ -376,7 +329,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
             ["Prix net vendeur", E(c.prixNetVendeur), true],
           ].map(([l, v, bold], i, arr) => (
             <View key={i} style={i === arr.length - 1 ? s.tableRowLast : s.tableRow}>
-              <Text style={[s.tableLbl, bold ? { fontFamily: BF, color: INK } : {}]}>{l as string}</Text>
+              <Text style={[s.tableLbl, bold ? { fontFamily: BF, fontWeight: 700, color: INK } : {}]}>{l as string}</Text>
               <Text style={[s.tableVal, bold ? { color: P } : {}]}>{v as string}</Text>
             </View>
           ))}
@@ -393,7 +346,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
           <>
             <Text style={s.body}>Dans le cadre du présent mandat, le mandant confie à Casa Caraïbes l'exclusivité de la commercialisation de son bien, afin de bénéficier d'un suivi personnalisé et d'une mobilisation optimale des moyens de l'agence.</Text>
             {f.avecApportDirect && (
-              <Text style={s.body}>Toutefois, si le mandant présente lui-même ou communique à Casa Caraïbes les coordonnées d'un acquéreur de son réseau personnel, Casa Caraïbes prend en charge l'intégralité du suivi du dossier. En reconnaissance de cet apport direct, les honoraires d'agence dus par le vendeur sont réduits de moitié, soit <Text style={s.bold}>{E(c.honoReduit)} TTC ({c.pctReduit}% du prix de vente FAI — TVA 8,5% DOM incluse)</Text>, le solde des honoraires restant à la charge exclusive du vendeur.</Text>
+              <Text style={s.body}>Toutefois, si le mandant présente lui-même ou communique à Casa Caraïbes les coordonnées d'un acquéreur de son réseau personnel, Casa Caraïbes prend en charge l'intégralité du suivi du dossier (qualification, visites, négociation, accompagnement jusqu'à l'acte authentique). En reconnaissance de cet apport direct, les honoraires d'agence dus par le vendeur sont réduits de moitié, soit <Text style={s.bold}>{E(c.honoReduit)} TTC ({c.pctReduit}% du prix de vente FAI — TVA 8,5% DOM incluse)</Text>, le solde des honoraires restant à la charge exclusive du vendeur.</Text>
             )}
           </>
         )}
@@ -408,13 +361,6 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         {!f.avecSousMandat && <Text style={s.body}><Text style={s.bold}>Sous-mandat : </Text>Le recours à un sous-mandataire n'est pas autorisé sauf accord écrit préalable et exprès du mandant.</Text>}
         {f.avecInterAgence && <Text style={s.body}><Text style={s.bold}>Inter-agence : </Text>Casa Caraïbes se réserve la faculté de collaborer avec d'autres agences immobilières dans le cadre d'un inter-agence, afin d'élargir la diffusion du bien et d'optimiser les chances de vente. Dans ce cadre, Casa Caraïbes demeure l'interlocuteur unique et exclusif du mandant pour toute question relative à la commercialisation, aux visites, aux offres et à la négociation. Le mandant n'aura aucun contact direct avec les agences partenaires. Le partage éventuel des honoraires entre agences est réglé entre professionnels et ne modifie en aucun cas le montant des honoraires dus par le vendeur tel que prévu à l'Article 2 et à l'Article 5 du présent mandat.</Text>}
 
-        <View style={s.footer}>
-          <Text style={s.footerTxt}>{FOOTER_TXT}</Text>
-        </View>
-      </Page>
-
-      {/* Page 3 — Articles 4 à 10 + Signatures */}
-      <Page size="A4" style={s.page}>
         {/* Article 4 */}
         <Text style={s.articleTitle}>ARTICLE 4 — OBLIGATIONS DE CASA CARAÏBES</Text>
         <Text style={s.body}>
@@ -433,23 +379,26 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
 
         {/* Article 5 */}
         <Text style={s.articleTitle}>ARTICLE 5 — RÉMUNÉRATION ET TVA</Text>
-        <Text style={s.body}>Casa Caraïbes percevra, en cas de vente effectivement réalisée, des honoraires d'un montant de <Text style={s.bold}>{E(c.honorairesTTC)} TTC</Text> (dont TVA au taux de 8,5 % applicable en Martinique — DOM, soit {E(c.tva)} de TVA), représentant {f.honorairesPct}% du prix de vente FAI de {E(f.prixFAI)}. Cette rémunération n'est exigible qu'à la condition que la vente soit effectivement réalisée et que l'acte authentique soit signé. Elle sera versée lors de la signature de l'acte authentique de vente, conformément à l'article 6 de la loi Hoguet du 2 janvier 1970.</Text>
+        <Text style={s.body}>Casa Caraïbes percevra, en cas de vente effectivement réalisée, des honoraires d'un montant de <Text style={s.bold}>{E(c.honorairesTTC)} TTC</Text> (dont TVA au taux de 8,5 % applicable en Martinique — DOM, soit {E(c.tva)} de TVA), représentant {f.honorairesPct}% du prix de vente FAI de {E(f.prixFAI)}. Cette rémunération n'est exigible qu'à la condition que la vente soit effectivement réalisée et que l'acte authentique soit signé. Elle sera versée par le vendeur lors de la signature de l'acte authentique de vente, conformément à l'article 6 de la loi Hoguet du 2 janvier 1970.</Text>
         <Text style={s.body}>Conformément à l'arrêté du 10 janvier 2017 relatif à l'information des consommateurs par les professionnels intervenant dans une transaction immobilière, le barème des honoraires de Casa Caraïbes est affiché dans nos locaux, mentionné sur nos annonces et disponible sur simple demande.</Text>
 
         {/* Article 6 */}
         <Text style={s.articleTitle}>ARTICLE 6 — RÉSILIATION</Text>
         <Text style={s.body}>Passée la période de trois (3) mois, chacune des parties pourra résilier le présent mandat par lettre recommandée avec accusé de réception, moyennant un préavis de quinze (15) jours ouvrés avant l'échéance de la période mensuelle en cours. En cas de résiliation anticipée du mandat par le mandant pendant la période initiale ferme, sans motif légitime reconnu, le mandant pourra être redevable d'une indemnité forfaitaire égale aux frais effectivement engagés et justifiés par Casa Caraïbes dans le cadre de l'exécution du présent mandat.</Text>
 
-        {/* Articles 7-10 */}
+        {/* Article 7 */}
         <Text style={s.articleTitle}>ARTICLE 7 — REPRÉSENTATION ET POUVOIRS</Text>
-        <Text style={s.body}>Le mandant autorise Casa Caraïbes à le représenter auprès des acquéreurs potentiels, de l'étude notariale désignée et de tout tiers intervenant dans le cadre de la réalisation de la vente. Casa Caraïbes est habilitée à recueillir et transmettre les offres d'achat, à signer tout document préalable à la vente au nom et pour le compte du mandant, dans les strictes limites des conditions financières et des modalités définies au présent mandat.</Text>
+        <Text style={s.body}>Le mandant autorise Casa Caraïbes à le représenter auprès des acquéreurs potentiels, de l'étude notariale désignée et de tout tiers intervenant dans le cadre de la réalisation de la vente. Casa Caraïbes est habilitée à recueillir et transmettre les offres d'achat, à signer tout document préalable à la vente (offre d'achat, avant-contrat préliminaire) au nom et pour le compte du mandant, dans les strictes limites des conditions financières et des modalités définies au présent mandat.</Text>
 
+        {/* Article 8 */}
         <Text style={s.articleTitle}>ARTICLE 8 — LUTTE ANTI-BLANCHIMENT (LCB-FT)</Text>
         <Text style={s.body}>Conformément aux articles L.561-1 et suivants du Code monétaire et financier, Casa Caraïbes est assujettie aux obligations de vigilance en matière de lutte contre le blanchiment de capitaux et le financement du terrorisme (LCB-FT). À ce titre, le mandant s'engage à fournir tout justificatif d'identité, de domicile et d'origine des fonds requis par la réglementation en vigueur. Casa Caraïbes est légalement tenue de déclarer à l'organisme TRACFIN tout soupçon avéré de blanchiment de capitaux ou de financement du terrorisme, et ce sans obligation d'en informer préalablement les parties concernées.</Text>
 
+        {/* Article 9 */}
         <Text style={s.articleTitle}>ARTICLE 9 — PROTECTION DES DONNÉES PERSONNELLES (RGPD)</Text>
         <Text style={s.body}>Les données personnelles collectées dans le cadre du présent mandat sont traitées par Casa Caraïbes SARL, en qualité de responsable de traitement, pour les finalités suivantes : exécution du présent mandat de vente, prospection commerciale, respect des obligations légales et réglementaires. Conformément au Règlement (UE) 2016/679 du 27 avril 2016 (RGPD) et à la loi Informatique et Libertés modifiée, le mandant dispose d'un droit d'accès, de rectification, d'effacement, de limitation du traitement et de portabilité de ses données personnelles. Pour exercer ces droits : contact@casacaraibes.com. Le mandant dispose également du droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).</Text>
 
+        {/* Article 10 */}
         <Text style={s.articleTitle}>ARTICLE 10 — DROIT DE RÉTRACTATION</Text>
         <Text style={s.body}>Si le présent mandat est conclu hors des locaux commerciaux de Casa Caraïbes (à domicile, sur le lieu de travail du mandant, par voie électronique ou tout autre lieu ne constituant pas l'établissement habituel du mandataire), le mandant dispose d'un délai de rétractation de <Text style={s.bold}>quatorze (14) jours calendaires</Text> à compter de la date de signature, conformément aux articles L.221-18 et suivants du Code de la consommation. Durant ce délai, Casa Caraïbes ne pourra entreprendre aucune démarche active (publicité, visites, démarchage) sans accord écrit et exprès du mandant. Le mandant souhaitant exercer son droit de rétractation devra en informer Casa Caraïbes par lettre recommandée avec accusé de réception ou par tout autre moyen permettant d'attester de la date d'envoi.</Text>
 
@@ -458,36 +407,26 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         </Text>
 
         {/* Signatures — 2 colonnes */}
-        <View style={{ marginTop: 20, border: `0.5 solid ${LINE}` }}>
+        <View wrap={false} style={{ marginTop: 20, border: `0.5 solid ${LINE}` }}>
           <View style={{ flexDirection: "row" }}>
-            {/* Colonne mandants */}
             <View style={{ flex: 1, padding: "10 12", borderRight: `0.5 solid ${LINE}` }}>
-              <Text style={[s.body, { fontFamily: BF, marginBottom: 8, textAlign: "center" }]}>LES MANDANTS</Text>
+              <Text style={[s.body, { fontFamily: BF, fontWeight: 700, marginBottom: 8, textAlign: "center" }]}>LES MANDANTS</Text>
               {f.mandants.map((m: Mandant, i: number) => (
                 <View key={i} style={i > 0 ? { marginTop: 14, paddingTop: 10, borderTop: `0.5 solid ${LINE}` } : { marginBottom: 6 }}>
-                  <Text style={[s.body, { fontFamily: BF, textAlign: "center" }]}>{m.civilite} {m.prenom} {m.nom}</Text>
-                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 4 }]}>
-                    Lu et approuvé
-                  </Text>
-                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center" }]}>
-                    Bon pour mandat {f.typeMandat.toLowerCase()} de vente
-                  </Text>
-                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 2 }]}>
-                    Signature
-                  </Text>
+                  <Text style={[s.body, { fontFamily: BF, fontWeight: 700, textAlign: "center" }]}>{m.civilite} {m.prenom} {m.nom}</Text>
+                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 4 }]}>Lu et approuvé</Text>
+                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center" }]}>Bon pour mandat {f.typeMandat.toLowerCase()} de vente</Text>
+                  <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 2 }]}>Signature</Text>
                   <View style={{ height: 35 }} />
                 </View>
               ))}
             </View>
-            {/* Colonne mandataire */}
             <View style={{ flex: 1, padding: "10 12" }}>
-              <Text style={[s.body, { fontFamily: BF, marginBottom: 8, textAlign: "center" }]}>LE MANDATAIRE</Text>
-              <Text style={[s.body, { fontFamily: BF, textAlign: "center" }]}>{f.redacteur}</Text>
+              <Text style={[s.body, { fontFamily: BF, fontWeight: 700, marginBottom: 8, textAlign: "center" }]}>LE MANDATAIRE</Text>
+              <Text style={[s.body, { fontFamily: BF, fontWeight: 700, textAlign: "center" }]}>{f.redacteur}</Text>
               <Text style={[s.body, { textAlign: "center" }]}>Pour Casa Caraïbes SARL</Text>
               <Text style={[s.body, { textAlign: "center" }]}>À Fort-de-France, le {fd(f.date)}</Text>
-              <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 8 }]}>
-                Signature
-              </Text>
+              <Text style={[s.body, { color: SUB, fontStyle: "italic", fontSize: 8.5, textAlign: "center", marginTop: 8 }]}>Signature</Text>
               <View style={{ height: 35 }} />
             </View>
           </View>
