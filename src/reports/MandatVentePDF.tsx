@@ -5,7 +5,7 @@ import MontserratMedium  from "../assets/fonts/Montserrat-Medium.ttf";
 import MontserratBold    from "../assets/fonts/Montserrat-Bold.ttf";
 import MontserratItalic  from "../assets/fonts/Montserrat-Italic.ttf";
 import type { MandatVenteFull, Mandant } from "../schemas/redacteur/mandatVenteFull.schema";
-import { calcMandatVente, isCopro, isTerrain, isFonds, needsCarrez, needsDPE } from "../schemas/redacteur/mandatVenteFull.schema";
+import { calcMandatVente, isCopro, isTerrain, isFonds, needsDPE } from "../schemas/redacteur/mandatVenteFull.schema";
 
 Font.register({
   family: "Montserrat",
