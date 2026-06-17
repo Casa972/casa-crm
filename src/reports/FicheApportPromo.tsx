@@ -105,7 +105,7 @@ const S = StyleSheet.create({
   legalNoteBold: { fontWeight: 600, color: C.gold },
 
   // Tableau — wrap false pour ne pas couper
-  tableSection: { marginBottom: 18 },
+  tableSection: { marginTop: 28, marginBottom: 18 },
   tableTitle: { fontWeight: 700, fontSize: 9, color: C.navy, marginBottom: 7 },
   tableWrap: { borderRadius: 5, overflow: "hidden", borderWidth: 1, borderColor: C.line },
   tableHead: { flexDirection: "row", backgroundColor: C.navy },
