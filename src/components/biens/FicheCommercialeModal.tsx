@@ -20,7 +20,7 @@ function newFiche(bien: Bien): FicheCommerciale {
     taxeFonciere: 0, chargesCopro: 0,
     anneeConstruction: "", chauffage: "", exposition: "", vue: "", digicode: "",
     contactNom: "M. Luc CLEMENTE",
-    contactTel: "0696 XX XX XX",
+    contactTel: "0696 43 39 49",
     contactEmail: "contact@casacaraibes.com",
   };
 }

@@ -23,7 +23,7 @@ export const ficheCommercialeSchema = z.object({
   vue: z.string().default(""),
   digicode: z.string().default(""),
   contactNom: z.string().default("M. Luc CLEMENTE"),
-  contactTel: z.string().default("0696 XX XX XX"),
+  contactTel: z.string().default("0696 43 39 49"),
   contactEmail: z.string().default("contact@casacaraibes.com"),
 });
 

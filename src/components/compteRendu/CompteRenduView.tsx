@@ -125,7 +125,7 @@ function CRForm({ initial, onSave }: {
 
           <Grid2>
             <Field label="Nom du visiteur *"><Input value={cr.visiteurNom} onChange={e => upd("visiteurNom", e.target.value)} placeholder="M. et Mme DUPONT" /></Field>
-            <Field label="Téléphone"><Input value={cr.visiteurTel} onChange={e => upd("visiteurTel", e.target.value)} placeholder="0696 XX XX XX" /></Field>
+            <Field label="Téléphone"><Input value={cr.visiteurTel} onChange={e => upd("visiteurTel", e.target.value)} placeholder="0696 43 39 49" /></Field>
             <Field label="Email"><Input type="email" value={cr.visiteurEmail} onChange={e => upd("visiteurEmail", e.target.value)} /></Field>
             <Field label="Nombre de personnes"><Input type="number" value={String(cr.nbPersonnes)} onChange={e => upd("nbPersonnes", +e.target.value)} /></Field>
           </Grid2>

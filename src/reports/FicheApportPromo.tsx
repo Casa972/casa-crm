@@ -170,7 +170,6 @@ const BAREME = [
   { prix: "200 000 a 300 000 EUR", taux: "7 %", honos: "14 000 a 21 000 EUR", apport: "1 400 a 2 100 EUR" },
   { prix: "300 000 a 400 000 EUR", taux: "6 %", honos: "18 000 a 24 000 EUR", apport: "1 800 a 2 400 EUR" },
   { prix: "400 000 a 500 000 EUR", taux: "5 %", honos: "20 000 a 25 000 EUR", apport: "2 000 a 2 500 EUR" },
-  { prix: "Au-dessus de 500 000 EUR", taux: "4 %", honos: "20 000 EUR et plus", apport: "2 000 EUR et plus" },
 ];
 
 export function FicheApportPromo() {
@@ -346,7 +345,7 @@ export function FicheApportPromo() {
                 </Text>
               </View>
               <View style={S.ctaRight}>
-                {[["Tel.", "0696 XX XX XX"], ["Email", "contact@casacaraibes.com"], ["Web", "www.casacaraibes.com"]].map(([l, v]) => (
+                {[["Tel.", "0696 43 39 49"], ["Email", "contact@casacaraibes.com"], ["Web", "www.casacaraibes.com"]].map(([l, v]) => (
                   <View key={l} style={S.ctaItem}>
                     <View style={S.ctaDot} />
                     <Text style={S.ctaVal}>{l}  {v}</Text>
