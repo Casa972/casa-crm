@@ -1,33 +1,17 @@
-import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import logoSrc from "../assets/logo.png";
-import {
-  MontserratRegularB64 as MontserratRegular,
-  MontserratMediumB64  as MontserratMedium,
-  MontserratBoldB64    as MontserratBold,
-  MontserratItalicB64  as MontserratItalic,
-} from "../assets/fonts/montserratFonts";
 import type { MandatVenteFull, Mandant } from "../schemas/redacteur/mandatVenteFull.schema";
 import { calcMandatVente, isCopro, isTerrain, isFonds, needsDPE } from "../schemas/redacteur/mandatVenteFull.schema";
-
-Font.register({
-  family: "Montserrat",
-  fonts: [
-    { src: MontserratRegular,             fontWeight: 400 },
-    { src: MontserratMedium,              fontWeight: 500 },
-    { src: MontserratBold,                fontWeight: 700 },
-    { src: MontserratItalic, fontStyle: "italic", fontWeight: 400 },
-  ],
-});
 
 const P   = "#1A3A52";
 const LINE = "#E4E4E0";
 const INK  = "#1A1A18";
 const SUB  = "#6B6B67";
-const BF   = "Montserrat";   // fontWeight 700 = bold
-const MED  = "Montserrat";   // fontWeight 500 = medium
+const BF   = "Helvetica-Bold";
+const MED  = "Helvetica";
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Montserrat", fontWeight: 400, fontSize: 9.5, color: INK, padding: "20mm 18mm 16mm" },
+  page: { fontFamily: "Helvetica", fontSize: 9.5, color: INK, padding: "20mm 18mm 16mm" },
   // Header
   logoBox: { alignItems: "center", marginBottom: 16, paddingBottom: 14, borderBottom: `1 solid ${LINE}` },
   // Titre doc
