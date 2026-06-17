@@ -36,13 +36,11 @@ const S = StyleSheet.create({
     backgroundColor: C.white,
   },
 
-  // ── TOP BAR ──
   topBar: { height: 4, flexDirection: "row" },
   topA: { flex: 2, backgroundColor: C.teal },
   topB: { flex: 1, backgroundColor: C.gold },
   topC: { flex: 3, backgroundColor: C.navy },
 
-  // ── HERO ──
   hero: { backgroundColor: C.navy, paddingHorizontal: 40, paddingTop: 22, paddingBottom: 20 },
   heroInner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   heroLeft: { flex: 1, paddingRight: 16 },
@@ -59,11 +57,9 @@ const S = StyleSheet.create({
   heroBadgePct: { color: C.white, fontWeight: 700, fontSize: 26 },
   heroBadgeLabel: { color: "#B2EEE8", fontSize: 7, fontWeight: 500, textAlign: "center", marginTop: 1 },
 
-  // ── BODY ──
   body: { paddingHorizontal: 40, paddingTop: 18, paddingBottom: 14 },
   sectionLabel: { fontSize: 7, fontWeight: 700, letterSpacing: 2, color: C.teal, marginBottom: 10 },
 
-  // ── COMMENT CA MARCHE ──
   stepsRow: { flexDirection: "row", marginBottom: 18 },
   step: { flex: 1, alignItems: "center", paddingHorizontal: 6 },
   stepCircle: {
@@ -75,15 +71,11 @@ const S = StyleSheet.create({
   stepText: { fontSize: 7, color: C.sub, textAlign: "center", lineHeight: 1.5 },
   stepSep: { width: 1, backgroundColor: C.line, marginTop: 13, alignSelf: "stretch" },
 
-  // ── MISSIONS ──
   missionsRow: { flexDirection: "row", gap: 10, marginBottom: 18 },
   missionCard: { flex: 1, borderRadius: 6, borderWidth: 1, borderColor: C.line, overflow: "hidden" },
   missionHead: { backgroundColor: C.navyMid, paddingHorizontal: 12, paddingVertical: 8 },
   missionHeadRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  missionTag: {
-    backgroundColor: C.teal, borderRadius: 3,
-    paddingHorizontal: 6, paddingVertical: 2,
-  },
+  missionTag: { backgroundColor: C.teal, borderRadius: 3, paddingHorizontal: 6, paddingVertical: 2 },
   missionTagText: { color: C.white, fontWeight: 700, fontSize: 7.5 },
   missionTitle: { color: C.white, fontWeight: 700, fontSize: 10 },
   missionSub: { color: "#8BA5BF", fontSize: 7, marginTop: 2 },
@@ -93,7 +85,6 @@ const S = StyleSheet.create({
   missionText: { flex: 1, fontSize: 7.5, color: C.sub, lineHeight: 1.5 },
   missionBold: { fontWeight: 600, color: C.ink },
 
-  // ── RETRIBUTION ──
   rewardsRow: { flexDirection: "row", gap: 10, marginBottom: 18 },
   rewardCard: { flex: 1, borderRadius: 6, overflow: "hidden", borderWidth: 1, borderColor: C.line },
   rewardHeadPro: { backgroundColor: C.navyMid, paddingHorizontal: 12, paddingVertical: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
@@ -113,24 +104,24 @@ const S = StyleSheet.create({
   legalNoteTxt: { fontSize: 6.5, color: C.sub, lineHeight: 1.55 },
   legalNoteBold: { fontWeight: 600, color: C.gold },
 
-  // ── TABLEAU ──
+  // Tableau — wrap false pour ne pas couper
+  tableSection: { marginBottom: 18 },
   tableTitle: { fontWeight: 700, fontSize: 9, color: C.navy, marginBottom: 7 },
-  tableWrap: { borderRadius: 5, overflow: "hidden", marginBottom: 18, borderWidth: 1, borderColor: C.line },
+  tableWrap: { borderRadius: 5, overflow: "hidden", borderWidth: 1, borderColor: C.line },
   tableHead: { flexDirection: "row", backgroundColor: C.navy },
   thCell: { color: C.white, fontWeight: 600, fontSize: 7.5, paddingHorizontal: 8, paddingVertical: 6, textAlign: "center" },
   th1: { width: "32%" },
-  th2: { width: "24%" },
-  th3: { width: "22%" },
+  th2: { width: "20%" },
+  th3: { width: "26%" },
   th4: { width: "22%" },
   tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: C.line },
   tableRowAlt: { backgroundColor: C.offWhite },
   tdBase: { fontSize: 7.5, paddingHorizontal: 8, paddingVertical: 5, textAlign: "center" },
   td1: { width: "32%", fontWeight: 700, color: C.navy },
-  td2: { width: "24%", color: C.sub },
-  td3: { width: "22%", fontWeight: 600, color: C.green },
+  td2: { width: "20%", color: C.sub, fontWeight: 600 },
+  td3: { width: "26%", fontWeight: 600, color: C.green },
   td4: { width: "22%", fontWeight: 600, color: C.gold },
 
-  // ── CONDITIONS ──
   condBox: { backgroundColor: C.offWhite, borderRadius: 6, padding: 11, marginBottom: 16, borderWidth: 1, borderColor: C.line },
   condTitle: { fontWeight: 700, fontSize: 8.5, color: C.navy, marginBottom: 7 },
   condRow: { flexDirection: "row", marginBottom: 3.5 },
@@ -138,7 +129,6 @@ const S = StyleSheet.create({
   condTxt: { flex: 1, fontSize: 7.5, color: C.sub, lineHeight: 1.5 },
   condBold: { fontWeight: 600, color: C.ink },
 
-  // ── CONTACT ──
   ctaBox: { backgroundColor: C.navy, borderRadius: 8, padding: 16, flexDirection: "row", alignItems: "center", gap: 20, marginBottom: 14 },
   ctaLeft: { flex: 1 },
   ctaTitle: { color: C.white, fontWeight: 700, fontSize: 11, marginBottom: 3 },
@@ -148,7 +138,6 @@ const S = StyleSheet.create({
   ctaDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: C.teal },
   ctaVal: { color: C.white, fontWeight: 600, fontSize: 8 },
 
-  // ── FOOTER ──
   footer: {
     paddingHorizontal: 40, paddingVertical: 10,
     borderTopWidth: 1, borderTopColor: C.line,
@@ -158,7 +147,6 @@ const S = StyleSheet.create({
   footerLegal: { fontSize: 6, color: "#9AA3B0", textAlign: "right", lineHeight: 1.5 },
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function MItem({ bold, text }: { bold: string; text: string }) {
   return (
     <View style={S.missionItem}>
@@ -177,63 +165,57 @@ function RItem({ bold, text, gold }: { bold: string; text: string; gold?: boolea
   );
 }
 
-// Barème dégressif : tranche → taux
-// 100-200k: 8%, 200-300k: 7%, 300-400k: 6%, 400-500k: 5%, >500k: 4%
 const BAREME = [
-  { prix: "100 000 – 200 000 EUR", taux: "8 %", honoEx: "8 000 – 16 000 EUR", apport: "800 – 1 600 EUR" },
-  { prix: "200 000 – 300 000 EUR", taux: "7 %", honoEx: "14 000 – 21 000 EUR", apport: "1 400 – 2 100 EUR" },
-  { prix: "300 000 – 450 000 EUR", taux: "6 %", honoEx: "18 000 – 27 000 EUR", apport: "1 800 – 2 700 EUR" },
-  { prix: "450 000 – 500 000 EUR", taux: "5 %", honoEx: "22 500 – 25 000 EUR", apport: "2 250 – 2 500 EUR" },
-  { prix: "Au-dessus de 500 000 EUR", taux: "4 %", honoEx: "20 000 EUR et +", apport: "2 000 EUR et +" },
+  { prix: "100 000 a 200 000 EUR", taux: "8 %", honos: "8 000 a 16 000 EUR", apport: "800 a 1 600 EUR" },
+  { prix: "200 000 a 300 000 EUR", taux: "7 %", honos: "14 000 a 21 000 EUR", apport: "1 400 a 2 100 EUR" },
+  { prix: "300 000 a 400 000 EUR", taux: "6 %", honos: "18 000 a 24 000 EUR", apport: "1 800 a 2 400 EUR" },
+  { prix: "400 000 a 500 000 EUR", taux: "5 %", honos: "20 000 a 25 000 EUR", apport: "2 000 a 2 500 EUR" },
+  { prix: "Au-dessus de 500 000 EUR", taux: "4 %", honos: "20 000 EUR et plus", apport: "2 000 EUR et plus" },
 ];
 
-// ── Document ──────────────────────────────────────────────────────────────────
 export function FicheApportPromo() {
   return (
-    <Document title="Apport d'affaires — Casa Caraïbes" author="Casa Caraïbes">
+    <Document title="Apport d'affaires — Casa Caraibes" author="Casa Caraibes">
       <Page size="A4" style={S.page}>
 
-        {/* TOP BAR */}
         <View style={S.topBar}>
           <View style={S.topA} /><View style={S.topB} /><View style={S.topC} />
         </View>
 
-        {/* HERO */}
         <View style={S.hero}>
           <View style={S.heroInner}>
             <View style={S.heroLeft}>
               <Text style={S.heroEyebrow}>PROGRAMME PARTENAIRES · APPORT D'AFFAIRES</Text>
               <Text style={S.heroTitle}>
-                Vous connaissez un{"\n"}vendeur ou un bailleur ?{"\n"}
+                Vous connaissez un vendeur{"\n"}ou un bailleur ?{" "}
                 <Text style={S.heroAccent}>Parlez-nous de lui.</Text>
               </Text>
               <Text style={S.heroSub}>
-                Mettez-nous en contact avec un propriétaire souhaitant vendre{"\n"}
+                Mettez-nous en contact avec un proprietaire souhaitant vendre{"\n"}
                 ou mettre en location son bien. Si la transaction aboutit,{"\n"}
-                nous vous versons une rétribution directement par virement.
+                nous vous versons une retribution directement par virement.
               </Text>
             </View>
             <View style={S.heroRight}>
               <Image src={logoWhite} style={S.logo} />
               <View style={S.heroBadge}>
                 <Text style={S.heroBadgePct}>10 %</Text>
-                <Text style={S.heroBadgeLabel}>de nos honoraires{"\n"}reversés</Text>
+                <Text style={S.heroBadgeLabel}>de nos honoraires{"\n"}reverses</Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* BODY */}
         <View style={S.body}>
 
-          {/* ÉTAPES */}
+          {/* ETAPES */}
           <Text style={S.sectionLabel}>COMMENT CA MARCHE — 4 ETAPES SIMPLES</Text>
           <View style={S.stepsRow}>
             {[
-              { n: "1", t: "Vous signalez", txt: "Remplissez la fiche de declaration et remettez-la a votre conseiller." },
-              { n: "2", t: "Nous contaction", txt: "Nos agents prennent contact avec le proprietaire sous 24 h." },
+              { n: "1", t: "Vous signalez", txt: "Remplissez la fiche de declaration et remettez-la a votre conseiller Casa Caraibes." },
+              { n: "2", t: "Nous contactons", txt: "Nos agents prennent contact avec le proprietaire sous 24 heures ouvrees." },
               { n: "3", t: "Transaction conclue", txt: "Acte notarie signe (vente) ou bail definitif signe (location)." },
-              { n: "4", t: "Vous etes retribue(e)", txt: "Virement bancaire des encaissement de nos honoraires." },
+              { n: "4", t: "Vous etes retribue(e)", txt: "Virement bancaire des encaissement complet de nos honoraires." },
             ].map((s, i, arr) => (
               <View key={i} style={{ flexDirection: "row", flex: 1, alignItems: "flex-start" }}>
                 <View style={S.step}>
@@ -249,8 +231,6 @@ export function FicheApportPromo() {
           {/* MISSIONS */}
           <Text style={S.sectionLabel}>DEUX TYPES DE MISSIONS</Text>
           <View style={S.missionsRow}>
-
-            {/* VENTE */}
             <View style={S.missionCard}>
               <View style={S.missionHead}>
                 <View style={S.missionHeadRow}>
@@ -267,7 +247,6 @@ export function FicheApportPromo() {
               </View>
             </View>
 
-            {/* LOCATION */}
             <View style={S.missionCard}>
               <View style={S.missionHead}>
                 <View style={S.missionHeadRow}>
@@ -283,14 +262,11 @@ export function FicheApportPromo() {
                 <MItem bold="Honoraires " text="equivalents a un mois de loyer charges comprises" />
               </View>
             </View>
-
           </View>
 
           {/* RETRIBUTION */}
           <Text style={S.sectionLabel}>VOTRE RETRIBUTION — 10 % DE NOS HONORAIRES TTC</Text>
           <View style={S.rewardsRow}>
-
-            {/* PRO */}
             <View style={S.rewardCard}>
               <View style={S.rewardHeadPro}>
                 <Text style={S.rewardTitlePro}>PROFESSIONNEL</Text>
@@ -304,7 +280,6 @@ export function FicheApportPromo() {
               </View>
             </View>
 
-            {/* PARTICULIER */}
             <View style={S.rewardCard}>
               <View style={S.rewardHeadPart}>
                 <Text style={S.rewardTitlePart}>PARTICULIER</Text>
@@ -322,66 +297,67 @@ export function FicheApportPromo() {
                 </View>
               </View>
             </View>
-
           </View>
 
-          {/* TABLEAU EXEMPLES */}
-          <Text style={S.tableTitle}>Exemples de retribution selon le bareme d'honoraires</Text>
-          <View style={S.tableWrap}>
-            <View style={S.tableHead}>
-              <Text style={[S.thCell, S.th1]}>Prix de vente</Text>
-              <Text style={[S.thCell, S.th2]}>Taux honoraires</Text>
-              <Text style={[S.thCell, S.th3]}>Honoraires agence</Text>
-              <Text style={[S.thCell, S.th4]}>Votre gain (10 %)</Text>
-            </View>
-            {BAREME.map((r, i) => (
-              <View key={i} style={[S.tableRow, i % 2 !== 0 ? S.tableRowAlt : {}]}>
-                <Text style={[S.tdBase, S.td1]}>{r.prix}</Text>
-                <Text style={[S.tdBase, S.td2]}>{r.taux}</Text>
-                <Text style={[S.tdBase, S.td3]}>{r.honoEx}</Text>
-                <Text style={[S.tdBase, S.td4]}>{r.apport}</Text>
+          {/* TABLEAU — wrap=false pour ne jamais couper */}
+          <View wrap={false} style={S.tableSection}>
+            <Text style={S.tableTitle}>Exemples de retribution selon le bareme d'honoraires</Text>
+            <View style={S.tableWrap}>
+              <View style={S.tableHead}>
+                <Text style={[S.thCell, S.th1]}>Prix de vente</Text>
+                <Text style={[S.thCell, S.th2]}>Honoraires</Text>
+                <Text style={[S.thCell, S.th3]}>Honoraires agence</Text>
+                <Text style={[S.thCell, S.th4]}>Votre gain (10 %)</Text>
               </View>
-            ))}
-          </View>
-
-          {/* CONDITIONS */}
-          <View style={S.condBox}>
-            <Text style={S.condTitle}>Conditions de declenchement de la retribution</Text>
-            {[
-              ["Le proprietaire apporte a signe un mandat avec Casa Caraibes ", "dans les 12 mois", " suivant la remise de votre fiche."],
-              ["La transaction est finalisee : ", "acte authentique signe chez le notaire (vente) ou bail definitif signe (location)", "."],
-              ["Casa Caraibes a ", "integralement encaisse ses honoraires", " avant tout versement."],
-              ["Si l'une de ces conditions n'est pas remplie, ", "aucune retribution ne sera versee", "."],
-            ].map(([a, b, c], i) => (
-              <View key={i} style={S.condRow}>
-                <Text style={S.condNum}>{i + 1}.</Text>
-                <Text style={S.condTxt}>{a}<Text style={S.condBold}>{b}</Text>{c}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* CONTACT */}
-          <View style={S.ctaBox}>
-            <View style={S.ctaLeft}>
-              <Text style={S.ctaTitle}>Pret(e) a nous recommander un bien ?</Text>
-              <Text style={S.ctaSub}>
-                Remplissez la fiche de declaration ci-jointe et remettez-la a votre conseiller.{"\n"}
-                Nous contactons le proprietaire sous 24 heures ouvrees.
-              </Text>
-            </View>
-            <View style={S.ctaRight}>
-              {[["Tel.", "0696 XX XX XX"], ["Email", "contact@casacaraibes.com"], ["Web", "www.casacaraibes.com"]].map(([l, v]) => (
-                <View key={l} style={S.ctaItem}>
-                  <View style={S.ctaDot} />
-                  <Text style={S.ctaVal}>{l}  {v}</Text>
+              {BAREME.map((r, i) => (
+                <View key={i} style={[S.tableRow, i % 2 !== 0 ? S.tableRowAlt : {}]}>
+                  <Text style={[S.tdBase, S.td1]}>{r.prix}</Text>
+                  <Text style={[S.tdBase, S.td2]}>{r.taux}</Text>
+                  <Text style={[S.tdBase, S.td3]}>{r.honos}</Text>
+                  <Text style={[S.tdBase, S.td4]}>{r.apport}</Text>
                 </View>
               ))}
             </View>
           </View>
 
+          {/* CONDITIONS */}
+          <View wrap={false}>
+            <View style={S.condBox}>
+              <Text style={S.condTitle}>Conditions de declenchement de la retribution</Text>
+              {[
+                ["Le proprietaire apporte a signe un mandat avec Casa Caraibes ", "dans les 12 mois", " suivant la remise de votre fiche."],
+                ["La transaction est finalisee : ", "acte authentique signe chez le notaire (vente) ou bail definitif signe (location)", "."],
+                ["Casa Caraibes a ", "integralement encaisse ses honoraires", " avant tout versement."],
+                ["Si l'une de ces conditions n'est pas remplie, ", "aucune retribution ne sera versee", "."],
+              ].map(([a, b, c], i) => (
+                <View key={i} style={S.condRow}>
+                  <Text style={S.condNum}>{i + 1}.</Text>
+                  <Text style={S.condTxt}>{a}<Text style={S.condBold}>{b}</Text>{c}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={S.ctaBox}>
+              <View style={S.ctaLeft}>
+                <Text style={S.ctaTitle}>Pret(e) a nous recommander un bien ?</Text>
+                <Text style={S.ctaSub}>
+                  Remplissez la fiche de declaration ci-jointe et remettez-la a votre conseiller.{"\n"}
+                  Nous contactons le proprietaire sous 24 heures ouvrees.
+                </Text>
+              </View>
+              <View style={S.ctaRight}>
+                {[["Tel.", "0696 XX XX XX"], ["Email", "contact@casacaraibes.com"], ["Web", "www.casacaraibes.com"]].map(([l, v]) => (
+                  <View key={l} style={S.ctaItem}>
+                    <View style={S.ctaDot} />
+                    <Text style={S.ctaVal}>{l}  {v}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+
         </View>
 
-        {/* FOOTER */}
         <View style={S.footer}>
           <Text style={S.footerBrand}>CASA CARAIBES</Text>
           <Text style={S.footerLegal}>
