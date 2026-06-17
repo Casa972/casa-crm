@@ -135,7 +135,7 @@ export interface ActiviteRow {
 export interface DocumentRow {
   id: string;
   agent_id: string;
-  type_doc: "mandat" | "compromis";
+  type_doc: "mandat" | "compromis" | "offre";
   nom: string;
   numero: string | null;
   parties: string | null;

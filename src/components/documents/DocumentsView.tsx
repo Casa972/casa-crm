@@ -4,16 +4,18 @@ import { useDocuments, useDeleteDocument } from "../../hooks/queries/useDocument
 import { getSignedUrl } from "../../services/documents.service";
 import type { DocumentRow } from "../../types/database";
 
-type Filter = "tous" | "mandat" | "compromis";
+type Filter = "tous" | "mandat" | "compromis" | "offre";
 
 const TYPE_LABEL: Record<string, string> = {
   mandat:    "Mandat de vente",
   compromis: "Compromis de vente",
+  offre:     "Offre d'achat",
 };
 
 const TYPE_COLOR: Record<string, string> = {
   mandat:    "bg-blue-100 text-blue-700",
   compromis: "bg-emerald-100 text-emerald-700",
+  offre:     "bg-amber-100 text-amber-700",
 };
 
 function fmtDate(iso?: string) {
@@ -71,7 +73,12 @@ function DocumentCard({ doc }: { doc: DocumentRow }) {
             <span className="text-[11px] font-mono text-ink-muted bg-line rounded px-1.5 py-0.5">{doc.numero}</span>
           )}
         </div>
-        <p className="text-[13.5px] font-semibold text-ink truncate">{doc.nom}</p>
+        <p className="text-[13.5px] font-semibold text-ink truncate">
+          {doc.nom}
+          {doc.nom.endsWith(".docx") && (
+            <span className="ml-2 text-[10px] font-medium text-ink-muted bg-line rounded px-1.5 py-0.5">DOCX</span>
+          )}
+        </p>
         {doc.parties && (
           <p className="text-[12px] text-ink-sub mt-0.5 truncate">{doc.parties}</p>
         )}
@@ -122,6 +129,7 @@ export function DocumentsView() {
     tous:      docs.length,
     mandat:    docs.filter(d => d.type_doc === "mandat").length,
     compromis: docs.filter(d => d.type_doc === "compromis").length,
+    offre:     docs.filter(d => d.type_doc === "offre").length,
   };
 
   return (
@@ -138,7 +146,7 @@ export function DocumentsView() {
 
         {/* Filtres */}
         <div className="mt-4 flex gap-2">
-          {(["tous", "mandat", "compromis"] as Filter[]).map(f => (
+          {(["tous", "mandat", "compromis", "offre"] as Filter[]).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}

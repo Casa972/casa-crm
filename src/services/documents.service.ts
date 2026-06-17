@@ -19,9 +19,14 @@ export async function uploadDocument(params: {
   const path      = `${params.agentId}/${timestamp}_${safeName}`;
 
   // 1. Upload fichier dans Storage
+  const isDocx = params.nom.endsWith(".docx");
+  const contentType = isDocx
+    ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    : "application/pdf";
+
   const { error: uploadErr } = await supabase.storage
     .from(BUCKET)
-    .upload(path, params.blob, { contentType: "application/pdf", upsert: false });
+    .upload(path, params.blob, { contentType, upsert: false });
 
   if (uploadErr) throw uploadErr;
 
