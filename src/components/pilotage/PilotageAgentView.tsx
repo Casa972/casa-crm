@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { KpiCard, StatusPill } from "../shared/StatusPill";
 import { EmptyState } from "../ui/Modal";
-import { CheckCircle, Calendar, CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle, Calendar, CheckCircle2, Circle, Target, Phone, Users, Home, FileText, Handshake, Key, TrendingUp } from "lucide-react";
 import { daysDiff, fdate } from "../../lib/format";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useSessionStore } from "../../store/session.store";
@@ -11,6 +12,155 @@ import { useActivites } from "../../hooks/queries/useActivites";
 
 const ETAPES = ["Prospect", "Visite", "Offre", "Compromis", "Acte"] as const;
 
+// ─── Objectifs débutant ───────────────────────────────────────────────────────
+const MOIS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+interface Objectif {
+  icon: React.ReactNode;
+  label: string;
+  detail: string;
+  valeur: number;
+  cible: number;
+  couleur: string;
+}
+
+function BarreObjectif({ obj }: { obj: Objectif }) {
+  const pct = Math.min(100, obj.cible > 0 ? Math.round((obj.valeur / obj.cible) * 100) : 0);
+  const atteint = pct >= 100;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className={`flex size-7 items-center justify-center rounded-full ${atteint ? "bg-emerald-100 text-emerald-600" : "bg-bg text-ink-muted"}`}>
+            {obj.icon}
+          </span>
+          <div>
+            <div className="text-[13px] font-semibold text-ink">{obj.label}</div>
+            <div className="text-[11px] text-ink-muted">{obj.detail}</div>
+          </div>
+        </div>
+        <div className="text-right shrink-0 ml-4">
+          <span className={`text-[14px] font-bold ${atteint ? "text-emerald-600" : "text-ink"}`}>{obj.valeur}</span>
+          <span className="text-[12px] text-ink-muted"> / {obj.cible}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-2 rounded-full bg-line overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-[width] duration-700 ${atteint ? "bg-emerald-500" : obj.couleur}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span className={`text-[11px] font-semibold w-8 text-right ${atteint ? "text-emerald-600" : "text-ink-muted"}`}>{pct}%</span>
+      </div>
+    </div>
+  );
+}
+
+function ObjectifsPanel({ userId, data, activites }: {
+  userId: string;
+  data: ReturnType<typeof useAgencyData>["data"];
+  activites: ReturnType<typeof useActivites>["data"];
+}) {
+  const now = new Date();
+  const moisLabel = `${MOIS_FR[now.getMonth()]} ${now.getFullYear()}`;
+  const moisKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const trimLabel = `T${Math.ceil((now.getMonth() + 1) / 3)} ${now.getFullYear()}`;
+  const trimMois = [0, 1, 2].map((i) => {
+    const m = now.getMonth() - (now.getMonth() % 3) + i + 1;
+    return `${now.getFullYear()}-${String(m).padStart(2, "0")}`;
+  });
+
+  // Activités de l'agent ce mois
+  const actMois = activites.filter((a) => a.agentId === userId && a.date.startsWith(moisKey));
+  const appels   = actMois.filter((a) => a.typeActivite === "Appel").length;
+  const rdvMois  = actMois.filter((a) => a.typeActivite === "RDV").length;
+  const visites  = actMois.filter((a) => a.typeActivite === "Visite").length;
+  const offres   = actMois.filter((a) => a.typeActivite === "Offre").length;
+
+  // Mandats pris ce mois (tous agents — pas d'agentId sur mandats)
+  const mandatsMois = data.mandats.filter((m) => m.dateDebut.startsWith(moisKey)).length;
+
+  // Clients de l'agent par statut
+  const mesClients = data.clients.filter((c) => c.agentId === userId);
+  const enCompromis = mesClients.filter((c) => c.statut === "Compromis").length;
+  const actesTrim   = data.compromis.filter((c) =>
+    trimMois.some((m) => c.dateActeReel?.startsWith(m))
+  ).length;
+
+  const objectifsMois: Objectif[] = [
+    { icon: <Phone size={14} />,    label: "Appels / prospection", detail: "Contacts sortants ce mois",    valeur: appels,      cible: 20, couleur: "bg-sky-500" },
+    { icon: <Users size={14} />,    label: "RDV clients",          detail: "Rendez-vous enregistrés",       valeur: rdvMois,     cible: 6,  couleur: "bg-violet-500" },
+    { icon: <Home size={14} />,     label: "Visites réalisées",    detail: "Visites de biens effectuées",   valeur: visites,     cible: 6,  couleur: "bg-amber-500" },
+    { icon: <FileText size={14} />, label: "Offres présentées",    detail: "Offres remises à un vendeur",   valeur: offres,      cible: 2,  couleur: "bg-orange-500" },
+    { icon: <Key size={14} />,      label: "Mandats pris",         detail: "Nouveaux mandats en agence",    valeur: mandatsMois, cible: 2,  couleur: "bg-primary" },
+  ];
+
+  const objectifsPipeline: Objectif[] = [
+    { icon: <Handshake size={14} />, label: "Compromis actifs",     detail: "Dossiers en cours de l'agent", valeur: enCompromis, cible: 1, couleur: "bg-teal-500" },
+    { icon: <CheckCircle size={14}/>, label: "Actes réalisés",      detail: `Objectif trimestriel · ${trimLabel}`, valeur: actesTrim, cible: 1, couleur: "bg-emerald-500" },
+  ];
+
+  // Score global
+  const totalPct = Math.round(
+    [...objectifsMois, ...objectifsPipeline].reduce((acc, o) =>
+      acc + Math.min(1, o.cible > 0 ? o.valeur / o.cible : 0), 0
+    ) / (objectifsMois.length + objectifsPipeline.length) * 100
+  );
+
+  const motivation =
+    totalPct >= 80 ? "🏆 Excellent mois ! Tu es au top de tes objectifs." :
+    totalPct >= 50 ? "💪 Bonne progression ! Garde ce rythme jusqu'à la fin du mois." :
+    totalPct >= 25 ? "📈 Bon départ ! Concentre-toi sur les appels et les RDV." :
+    "🚀 C'est le moment de se lancer ! Commence par 5 appels aujourd'hui.";
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Header */}
+      <div className="card p-4 flex items-center justify-between">
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-wide text-ink-muted mb-0.5">Période en cours</div>
+          <div className="text-[15px] font-bold text-ink">{moisLabel}</div>
+          <div className="text-[12px] text-ink-muted mt-0.5">Objectifs mensuels · niveau débutant</div>
+        </div>
+        <div className="flex flex-col items-center justify-center size-16 rounded-full border-2 border-primary bg-primary/5">
+          <span className="text-[18px] font-bold text-primary leading-none">{totalPct}%</span>
+          <span className="text-[10px] text-ink-muted">atteint</span>
+        </div>
+      </div>
+
+      {/* Objectifs mensuels */}
+      <div className="card p-4">
+        <h2 className="mb-4 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5">
+          <TrendingUp size={13} /> Activité mensuelle
+        </h2>
+        <div className="flex flex-col gap-4">
+          {objectifsMois.map((o) => <BarreObjectif key={o.label} obj={o} />)}
+        </div>
+      </div>
+
+      {/* Pipeline */}
+      <div className="card p-4">
+        <h2 className="mb-4 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5">
+          <Target size={13} /> Pipeline & résultats
+        </h2>
+        <div className="flex flex-col gap-4">
+          {objectifsPipeline.map((o) => <BarreObjectif key={o.label} obj={o} />)}
+        </div>
+        <div className="mt-4 rounded-lg bg-bg px-4 py-3 text-[12.5px] text-ink-muted border border-line">
+          <span className="font-semibold text-ink">💡 Rappel : </span>
+          En immobilier, 1 acte = en moyenne 15 appels → 5 RDV → 3 visites → 1 offre → 1 compromis → 1 acte. Sois régulier dans la prospection !
+        </div>
+      </div>
+
+      {/* Message motivation */}
+      <div className="rounded-xl bg-primary/5 border border-primary/20 px-4 py-3 text-[13px] text-ink">
+        {motivation}
+      </div>
+    </div>
+  );
+}
+
 export function PilotageAgentView() {
   const { data } = useAgencyData();
   const user = useSessionStore((s) => s.user);
@@ -18,6 +168,7 @@ export function PilotageAgentView() {
   const { data: rdvList } = useRdv();
   const { data: taches } = useTaches();
   const { data: activites } = useActivites(undefined);
+  const [tab, setTab] = useState<"dashboard" | "objectifs">("dashboard");
   if (!user) return null;
 
   const mesClients = data.clients.filter((c) => c.agentId === user.id);
@@ -38,7 +189,32 @@ export function PilotageAgentView() {
 
   return (
     <div className="mx-auto max-w-[900px] px-4 py-6">
-      <h1 className="mb-5 font-heading text-2xl font-semibold text-ink">Bonjour {user.name} 👋</h1>
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <h1 className="font-heading text-2xl font-semibold text-ink">Bonjour {user.name} 👋</h1>
+        {/* Onglets */}
+        <div className="flex rounded-lg border border-line bg-bg p-0.5 shrink-0">
+          <button
+            onClick={() => setTab("dashboard")}
+            className={`px-3 py-1.5 rounded-md text-[12.5px] font-semibold transition-colors ${tab === "dashboard" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
+          >
+            Tableau de bord
+          </button>
+          <button
+            onClick={() => setTab("objectifs")}
+            className={`px-3 py-1.5 rounded-md text-[12.5px] font-semibold transition-colors flex items-center gap-1.5 ${tab === "objectifs" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
+          >
+            <Target size={13} /> Objectifs
+          </button>
+        </div>
+      </div>
+
+      {/* ── Onglet Objectifs ── */}
+      {tab === "objectifs" && (
+        <ObjectifsPanel userId={user.id} data={data} activites={activites} />
+      )}
+
+      {/* ── Onglet Dashboard ── */}
+      {tab === "dashboard" && <>
 
       {/* KPIs */}
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -155,6 +331,8 @@ export function PilotageAgentView() {
           </div>
         </div>
       )}
+
+      </>}
     </div>
   );
 }
