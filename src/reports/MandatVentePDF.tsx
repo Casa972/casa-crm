@@ -1,9 +1,11 @@
 import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer";
 import logoSrc from "../assets/logo.png";
-import MontserratRegular from "../assets/fonts/Montserrat-Regular.ttf";
-import MontserratMedium  from "../assets/fonts/Montserrat-Medium.ttf";
-import MontserratBold    from "../assets/fonts/Montserrat-Bold.ttf";
-import MontserratItalic  from "../assets/fonts/Montserrat-Italic.ttf";
+import {
+  MontserratRegularB64 as MontserratRegular,
+  MontserratMediumB64  as MontserratMedium,
+  MontserratBoldB64    as MontserratBold,
+  MontserratItalicB64  as MontserratItalic,
+} from "../assets/fonts/montserratFonts";
 import type { MandatVenteFull, Mandant } from "../schemas/redacteur/mandatVenteFull.schema";
 import { calcMandatVente, isCopro, isTerrain, isFonds, needsDPE } from "../schemas/redacteur/mandatVenteFull.schema";
 
