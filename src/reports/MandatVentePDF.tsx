@@ -68,15 +68,16 @@ const FOOTER_TXT = "Casa Caraïbes SARL — RCS Fort-de-France 928 647 981 — C
 
 function MandantBlock({ m }: { m: Mandant }) {
   const name = [m.civilite, m.prenom, m.nom].filter(Boolean).join(" ");
+  // Utiliser !! pour convertir string vide "" en false (évite "Invalid '' string child")
   return (
     <View>
       <Text style={s.mandantName}>{name || dash}</Text>
-      {m.dateNaissance && <Text style={s.mandantLine}>Né(e) le {fdShort(m.dateNaissance)}</Text>}
-      {m.nationalite && <Text style={s.mandantLine}>Nationalité : {m.nationalite}</Text>}
-      {m.adresse && <Text style={s.mandantLine}>Domicilié(e) : {m.adresse}</Text>}
-      {(m.codePostal || m.ville) && <Text style={s.mandantLine}>{m.codePostal} {m.ville.toUpperCase()}{m.pays && m.pays !== "FRANCE" ? ` — ${m.pays}` : " — FRANCE"}</Text>}
-      {m.tel && <Text style={s.mandantLine}>Tél : {m.tel}</Text>}
-      {m.email && <Text style={s.mandantLine}>Email : {m.email}</Text>}
+      {!!m.dateNaissance && <Text style={s.mandantLine}>Né(e) le {fdShort(m.dateNaissance)}</Text>}
+      {!!m.nationalite && <Text style={s.mandantLine}>Nationalité : {m.nationalite}</Text>}
+      {!!m.adresse && <Text style={s.mandantLine}>Domicilié(e) : {m.adresse}</Text>}
+      {!!(m.codePostal || m.ville) && <Text style={s.mandantLine}>{m.codePostal} {m.ville.toUpperCase()}{m.pays && m.pays !== "FRANCE" ? ` — ${m.pays}` : " — FRANCE"}</Text>}
+      {!!m.tel && <Text style={s.mandantLine}>Tél : {m.tel}</Text>}
+      {!!m.email && <Text style={s.mandantLine}>Email : {m.email}</Text>}
       <Text style={s.mandantQualite}>Qualité : {m.qualite}</Text>
     </View>
   );
@@ -136,10 +137,10 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
   if (isFonds(t)) {
     return (
       <View>
-        {f.descriptionBien && <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Description du fonds : </Text>{f.descriptionBien}</Text>}
+        {!!f.descriptionBien && <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Description du fonds : </Text>{f.descriptionBien}</Text>}
         {f.chiffreAffaires > 0 && <Text style={s.body}><Text style={s.bold}>Chiffre d'affaires annuel HT : </Text>{E(f.chiffreAffaires)}</Text>}
-        {f.commune && <Text style={s.body}><Text style={s.bold}>Commune : </Text>{f.commune}{f.codePostal ? ` (${f.codePostal})` : ""}</Text>}
-        {f.refCadastrale && <Text style={s.body}><Text style={s.bold}>Réf. cadastrale : </Text>{f.refCadastrale}</Text>}
+        {!!f.commune && <Text style={s.body}><Text style={s.bold}>Commune : </Text>{f.commune}{f.codePostal ? ` (${f.codePostal})` : ""}</Text>}
+        {!!f.refCadastrale && <Text style={s.body}><Text style={s.bold}>Réf. cadastrale : </Text>{f.refCadastrale}</Text>}
       </View>
     );
   }
@@ -214,7 +215,7 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
             </View>
           ))}
         </View>
-        {f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
+        {!!f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
         {isCopro(t) && <CoproTable f={f} />}
       </View>
     );
@@ -241,7 +242,7 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
           </View>
         ))}
       </View>
-      {f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
+      {!!f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
     </View>
   );
 }
@@ -314,7 +315,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
             Le bien est actuellement occupé en vertu d'un {f.bailType} consenti à {f.nomLocataire || dash} moyennant un loyer mensuel de {E(f.loyerMensuel)}, venant à expiration le {f.datFinBail ? fdShort(f.datFinBail) : dash}.
           </Text>
         )}
-        {f.servitudes && (
+        {!!f.servitudes && (
           <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>SERVITUDES : </Text>{f.servitudes}</Text>
         )}
 
@@ -332,8 +333,8 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         <Text style={s.body}>
           Le diagnostiqueur mandaté est : {f.diagnostiqueur || "à désigner"}. Les frais de diagnostic sont à la charge exclusive du vendeur.
         </Text>
-        {f.ernmt && <Text style={s.body}><Text style={s.bold}>ERNMT — Informations : </Text>{f.ernmt}</Text>}
-        {f.anomaliesElec && <Text style={s.body}><Text style={s.bold}>Anomalies électriques constatées : </Text>{f.anomaliesElec}</Text>}
+        {!!f.ernmt && <Text style={s.body}><Text style={s.bold}>ERNMT — Informations : </Text>{f.ernmt}</Text>}
+        {!!f.anomaliesElec && <Text style={s.body}><Text style={s.bold}>Anomalies électriques constatées : </Text>{f.anomaliesElec}</Text>}
 
         {/* Article 2 */}
         <Text style={s.articleTitle}>ARTICLE 2 — PRIX ET CONDITIONS FINANCIÈRES</Text>
@@ -392,7 +393,7 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
           {"  "}• Remettre toute offre d'achat au mandant dans les meilleurs délais{"\n"}
           {"  "}• Coordonner la réalisation des diagnostics techniques obligatoires auprès de prestataires agréés, les frais restant à la charge du vendeur{"\n"}
           {"  "}• Respecter le secret professionnel et les obligations de confidentialité{"\n"}
-          {f.avecPanneau ? "  • Poser et maintenir un panneau de vente sur le bien pendant toute la durée du mandat\n" : ""}
+          {f.avecPanneau ? "  • Poser et maintenir un panneau de vente sur le bien pendant toute la durée du mandat\n" : null}
           {"  "}• Contribuer à la finalisation de la vente jusqu'à la signature de l'acte authentique devant notaire
         </Text>
 
