@@ -10,7 +10,11 @@ import { useEstimations, useSaveEstimation, useDeleteEstimation, uid } from "../
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useSessionStore } from "../../store/session.store";
 import { useAutosave } from "../../hooks/useAutosave";
-import type { Estimation, RefMarche, CritereMarche } from "../../schemas/estimation.schema";
+import type {
+  Estimation, RefMarche, CritereMarche,
+  DiagnosticDDT, ObservationVisuelle, IndicateurMarche,
+  SynthesePonderation, PieceAnalysee, SourceExpertise,
+} from "../../schemas/estimation.schema";
 import { TypeBienEstimation, EtatGeneral, ImpactCritere, COMMUNES_MARTINIQUE } from "../../schemas/enums";
 import { eur } from "../../lib/format";
 import { nombreEnLettres } from "../../schemas/estimation.schema";
@@ -22,13 +26,29 @@ import {
 const EstimationPDFDownload = lazy(() => import("./EstimationPDFDownload"));
 
 const today = () => new Date().toISOString().slice(0, 10);
-const newRefMarche = (): RefMarche => ({ id: uid(), type: "", surface: 0, prix: 0, prixM2: 0, observations: "", source: "Annonce active" });
-const newCritere = (): CritereMarche => ({ id: uid(), critere: "", analyse: "", impact: "Neutre" });
+const newRefMarche = (): RefMarche => ({ id: uid(), type: "", surface: 0, prix: 0, prixM2: 0, observations: "", source: "Annonce active", reference: "", localisation: "", differences: "" });
+const newCritere  = (): CritereMarche => ({ id: uid(), critere: "", analyse: "", impact: "Neutre", situationBien: "", ajustement: "" });
+const newDiag     = (diagnostic = ""): DiagnosticDDT => ({ id: uid(), diagnostic, resultat: "", impact: "Sans impact" });
+const newObsVis   = (): ObservationVisuelle => ({ id: uid(), zone: "", constat: "", preconisation: "" });
+const newInd      = (): IndicateurMarche => ({ id: uid(), indicateur: "", valeur: "", source: "" });
+const newSynth    = (): SynthesePonderation => ({ id: uid(), methode: "", valeurIndicative: 0, ponderation: "", contribution: 0 });
+const newPiece    = (): PieceAnalysee => ({ id: uid(), reference: "", nature: "", date: "", emetteur: "" });
+const newSource   = (): SourceExpertise => ({ id: uid(), source: "", usage: "", date: "" });
 
 const CRITERES_DEFAUT = [
-  "Surface habitable", "Terrasse / extérieur", "Étage / exposition", "État général",
-  "Vendu meublé", "Cave / parking", "Potentiel locatif saisonnier", "Localisation",
-  "Charges de copropriété",
+  "Superficie (m²)", "Terrasse / extérieur", "Étage / exposition", "État général intérieur",
+  "Prestations & équipements", "Stationnement", "Cave", "Charges de copropriété", "Localisation fine",
+];
+
+const DDT_DEFAUT = [
+  "DPE (Diagnostic de Performance Énergétique)",
+  "État des risques et pollutions (ERP)",
+  "Termites",
+  "Amiante",
+  "Plomb (CREP)",
+  "Électricité",
+  "Gaz",
+  "Assainissement non collectif",
 ];
 
 // ─── DVF API ──────────────────────────────────────────────────────────────────
@@ -79,12 +99,16 @@ function newEstimation(agentId?: string): Estimation {
     typeBien: "Appartement en copropriété", residence: "", adresse: "", commune: "Les Trois-Îlets", codePostal: "97229",
     sectionCadastrale: "", parcelles: "", demandeur: "", redacteur: "M. Luc CLEMENTE",
     dateEstimation: today(), photoBase64: "",
+    lieu: "Le Lamentin (Martinique)", certificationExpert: "Expert Immobilier Certifié INIGEP®",
     etage: "", regimeJuridique: "Copropriété – appartement privatif", chargesCopro: 0,
     surfaceHabitable: 0, surfaceTerrasse: 0, surfaceJardin: 0, surfaceTerrain: 0,
     modeConstructif: "Béton", etatGeneral: "Bon état", distribution: "", parking: "",
     cave: false, piscine: false, venduMeuble: false, notesDescription: "",
     structureGeneral: "Bon état", finitionsInterieures: "Bon état", equipementsSanitaires: "Bon état", travauxAPrevoir: "",
+    diagnosticsDDT: DDT_DEFAUT.map(d => newDiag(d)),
+    observationsVisuelles: [],
     descriptionEnvironnement: "",
+    indicateursMarche: [],
     refsAnnonces: [], refsDVF: [], commentaireMarche: "",
     avecLocatif: false,
     saisons: [
@@ -92,9 +116,22 @@ function newEstimation(agentId?: string): Estimation {
       { periode: "Moyenne saison (vacances scolaires)", tarifNuit: 0, nbNuits: 0 },
       { periode: "Basse saison", tarifNuit: 0, nbNuits: 0 },
     ],
-    criteres: CRITERES_DEFAUT.map(c => ({ id: uid(), critere: c, analyse: "", impact: "Neutre" as const })),
+    loyerBrut: 0, loyerRetenu: 0, chargesLocatif: 0, taxeFonciere: 0, partNonRecuperable: 0,
+    tauxVacance: "", delaiRelocation: "", cibleLocataire: "",
+    criteres: CRITERES_DEFAUT.map(c => ({ id: uid(), critere: c, analyse: "", impact: "Neutre" as const, situationBien: "", ajustement: "" })),
     argumentaireValeur: "", prixM2Retenu: 0, valeurVenale: 0, valeurCoupDeCœur: 0, argumentaireCoupDeCœur: "",
+    synthesePonderation: [
+      { id: uid(), methode: "Comparaison directe", valeurIndicative: 0, ponderation: "70%", contribution: 0 },
+      { id: uid(), methode: "Capitalisation des revenus", valeurIndicative: 0, ponderation: "30%", contribution: 0 },
+    ],
+    fourchetteBasse: 0, fourchetteHaute: 0,
     limites: "",
+    piecesAnalysees: [],
+    sourcesExpertise: [
+      { id: uid(), source: "DVF DGFiP", usage: "Références de transactions", date: "" },
+      { id: uid(), source: "Portails immobiliers (LeBonCoin, SeLoger)", usage: "Comparaison annonces actives", date: "" },
+      { id: uid(), source: "Visite du bien", usage: "État et description", date: "" },
+    ],
   };
 }
 
@@ -114,10 +151,11 @@ function AiButton({ label, onClick, loading }: { label: string; onClick: () => v
 const STEPS = [
   { id: 1, label: "Page de garde" },
   { id: 2, label: "Identification" },
-  { id: 3, label: "État & Environnement" },
-  { id: 4, label: "Étude de marché" },
-  { id: 5, label: "Locatif" },
-  { id: 6, label: "Estimation" },
+  { id: 3, label: "État & Diagnostics" },
+  { id: 4, label: "Environnement" },
+  { id: 5, label: "Étude de marché" },
+  { id: 6, label: "Locatif" },
+  { id: 7, label: "Estimation" },
 ];
 
 // ─── Éditeur multi-étapes ─────────────────────────────────────────────────────
@@ -155,7 +193,7 @@ function EstimationEditor({ initial, onSave, onBack }: {
         const cols = l.split(";").map(c => c.replace(/^"|"$/g, "").trim());
         const prix = parseFloat((cols[2] ?? "").replace(/\s/g, "")) || 0;
         const surface = parseFloat(cols[1] ?? "") || 0;
-        return { id: uid(), type: cols[0] ?? "", surface, prix, prixM2: surface > 0 ? Math.round(prix / surface) : 0, observations: cols[3] ?? "", source: target === "refsDVF" ? "DVF" as const : "Annonce active" as const };
+        return { id: uid(), type: cols[0] ?? "", surface, prix, prixM2: surface > 0 ? Math.round(prix / surface) : 0, observations: cols[3] ?? "", source: target === "refsDVF" ? "DVF" as const : "Annonce active" as const, reference: "", localisation: "", differences: "" };
       });
       upd(target, [...(e[target] ?? []), ...refs]);
     };
@@ -166,7 +204,8 @@ function EstimationEditor({ initial, onSave, onBack }: {
   const updRef = (t: "refsAnnonces" | "refsDVF", idx: number, k: keyof RefMarche, v: string) => {
     upd(t, e[t].map((r, i) => {
       if (i !== idx) return r;
-      const u = { ...r, [k]: k === "type" || k === "observations" || k === "source" ? v : (parseFloat(v) || 0) };
+      const numKeys = new Set(["surface", "prix", "prixM2"]);
+      const u = { ...r, [k]: numKeys.has(k) ? (parseFloat(v) || 0) : v };
       if ((k === "prix" || k === "surface") && u.surface > 0 && u.prix > 0) u.prixM2 = Math.round(u.prix / u.surface);
       return u;
     }));
@@ -174,6 +213,20 @@ function EstimationEditor({ initial, onSave, onBack }: {
   const delRef = (t: "refsAnnonces" | "refsDVF", idx: number) => upd(t, e[t].filter((_, i) => i !== idx));
   const updCritere = (idx: number, k: keyof CritereMarche, v: string) =>
     upd("criteres", e.criteres.map((c, i) => i === idx ? { ...c, [k]: v } : c));
+
+  // ── Handlers nouvelles tables ──
+  const updDDT = (idx: number, k: keyof DiagnosticDDT, v: string) =>
+    upd("diagnosticsDDT", (e.diagnosticsDDT ?? []).map((d, i) => i === idx ? { ...d, [k]: v } : d));
+  const updObs = (idx: number, k: keyof ObservationVisuelle, v: string) =>
+    upd("observationsVisuelles", (e.observationsVisuelles ?? []).map((o, i) => i === idx ? { ...o, [k]: v } : o));
+  const updInd = (idx: number, k: keyof IndicateurMarche, v: string) =>
+    upd("indicateursMarche", (e.indicateursMarche ?? []).map((ind, i) => i === idx ? { ...ind, [k]: v } : ind));
+  const updSynth = (idx: number, k: keyof SynthesePonderation, v: string) =>
+    upd("synthesePonderation", (e.synthesePonderation ?? []).map((sp, i) => i === idx ? { ...sp, [k]: k === "valeurIndicative" || k === "contribution" ? parseFloat(v) || 0 : v } : sp));
+  const updPiece = (idx: number, k: keyof PieceAnalysee, v: string) =>
+    upd("piecesAnalysees", (e.piecesAnalysees ?? []).map((p, i) => i === idx ? { ...p, [k]: v } : p));
+  const updSrc = (idx: number, k: keyof SourceExpertise, v: string) =>
+    upd("sourcesExpertise", (e.sourcesExpertise ?? []).map((src, i) => i === idx ? { ...src, [k]: v } : src));
 
   const applySuggestion = () => {
     if (!suggestion) return;
@@ -193,7 +246,7 @@ function EstimationEditor({ initial, onSave, onBack }: {
           alert("Texte généré copié dans le presse-papier :\n\n" + result);
         }
       } else if (Array.isArray(result) && result.length > 0) {
-        upd("criteres", result.map(c => ({ id: uid(), critere: c.critere, analyse: c.analyse, impact: (c.impact as CritereMarche["impact"]) || "Neutre" })));
+        upd("criteres", result.map(c => ({ id: uid(), critere: c.critere, analyse: c.analyse, situationBien: c.analyse || "", ajustement: "", impact: (c.impact as CritereMarche["impact"]) || "Neutre" })));
       }
     } catch { alert("Erreur de génération IA. Vérifiez votre connexion."); }
     setAiLoading(null);
@@ -320,6 +373,8 @@ function EstimationEditor({ initial, onSave, onBack }: {
               <Field label="Demandeur"><Input value={e.demandeur} onChange={ev => upd("demandeur", ev.target.value)} placeholder="M. et Mme DUPONT" /></Field>
               <Field label="Rédacteur"><Input value={e.redacteur} onChange={ev => upd("redacteur", ev.target.value)} /></Field>
               <Field label="Date"><Input type="date" value={e.dateEstimation} onChange={ev => upd("dateEstimation", ev.target.value)} /></Field>
+              <Field label="Lieu de signature"><Input value={e.lieu ?? ""} onChange={ev => upd("lieu", ev.target.value)} placeholder="Le Lamentin (Martinique)" /></Field>
+              <Field label="Certification expert"><Input value={e.certificationExpert ?? ""} onChange={ev => upd("certificationExpert", ev.target.value)} placeholder="Expert Immobilier Certifié INIGEP®" /></Field>
             </Grid2>
             <Field label="Photo de couverture (optionnel)">
               <input type="file" accept="image/*" onChange={handlePhoto} className="text-[13px] text-ink-sub" />
@@ -356,12 +411,14 @@ function EstimationEditor({ initial, onSave, onBack }: {
           </div>
         )}
 
-        {/* ÉTAPE 3 — État & Environnement */}
+        {/* ÉTAPE 3 — État & Diagnostics */}
         {step === 3 && (
           <div>
-            <h2 className="mb-4 font-heading text-base font-semibold text-ink">État général & Environnement</h2>
+            <h2 className="mb-4 font-heading text-base font-semibold text-ink">État général & Diagnostics</h2>
+
+            {/* État général */}
             <div className="card mb-5 p-4">
-              <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted">État général</div>
+              <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted">3.1 État général</div>
               <Grid2>
                 <Field label="Structure générale"><Select value={e.structureGeneral} onChange={v => upd("structureGeneral", v as Estimation["structureGeneral"])} options={EtatGeneral.options} /></Field>
                 <Field label="Finitions intérieures"><Select value={e.finitionsInterieures} onChange={v => upd("finitionsInterieures", v as Estimation["finitionsInterieures"])} options={EtatGeneral.options} /></Field>
@@ -369,16 +426,68 @@ function EstimationEditor({ initial, onSave, onBack }: {
                 <Field label="Travaux à prévoir"><Input value={e.travauxAPrevoir} onChange={ev => upd("travauxAPrevoir", ev.target.value)} /></Field>
               </Grid2>
             </div>
+
+            {/* DDT */}
+            <div className="mb-2 text-[12px] font-bold uppercase tracking-wide text-ink-muted">3.2 Diagnostics DDT</div>
+            <div className="card mb-5 overflow-hidden">
+              <div className="grid border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "2fr 2fr 1.5fr" }}>
+                <span>Diagnostic</span><span>Résultat / Classe</span><span>Impact valeur</span>
+              </div>
+              {(e.diagnosticsDDT ?? []).map((d, i) => (
+                <div key={d.id} className={`grid gap-1.5 border-b border-line px-3 py-2 ${i % 2 === 0 ? "" : "bg-bg"}`} style={{ gridTemplateColumns: "2fr 2fr 1.5fr" }}>
+                  <Input value={d.diagnostic} onChange={ev => updDDT(i, "diagnostic", ev.target.value)} placeholder="DPE…" className="h-7 text-[12px]" />
+                  <Input value={d.resultat} onChange={ev => updDDT(i, "resultat", ev.target.value)} placeholder="Classe D / 180 kWh…" className="h-7 text-[12px]" />
+                  <Input value={d.impact} onChange={ev => updDDT(i, "impact", ev.target.value)} placeholder="Sans impact" className="h-7 text-[12px]" />
+                </div>
+              ))}
+              <div className="px-3 py-2">
+                <button className="btn-ghost text-[12px]" onClick={() => upd("diagnosticsDDT", [...(e.diagnosticsDDT ?? []), newDiag()])}>
+                  <Plus size={13} /> Ajouter
+                </button>
+              </div>
+            </div>
+
+            {/* Observations visuelles */}
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">3.3 Observations visuelles</span>
+              <button className="btn-ghost text-[12px]" onClick={() => upd("observationsVisuelles", [...(e.observationsVisuelles ?? []), newObsVis()])}>
+                <Plus size={13} /> Ajouter
+              </button>
+            </div>
+            {(e.observationsVisuelles ?? []).length === 0 ? (
+              <div className="mb-4 rounded border border-dashed border-line2 py-4 text-center text-[12.5px] text-ink-muted">Aucune observation (optionnel)</div>
+            ) : (
+              <div className="card mb-4 overflow-hidden">
+                <div className="grid border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "1.5fr 2fr 2fr auto" }}>
+                  <span>Zone</span><span>Constat technique</span><span>Préconisation</span><span />
+                </div>
+                {(e.observationsVisuelles ?? []).map((o, i) => (
+                  <div key={o.id} className={`grid gap-1.5 border-b border-line px-3 py-2 ${i % 2 === 0 ? "" : "bg-bg"}`} style={{ gridTemplateColumns: "1.5fr 2fr 2fr auto" }}>
+                    <Input value={o.zone} onChange={ev => updObs(i, "zone", ev.target.value)} placeholder="Cuisine…" className="h-7 text-[12px]" />
+                    <Input value={o.constat} onChange={ev => updObs(i, "constat", ev.target.value)} placeholder="Fissures en façade…" className="h-7 text-[12px]" />
+                    <Input value={o.preconisation} onChange={ev => updObs(i, "preconisation", ev.target.value)} placeholder="Rebouchage…" className="h-7 text-[12px]" />
+                    <button onClick={() => upd("observationsVisuelles", (e.observationsVisuelles ?? []).filter((_, j) => j !== i))} className="text-ink-muted hover:text-danger"><Trash2 size={13} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ÉTAPE 4 — Environnement */}
+        {step === 4 && (
+          <div>
+            <h2 className="mb-4 font-heading text-base font-semibold text-ink">Environnement et situation</h2>
             <div className="mb-1.5 flex items-center justify-between">
               <label className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Description de l'environnement</label>
               <AiButton label="Générer avec IA" loading={aiLoading === "env"} onClick={() => withAi("env", () => genEnvironnement(e))} />
             </div>
-            <Textarea rows={8} value={e.descriptionEnvironnement} onChange={ev => upd("descriptionEnvironnement", ev.target.value)} placeholder="" />
+            <Textarea rows={10} value={e.descriptionEnvironnement} onChange={ev => upd("descriptionEnvironnement", ev.target.value)} placeholder="Quartier, accessibilité, commerces, transports, nuisances éventuelles…" />
           </div>
         )}
 
-        {/* ÉTAPE 4 — Marché */}
-        {step === 4 && (
+        {/* ÉTAPE 5 — Marché */}
+        {step === 5 && (
           <div>
             <h2 className="mb-1 font-heading text-base font-semibold text-ink">Étude de marché</h2>
             <p className="mb-4 text-[12.5px] text-ink-muted">Les références saisies ici alimentent la proposition de prix automatique à l'étape 6.</p>
@@ -402,53 +511,100 @@ function EstimationEditor({ initial, onSave, onBack }: {
                 <b>Comment importer :</b> cliquez le bouton ci-dessus → le fichier se télécharge → cliquez <b>📥 CSV</b> dans le tableau DVF ci-dessous → sélectionnez le fichier téléchargé.
               </div>
             </div>
-            <RefTable target="refsAnnonces" label="Références — Annonces actives (leboncoin, domimmo…)" />
-            <RefTable target="refsDVF" label="Données DVF — Transactions réelles (DGFiP)" />
+            {/* Indicateurs de marché */}
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">5.1 Indicateurs de marché</span>
+              <button className="btn-ghost text-[12px]" onClick={() => upd("indicateursMarche", [...(e.indicateursMarche ?? []), newInd()])}><Plus size={13} /> Ajouter</button>
+            </div>
+            {(e.indicateursMarche ?? []).length > 0 && (
+              <div className="card mb-5 overflow-hidden">
+                <div className="grid border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "2.5fr 1.5fr 1.5fr auto" }}>
+                  <span>Indicateur</span><span>Valeur</span><span>Source</span><span />
+                </div>
+                {(e.indicateursMarche ?? []).map((ind, i) => (
+                  <div key={ind.id} className={`grid gap-1.5 border-b border-line px-3 py-2 ${i % 2 === 0 ? "" : "bg-bg"}`} style={{ gridTemplateColumns: "2.5fr 1.5fr 1.5fr auto" }}>
+                    <Input value={ind.indicateur} onChange={ev => updInd(i, "indicateur", ev.target.value)} placeholder="Prix moyen au m²…" className="h-7 text-[12px]" />
+                    <Input value={ind.valeur} onChange={ev => updInd(i, "valeur", ev.target.value)} placeholder="3 200 €/m²" className="h-7 text-[12px]" />
+                    <Input value={ind.source} onChange={ev => updInd(i, "source", ev.target.value)} placeholder="DVF / LeBonCoin" className="h-7 text-[12px]" />
+                    <button onClick={() => upd("indicateursMarche", (e.indicateursMarche ?? []).filter((_, j) => j !== i))} className="px-1 text-ink-muted hover:text-danger"><Trash2 size={12} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <RefTable target="refsAnnonces" label="5.2 Références — Annonces actives (leboncoin, domimmo…)" />
+            <RefTable target="refsDVF" label="5.3 Données DVF — Transactions réelles (DGFiP)" />
             <Field label="Commentaire de marché">
               <Textarea rows={3} value={e.commentaireMarche} onChange={ev => upd("commentaireMarche", ev.target.value)} placeholder="" />
             </Field>
           </div>
         )}
 
-        {/* ÉTAPE 5 — Locatif */}
-        {step === 5 && (
+        {/* ÉTAPE 6 — Locatif */}
+        {step === 6 && (
           <div>
-            <h2 className="mb-4 font-heading text-base font-semibold text-ink">Potentiel locatif saisonnier</h2>
-            <label className="mb-5 flex items-center gap-2.5 text-[13.5px] font-medium text-ink cursor-pointer">
+            <h2 className="mb-4 font-heading text-base font-semibold text-ink">Analyse du potentiel locatif</h2>
+            <label className="mb-4 flex items-center gap-2.5 text-[13.5px] font-medium text-ink cursor-pointer">
               <input type="checkbox" checked={e.avecLocatif} onChange={ev => upd("avecLocatif", ev.target.checked)} className="size-4 accent-primary" />
-              Inclure une analyse du potentiel locatif saisonnier
+              Inclure une analyse du potentiel locatif
             </label>
             {e.avecLocatif && (
-              <div className="card p-4">
-                <table className="w-full text-[13px]">
-                  <thead><tr className="border-b border-line">
-                    <th className="pb-2 text-left font-semibold text-ink-sub">Période</th>
-                    <th className="pb-2 text-right font-semibold text-ink-sub">Tarif/nuit</th>
-                    <th className="pb-2 text-right font-semibold text-ink-sub">Nb nuits</th>
-                    <th className="pb-2 text-right font-semibold text-ink-sub">Revenu brut</th>
-                  </tr></thead>
-                  <tbody>
-                    {e.saisons.map((ss, i) => (
-                      <tr key={i} className="border-b border-line/50">
-                        <td className="py-2 pr-3 text-ink-sub">{ss.periode}</td>
-                        <td className="py-2 pr-2"><Input type="number" value={String(ss.tarifNuit || "")} onChange={ev => upd("saisons", e.saisons.map((s, j) => j === i ? { ...s, tarifNuit: +ev.target.value } : s))} className="h-8 w-24 text-right text-[13px]" /></td>
-                        <td className="py-2 pr-2"><Input type="number" value={String(ss.nbNuits || "")} onChange={ev => upd("saisons", e.saisons.map((s, j) => j === i ? { ...s, nbNuits: +ev.target.value } : s))} className="h-8 w-20 text-right text-[13px]" /></td>
-                        <td className="py-2 text-right font-semibold text-ink">{eur(ss.tarifNuit * ss.nbNuits)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="mt-3 flex items-center justify-between rounded bg-primary-soft px-3 py-2.5">
-                  <span className="text-[12.5px] font-semibold text-primary">Total ({e.saisons.reduce((s, x) => s + x.nbNuits, 0)} nuits/an)</span>
-                  <span className="font-heading text-base font-bold text-primary">{eur(e.saisons.reduce((s, x) => s + x.tarifNuit * x.nbNuits, 0))} brut</span>
+              <>
+                {/* Locatif longue durée */}
+                <div className="card mb-4 p-4">
+                  <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted">Analyse locative longue durée</div>
+                  <Grid2>
+                    <Field label="Loyer brut estimé (€/mois HC)"><Input type="number" value={String(e.loyerBrut || "")} onChange={ev => upd("loyerBrut", +ev.target.value)} /></Field>
+                    <Field label="Loyer retenu (€/mois HC)"><Input type="number" value={String(e.loyerRetenu || "")} onChange={ev => upd("loyerRetenu", +ev.target.value)} /></Field>
+                    <Field label="Charges copro annuelles (€)"><Input type="number" value={String(e.chargesLocatif || "")} onChange={ev => upd("chargesLocatif", +ev.target.value)} /></Field>
+                    <Field label="Taxe foncière (€/an)"><Input type="number" value={String(e.taxeFonciere || "")} onChange={ev => upd("taxeFonciere", +ev.target.value)} /></Field>
+                    <Field label="Part non récupérable (€/an)"><Input type="number" value={String(e.partNonRecuperable || "")} onChange={ev => upd("partNonRecuperable", +ev.target.value)} /></Field>
+                    <Field label="Cible locataire"><Input value={e.cibleLocataire ?? ""} onChange={ev => upd("cibleLocataire", ev.target.value)} placeholder="Actifs locaux, touristes…" /></Field>
+                    <Field label="Taux de vacance estimé"><Input value={e.tauxVacance ?? ""} onChange={ev => upd("tauxVacance", ev.target.value)} placeholder="5 %" /></Field>
+                    <Field label="Délai de relocation"><Input value={e.delaiRelocation ?? ""} onChange={ev => upd("delaiRelocation", ev.target.value)} placeholder="2 semaines" /></Field>
+                  </Grid2>
+                  {(e.loyerRetenu || e.loyerBrut) > 0 && (
+                    <div className="mt-3 grid grid-cols-3 gap-3 rounded bg-primary-soft p-3 text-[12.5px]">
+                      <div><span className="text-ink-muted">Revenu brut/an</span><div className="font-bold text-primary">{eur((e.loyerRetenu || e.loyerBrut) * 12)}</div></div>
+                      <div><span className="text-ink-muted">Rdmt brut</span><div className="font-bold text-primary">{e.valeurVenale > 0 ? (((e.loyerRetenu || e.loyerBrut) * 12 / e.valeurVenale) * 100).toFixed(2) + " %" : "—"}</div></div>
+                      <div><span className="text-ink-muted">Rdmt net</span><div className="font-bold text-primary">{e.valeurVenale > 0 && (e.loyerRetenu || e.loyerBrut) > 0 ? ((((e.loyerRetenu || e.loyerBrut) * 12 - (e.chargesLocatif || 0) - (e.taxeFonciere || 0) - (e.partNonRecuperable || 0)) / e.valeurVenale) * 100).toFixed(2) + " %" : "—"}</div></div>
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {/* Locatif saisonnier */}
+                <div className="card p-4">
+                  <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted">Locatif saisonnier (optionnel)</div>
+                  <table className="w-full text-[13px]">
+                    <thead><tr className="border-b border-line">
+                      <th className="pb-2 text-left font-semibold text-ink-sub">Période</th>
+                      <th className="pb-2 text-right font-semibold text-ink-sub">Tarif/nuit</th>
+                      <th className="pb-2 text-right font-semibold text-ink-sub">Nb nuits</th>
+                      <th className="pb-2 text-right font-semibold text-ink-sub">Revenu brut</th>
+                    </tr></thead>
+                    <tbody>
+                      {e.saisons.map((ss, i) => (
+                        <tr key={i} className="border-b border-line/50">
+                          <td className="py-2 pr-3 text-ink-sub">{ss.periode}</td>
+                          <td className="py-2 pr-2"><Input type="number" value={String(ss.tarifNuit || "")} onChange={ev => upd("saisons", e.saisons.map((s, j) => j === i ? { ...s, tarifNuit: +ev.target.value } : s))} className="h-8 w-24 text-right text-[13px]" /></td>
+                          <td className="py-2 pr-2"><Input type="number" value={String(ss.nbNuits || "")} onChange={ev => upd("saisons", e.saisons.map((s, j) => j === i ? { ...s, nbNuits: +ev.target.value } : s))} className="h-8 w-20 text-right text-[13px]" /></td>
+                          <td className="py-2 text-right font-semibold text-ink">{eur(ss.tarifNuit * ss.nbNuits)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="mt-3 flex items-center justify-between rounded bg-primary-soft px-3 py-2.5">
+                    <span className="text-[12.5px] font-semibold text-primary">Total ({e.saisons.reduce((s, x) => s + x.nbNuits, 0)} nuits/an)</span>
+                    <span className="font-heading text-base font-bold text-primary">{eur(e.saisons.reduce((s, x) => s + x.tarifNuit * x.nbNuits, 0))} brut</span>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         )}
 
-        {/* ÉTAPE 6 — Estimation */}
-        {step === 6 && (
+        {/* ÉTAPE 7 — Estimation */}
+        {step === 7 && (
           <div>
             <h2 className="mb-4 font-heading text-base font-semibold text-ink">Grille d'analyse & Valeur vénale</h2>
 
@@ -480,27 +636,29 @@ function EstimationEditor({ initial, onSave, onBack }: {
             ) : (
               <div className="card mb-4 border-dashed border-line2 p-4 text-center text-[12.5px] text-ink-muted">
                 <Sparkles size={16} className="mx-auto mb-2 text-ink-muted" />
-                Ajoutez des références de marché (étape 4) pour obtenir une proposition automatique.
+                Ajoutez des références de marché (étape 5) pour obtenir une proposition automatique.
               </div>
             )}
 
-            {/* Grille d'analyse */}
+            {/* Grille d'ajustements — 4 colonnes */}
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">Grille d'analyse</span>
+              <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">Grille d'ajustements</span>
               <AiButton label="Générer avec IA" loading={aiLoading === "criteres"} onClick={() => withAi("criteres", () => genCriteres(e))} />
             </div>
-            <div className="card mb-5 overflow-hidden">
-              <div className="grid grid-cols-3 gap-2 border-b border-line bg-primary px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                <span>Critère</span><span>Analyse</span><span>Impact</span>
+            <div className="card mb-5 overflow-x-auto">
+              <div className="grid min-w-[600px] border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "1.8fr 2fr 1.5fr 1.2fr auto" }}>
+                <span>Critère</span><span>Situation du bien</span><span>Appréciation</span><span>Ajustement</span><span />
               </div>
               {e.criteres.map((c, i) => (
-                <div key={c.id} className={`grid grid-cols-3 gap-2 border-b border-line p-2.5 ${i % 2 === 0 ? "" : "bg-bg"}`}>
-                  <Input value={c.critere} onChange={ev => updCritere(i, "critere", ev.target.value)} className="h-8 text-[12px]" />
-                  <Input value={c.analyse} onChange={ev => updCritere(i, "analyse", ev.target.value)} className="h-8 text-[12px]" placeholder="" />
-                  <Select value={c.impact} onChange={v => updCritere(i, "impact", v)} options={ImpactCritere.options} className="h-8 text-[12px]" />
+                <div key={c.id} className={`grid min-w-[600px] gap-1.5 border-b border-line px-3 py-2 ${i % 2 === 0 ? "" : "bg-bg"}`} style={{ gridTemplateColumns: "1.8fr 2fr 1.5fr 1.2fr auto" }}>
+                  <Input value={c.critere} onChange={ev => updCritere(i, "critere", ev.target.value)} className="h-7 text-[12px]" />
+                  <Input value={c.situationBien || c.analyse} onChange={ev => { updCritere(i, "situationBien", ev.target.value); updCritere(i, "analyse", ev.target.value); }} className="h-7 text-[12px]" placeholder="Similaire aux références…" />
+                  <Select value={c.impact} onChange={v => updCritere(i, "impact", v)} options={ImpactCritere.options} className="h-7 text-[12px]" />
+                  <Input value={c.ajustement ?? ""} onChange={ev => updCritere(i, "ajustement", ev.target.value)} className="h-7 text-[12px]" placeholder="-5%" />
+                  <button onClick={() => upd("criteres", e.criteres.filter((_, j) => j !== i))} className="px-1 text-ink-muted hover:text-danger"><Trash2 size={12} /></button>
                 </div>
               ))}
-              <div className="p-2.5"><button className="btn-ghost text-[12px]" onClick={() => upd("criteres", [...e.criteres, newCritere()])}><Plus size={13} /> Ajouter</button></div>
+              <div className="px-3 py-2"><button className="btn-ghost text-[12px]" onClick={() => upd("criteres", [...e.criteres, newCritere()])}><Plus size={13} /> Ajouter</button></div>
             </div>
 
             {/* Argumentation */}
@@ -508,18 +666,40 @@ function EstimationEditor({ initial, onSave, onBack }: {
               <label className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Argumentation de la valeur</label>
               <AiButton label="Générer avec IA" loading={aiLoading === "arg"} onClick={() => withAi("arg", () => genArgumentaireValeur(e, suggestion))} />
             </div>
-            <Textarea rows={5} value={e.argumentaireValeur} onChange={ev => upd("argumentaireValeur", ev.target.value)} placeholder="" className="mb-4" />
+            <Textarea rows={4} value={e.argumentaireValeur} onChange={ev => upd("argumentaireValeur", ev.target.value)} placeholder="" className="mb-5" />
 
-            {/* Valeur vénale */}
+            {/* Synthèse pondération */}
+            <div className="mb-2 text-[12px] font-bold uppercase tracking-wide text-ink-muted">Synthèse et pondération des méthodes</div>
+            <div className="card mb-5 overflow-hidden">
+              <div className="grid border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "2.5fr 1.5fr 1fr 1.5fr auto" }}>
+                <span>Méthode</span><span>Valeur indicative</span><span>Pondération</span><span>Contribution</span><span />
+              </div>
+              {(e.synthesePonderation ?? []).map((sp, i) => (
+                <div key={sp.id} className={`grid gap-1.5 border-b border-line px-3 py-2 ${i % 2 === 0 ? "" : "bg-bg"}`} style={{ gridTemplateColumns: "2.5fr 1.5fr 1fr 1.5fr auto" }}>
+                  <Input value={sp.methode} onChange={ev => updSynth(i, "methode", ev.target.value)} placeholder="Comparaison directe" className="h-7 text-[12px]" />
+                  <Input type="number" value={String(sp.valeurIndicative || "")} onChange={ev => updSynth(i, "valeurIndicative", ev.target.value)} className="h-7 text-[12px] text-right" />
+                  <Input value={sp.ponderation} onChange={ev => updSynth(i, "ponderation", ev.target.value)} placeholder="70%" className="h-7 text-[12px]" />
+                  <Input type="number" value={String(sp.contribution || "")} onChange={ev => updSynth(i, "contribution", ev.target.value)} className="h-7 text-[12px] text-right" />
+                  <button onClick={() => upd("synthesePonderation", (e.synthesePonderation ?? []).filter((_, j) => j !== i))} className="px-1 text-ink-muted hover:text-danger"><Trash2 size={12} /></button>
+                </div>
+              ))}
+              <div className="px-3 py-2"><button className="btn-ghost text-[12px]" onClick={() => upd("synthesePonderation", [...(e.synthesePonderation ?? []), newSynth()])}><Plus size={13} /> Ajouter</button></div>
+            </div>
+
+            {/* Valeur vénale + fourchette */}
             <div className="card mb-5 border-l-4 border-l-primary bg-primary-soft p-5">
               <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-primary">Valeur vénale estimée</div>
-              <div className="flex items-center gap-4">
+              <div className="mb-3 flex items-center gap-4">
                 <div className="flex-1"><Field label="Valeur vénale (€)"><Input type="number" value={String(e.valeurVenale || "")} onChange={ev => upd("valeurVenale", +ev.target.value)} className="text-xl font-bold" /></Field></div>
                 <div className="text-right shrink-0">
                   {prixM2Calc > 0 && <div className="text-[14px] font-semibold text-primary">{prixM2Calc.toLocaleString("fr-FR")} €/m²</div>}
                   <div className="text-[11px] italic text-ink-muted">{e.valeurVenale > 0 ? nombreEnLettres(e.valeurVenale) : "—"}</div>
                 </div>
               </div>
+              <Grid2>
+                <Field label="Fourchette basse (€)"><Input type="number" value={String(e.fourchetteBasse || "")} onChange={ev => upd("fourchetteBasse", +ev.target.value)} /></Field>
+                <Field label="Fourchette haute (€)"><Input type="number" value={String(e.fourchetteHaute || "")} onChange={ev => upd("fourchetteHaute", +ev.target.value)} /></Field>
+              </Grid2>
             </div>
 
             {/* Coup de cœur */}
@@ -533,6 +713,49 @@ function EstimationEditor({ initial, onSave, onBack }: {
               </Grid2>
               <Field label="Argumentation coup de cœur"><Textarea rows={3} value={e.argumentaireCoupDeCœur} onChange={ev => upd("argumentaireCoupDeCœur", ev.target.value)} /></Field>
             </div>
+
+            {/* Pièces analysées */}
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">Pièces analysées (annexe)</span>
+              <button className="btn-ghost text-[12px]" onClick={() => upd("piecesAnalysees", [...(e.piecesAnalysees ?? []), newPiece()])}><Plus size={13} /> Ajouter</button>
+            </div>
+            {(e.piecesAnalysees ?? []).length > 0 && (
+              <div className="card mb-4 overflow-hidden">
+                <div className="grid border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "1fr 2fr 1fr 1.5fr auto" }}>
+                  <span>Référence</span><span>Nature</span><span>Date</span><span>Émetteur</span><span />
+                </div>
+                {(e.piecesAnalysees ?? []).map((p, i) => (
+                  <div key={p.id} className={`grid gap-1.5 border-b border-line px-3 py-2 ${i % 2 === 0 ? "" : "bg-bg"}`} style={{ gridTemplateColumns: "1fr 2fr 1fr 1.5fr auto" }}>
+                    <Input value={p.reference} onChange={ev => updPiece(i, "reference", ev.target.value)} placeholder="DOC-01" className="h-7 text-[12px]" />
+                    <Input value={p.nature} onChange={ev => updPiece(i, "nature", ev.target.value)} placeholder="Titre de propriété…" className="h-7 text-[12px]" />
+                    <Input type="date" value={p.date} onChange={ev => updPiece(i, "date", ev.target.value)} className="h-7 text-[12px]" />
+                    <Input value={p.emetteur} onChange={ev => updPiece(i, "emetteur", ev.target.value)} placeholder="Notaire…" className="h-7 text-[12px]" />
+                    <button onClick={() => upd("piecesAnalysees", (e.piecesAnalysees ?? []).filter((_, j) => j !== i))} className="px-1 text-ink-muted hover:text-danger"><Trash2 size={12} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Sources */}
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">Sources utilisées (annexe)</span>
+              <button className="btn-ghost text-[12px]" onClick={() => upd("sourcesExpertise", [...(e.sourcesExpertise ?? []), newSource()])}><Plus size={13} /> Ajouter</button>
+            </div>
+            {(e.sourcesExpertise ?? []).length > 0 && (
+              <div className="card mb-4 overflow-hidden">
+                <div className="grid border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "2fr 2fr 1fr auto" }}>
+                  <span>Source</span><span>Usage</span><span>Date</span><span />
+                </div>
+                {(e.sourcesExpertise ?? []).map((src, i) => (
+                  <div key={src.id} className={`grid gap-1.5 border-b border-line px-3 py-2 ${i % 2 === 0 ? "" : "bg-bg"}`} style={{ gridTemplateColumns: "2fr 2fr 1fr auto" }}>
+                    <Input value={src.source} onChange={ev => updSrc(i, "source", ev.target.value)} placeholder="DVF DGFiP…" className="h-7 text-[12px]" />
+                    <Input value={src.usage} onChange={ev => updSrc(i, "usage", ev.target.value)} placeholder="Références de transactions" className="h-7 text-[12px]" />
+                    <Input type="date" value={src.date} onChange={ev => updSrc(i, "date", ev.target.value)} className="h-7 text-[12px]" />
+                    <button onClick={() => upd("sourcesExpertise", (e.sourcesExpertise ?? []).filter((_, j) => j !== i))} className="px-1 text-ink-muted hover:text-danger"><Trash2 size={12} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <Field label="Limites & réserves"><Textarea rows={4} value={e.limites} onChange={ev => upd("limites", ev.target.value)} /></Field>
           </div>

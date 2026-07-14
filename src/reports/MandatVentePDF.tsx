@@ -120,60 +120,62 @@ function CoproTable({ f }: { f: MandatVenteFull }) {
 function DesignationTable({ f }: { f: MandatVenteFull }) {
   const t = f.typeBien;
 
+  // Composant helper : ligne "Libellé : valeur" en texte inline
+  const L = ({ label, value }: { label: string; value: string | number | null | undefined }) => {
+    if (!value && value !== 0) return null;
+    return (
+      <Text style={s.body}>
+        <Text style={s.bold}>{label} : </Text>{String(value)}
+      </Text>
+    );
+  };
+
   if (isFonds(t)) {
     return (
       <View>
-        {!!f.descriptionBien && <Text style={[s.body, { marginTop: 4 }]}><Text style={s.bold}>Description du fonds : </Text>{f.descriptionBien}</Text>}
-        {f.chiffreAffaires > 0 && <Text style={s.body}><Text style={s.bold}>Chiffre d'affaires annuel HT : </Text>{E(f.chiffreAffaires)}</Text>}
-        {!!f.commune && <Text style={s.body}><Text style={s.bold}>Commune : </Text>{f.commune}{!!f.codePostal ? ` (${f.codePostal})` : null}</Text>}
-        {!!f.refCadastrale && <Text style={s.body}><Text style={s.bold}>Réf. cadastrale : </Text>{f.refCadastrale}</Text>}
+        <L label="Commune" value={f.commune ? `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}` : null} />
+        <L label="Type" value="Fonds de commerce" />
+        <L label="Description du fonds" value={f.descriptionBien} />
+        {f.chiffreAffaires > 0 && (
+          <Text style={s.body}><Text style={s.bold}>Chiffre d'affaires annuel HT : </Text>{E(f.chiffreAffaires)}</Text>
+        )}
+        <L label="Réf. cadastrale" value={f.refCadastrale} />
       </View>
     );
   }
 
   if (isTerrain(t)) {
-    const rows: [string, string][] = [
-      ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
-      ["Type", "Terrain"],
-      ...(f.surfaceFonciere > 0 ? [["Surface foncière", `${f.surfaceFonciere} m²`] as [string, string]] : []),
-      ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
-    ];
     return (
-      <View wrap={false} style={s.tableBox}>
-        {rows.map((row, i) => (
-          <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-            <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
-            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
-          </View>
-        ))}
+      <View>
+        <L label="Adresse" value={f.adresseBien} />
+        <L label="Commune" value={`${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`} />
+        <Text style={s.body}><Text style={s.bold}>Type : </Text>Terrain</Text>
+        {f.surfaceFonciere > 0 && (
+          <Text style={s.body}><Text style={s.bold}>Surface foncière : </Text>{f.surfaceFonciere} m²</Text>
+        )}
+        <L label="Référence cadastrale" value={f.refCadastrale} />
       </View>
     );
   }
 
   if (t === "Appartement") {
-    const rows: [string, string][] = [
-      ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
-      ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
-      ["Type de bien", f.typeBien],
-      ...(f.nomsLots ? [["N° de lot(s)", f.nomsLots] as [string, string]] : []),
-      ...(f.tantiemes ? [["Tantièmes", f.tantiemes] as [string, string]] : []),
-      ...(f.surfaceCarrez > 0 ? [["Surface loi Carrez (m²)*", `${f.surfaceCarrez} m²`] as [string, string]] : []),
-      ...(f.surfaceTotale > 0 ? [["Surface totale (m²)", `${f.surfaceTotale} m²`] as [string, string]] : []),
-      ...(f.nbPieces ? [["Nombre de pièces", f.nbPieces] as [string, string]] : []),
-      ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
-    ];
     return (
       <View>
-        <View wrap={false} style={s.tableBox}>
-          {rows.map((row, i) => (
-            <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-              <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
-              <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
-            </View>
-          ))}
-        </View>
+        <L label="Adresse" value={[f.residence, f.adresseBien].filter(Boolean).join(", ")} />
+        <L label="Commune" value={`${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`} />
+        <Text style={s.body}><Text style={s.bold}>Type : </Text>{f.typeBien}</Text>
+        <L label="N° de lot(s)" value={f.nomsLots} />
+        <L label="Tantièmes" value={f.tantiemes} />
+        {f.surfaceCarrez > 0 && (
+          <Text style={s.body}><Text style={s.bold}>Surface loi Carrez : </Text>{f.surfaceCarrez} m²</Text>
+        )}
+        {f.surfaceTotale > 0 && (
+          <Text style={s.body}><Text style={s.bold}>Surface totale : </Text>{f.surfaceTotale} m²</Text>
+        )}
+        <L label="Nombre de pièces" value={f.nbPieces} />
+        <L label="Référence cadastrale" value={f.refCadastrale} />
         {!!(f.nomsLots || f.residence) && (
-          <Text style={s.body}>
+          <Text style={[s.body, { marginTop: 4 }]}>
             Lot(s) N°{f.nomsLots || dash} de la copropriété {f.residence || dash}{!!f.descriptionBien ? `, comprenant ${f.descriptionBien}` : ""}.
           </Text>
         )}
@@ -183,52 +185,45 @@ function DesignationTable({ f }: { f: MandatVenteFull }) {
   }
 
   if (t === "Local commercial") {
-    const rows: [string, string][] = [
-      ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
-      ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
-      ["Type de bien", f.typeBien],
-      ...(f.surfaceTotale > 0 ? [["Surface totale (m²)", `${f.surfaceTotale} m²`] as [string, string]] : []),
-      ...(f.surfaceCarrez > 0 ? [["Surface loi Carrez (m²)", `${f.surfaceCarrez} m²`] as [string, string]] : []),
-      ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
-    ];
     return (
       <View>
-        <View wrap={false} style={s.tableBox}>
-          {rows.map((row, i) => (
-            <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-              <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
-              <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
-            </View>
-          ))}
-        </View>
-        {!!f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
+        <L label="Adresse" value={[f.residence, f.adresseBien].filter(Boolean).join(", ")} />
+        <L label="Commune" value={`${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`} />
+        <Text style={s.body}><Text style={s.bold}>Type : </Text>{f.typeBien}</Text>
+        {f.surfaceTotale > 0 && (
+          <Text style={s.body}><Text style={s.bold}>Surface totale : </Text>{f.surfaceTotale} m²</Text>
+        )}
+        {f.surfaceCarrez > 0 && (
+          <Text style={s.body}><Text style={s.bold}>Surface loi Carrez : </Text>{f.surfaceCarrez} m²</Text>
+        )}
+        <L label="Référence cadastrale" value={f.refCadastrale} />
+        <L label="Description" value={f.descriptionBien} />
         {isCopro(t) && <CoproTable f={f} />}
       </View>
     );
   }
 
   // Villa / Maison
-  const rows: [string, string][] = [
-    ["Adresse", [f.residence, f.adresseBien].filter(Boolean).join(", ")],
-    ["Commune", `${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`],
-    ["Type de bien", f.typeBien],
-    ...(f.surfaceHabitable > 0 ? [["Surface habitable (m²)", `${f.surfaceHabitable} m²`] as [string, string]] : f.surfaceTotale > 0 ? [["Surface (m²)", `${f.surfaceTotale} m²`] as [string, string]] : []),
-    ...(f.surfaceTerrain > 0 ? [["Surface terrain (m²)", `${f.surfaceTerrain} m²`] as [string, string]] : []),
-    ...(t === "Villa" && f.surfacePiscine > 0 ? [["Piscine (m²)", `${f.surfacePiscine} m²`] as [string, string]] : []),
-    ...(f.nbPieces ? [["Nombre de pièces", f.nbPieces] as [string, string]] : []),
-    ...(f.refCadastrale ? [["Référence cadastrale", f.refCadastrale] as [string, string]] : []),
-  ];
   return (
     <View>
-      <View wrap={false} style={s.tableBox}>
-        {rows.map((row, i) => (
-          <View key={i} style={i === rows.length - 1 ? s.tableRowLast : s.tableRow}>
-            <Text style={[s.tableLbl, { fontFamily: BF, fontWeight: 700 }]}>{row[0]}</Text>
-            <Text style={{ flex: 2, fontSize: 9.5, color: INK }}>{row[1] || dash}</Text>
-          </View>
-        ))}
-      </View>
-      {!!f.descriptionBien && <Text style={s.body}><Text style={s.bold}>Description : </Text>{f.descriptionBien}</Text>}
+      <L label="Adresse" value={[f.residence, f.adresseBien].filter(Boolean).join(", ")} />
+      <L label="Commune" value={`${f.commune}${f.codePostal ? ` (${f.codePostal})` : ""}`} />
+      <Text style={s.body}><Text style={s.bold}>Type : </Text>{f.typeBien}</Text>
+      {f.surfaceHabitable > 0 && (
+        <Text style={s.body}><Text style={s.bold}>Surface habitable : </Text>{f.surfaceHabitable} m²</Text>
+      )}
+      {!f.surfaceHabitable && f.surfaceTotale > 0 && (
+        <Text style={s.body}><Text style={s.bold}>Surface : </Text>{f.surfaceTotale} m²</Text>
+      )}
+      {f.surfaceTerrain > 0 && (
+        <Text style={s.body}><Text style={s.bold}>Surface terrain : </Text>{f.surfaceTerrain} m²</Text>
+      )}
+      {t === "Villa" && f.surfacePiscine > 0 && (
+        <Text style={s.body}><Text style={s.bold}>Piscine : </Text>{f.surfacePiscine} m²</Text>
+      )}
+      <L label="Nombre de pièces" value={f.nbPieces} />
+      <L label="Référence cadastrale" value={f.refCadastrale} />
+      <L label="Description" value={f.descriptionBien} />
     </View>
   );
 }
@@ -411,6 +406,14 @@ export function MandatVentePDF({ f }: { f: MandatVenteFull }) {
         <Text style={[s.body, { marginTop: 6, fontStyle: "italic", color: SUB, fontSize: 8.5 }]}>
           Le présent mandat est établi conformément à la loi n° 70-9 du 2 janvier 1970 (loi Hoguet), au décret n° 72-678 du 20 juillet 1972, à la loi n° 2014-366 du 24 mars 2014 (loi ALUR) et à l'arrêté du 10 janvier 2017. Tout litige relatif au présent mandat sera soumis à la compétence des juridictions de Fort-de-France.
         </Text>
+
+        {/* Observations complémentaires — affichées uniquement si renseignées */}
+        {!!f.observations && (
+          <View wrap={false} style={{ marginTop: 14, border: `0.5 solid ${LINE}`, borderRadius: 4, padding: "8 12" }}>
+            <Text style={[s.articleTitle, { marginTop: 0, marginBottom: 6 }]}>Observations et précisions complémentaires</Text>
+            <Text style={s.body}>{f.observations}</Text>
+          </View>
+        )}
 
         {/* Signatures — 2 colonnes */}
         <View wrap={false} style={{ marginTop: 20, border: `0.5 solid ${LINE}` }}>

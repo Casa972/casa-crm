@@ -54,6 +54,27 @@ function toRow(e: Estimation): Record<string, unknown> {
     valeur_coup_de_coeur: e.valeurCoupDeCœur || 0,
     argumentaire_coup_de_coeur: e.argumentaireCoupDeCœur || null,
     limites: e.limites || null,
+    // Nouveaux champs — stockés en JSON dans la colonne extra_json
+    extra_json: JSON.stringify({
+      lieu: e.lieu ?? "Le Lamentin (Martinique)",
+      certificationExpert: e.certificationExpert ?? "Expert Immobilier Certifié INIGEP®",
+      diagnosticsDDT: e.diagnosticsDDT ?? [],
+      observationsVisuelles: e.observationsVisuelles ?? [],
+      indicateursMarche: e.indicateursMarche ?? [],
+      synthesePonderation: e.synthesePonderation ?? [],
+      fourchetteBasse: e.fourchetteBasse ?? 0,
+      fourchetteHaute: e.fourchetteHaute ?? 0,
+      piecesAnalysees: e.piecesAnalysees ?? [],
+      sourcesExpertise: e.sourcesExpertise ?? [],
+      loyerBrut: e.loyerBrut ?? 0,
+      loyerRetenu: e.loyerRetenu ?? 0,
+      chargesLocatif: e.chargesLocatif ?? 0,
+      taxeFonciere: e.taxeFonciere ?? 0,
+      partNonRecuperable: e.partNonRecuperable ?? 0,
+      tauxVacance: e.tauxVacance ?? "",
+      delaiRelocation: e.delaiRelocation ?? "",
+      cibleLocataire: e.cibleLocataire ?? "",
+    }),
     updated_at: new Date().toISOString(),
   };
 }
@@ -116,6 +137,31 @@ function fromRow(r: Record<string, unknown>): Estimation {
     valeurCoupDeCœur: Number(r.valeur_coup_de_coeur ?? 0),
     argumentaireCoupDeCœur: String(r.argumentaire_coup_de_coeur ?? ""),
     limites: String(r.limites ?? ""),
+    // Nouveaux champs depuis extra_json
+    ...(() => {
+      const x: Record<string, unknown> = {};
+      try { Object.assign(x, JSON.parse(String(r.extra_json ?? "{}"))); } catch { /* ignore */ }
+      return {
+        lieu: String(x.lieu ?? "Le Lamentin (Martinique)"),
+        certificationExpert: String(x.certificationExpert ?? "Expert Immobilier Certifié INIGEP®"),
+        diagnosticsDDT: Array.isArray(x.diagnosticsDDT) ? x.diagnosticsDDT : [],
+        observationsVisuelles: Array.isArray(x.observationsVisuelles) ? x.observationsVisuelles : [],
+        indicateursMarche: Array.isArray(x.indicateursMarche) ? x.indicateursMarche : [],
+        synthesePonderation: Array.isArray(x.synthesePonderation) ? x.synthesePonderation : [],
+        fourchetteBasse: Number(x.fourchetteBasse ?? 0),
+        fourchetteHaute: Number(x.fourchetteHaute ?? 0),
+        piecesAnalysees: Array.isArray(x.piecesAnalysees) ? x.piecesAnalysees : [],
+        sourcesExpertise: Array.isArray(x.sourcesExpertise) ? x.sourcesExpertise : [],
+        loyerBrut: Number(x.loyerBrut ?? 0),
+        loyerRetenu: Number(x.loyerRetenu ?? 0),
+        chargesLocatif: Number(x.chargesLocatif ?? 0),
+        taxeFonciere: Number(x.taxeFonciere ?? 0),
+        partNonRecuperable: Number(x.partNonRecuperable ?? 0),
+        tauxVacance: String(x.tauxVacance ?? ""),
+        delaiRelocation: String(x.delaiRelocation ?? ""),
+        cibleLocataire: String(x.cibleLocataire ?? ""),
+      };
+    })(),
   };
 }
 
