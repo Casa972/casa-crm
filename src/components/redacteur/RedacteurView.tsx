@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useUiStore } from "../../store/ui.store";
+import { useUiStore, type ViewId } from "../../store/ui.store";
 import { Plus, Trash2, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
@@ -13,7 +13,7 @@ import { MandatPDFDownload, MandatDOCXDownload, CompromisPDFDownload, CompromisD
 import { downloadFicheApportAffaires } from "../../reports/FicheApportAffairesPDF";
 import { downloadFicheApportPromo } from "../../reports/FicheApportPromo";
 
-type DocType = "mandat" | "compromis" | "offre";
+type DocType = "mandat" | "compromis" | "offre" | "expertise";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -39,6 +39,7 @@ function defaultMandat(): MandatVenteFull {
     avecApportDirect: true, avecSousMandat: false, avecInterAgence: true,
     avecPanneau: true, bienIndivision: false,
     redacteur: "",
+    observations: "",
   };
 }
 
@@ -62,6 +63,7 @@ function defaultCompromis(): CompromisVente {
     travauxVotesRestants: 0, detailTravauxVotes: "",
     taxeFonciere: 0, anneeRef: String(new Date().getFullYear() - 1),
     redacteur: "M. Luc CLEMENTE", mandatRef: "",
+    observations: "",
   };
 }
 
@@ -80,6 +82,7 @@ function defaultOffre(): OffreAchat {
     conditionPret: true, conditionVenteBien: false, descriptionBienVente: "",
     autresConditions: "",
     validiteJours: 5, dateEntreeJouissance: "", sequestre: 0, notaire: "",
+    observations: "",
   };
 }
 
@@ -454,6 +457,16 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
               <span className="text-[13.5px] text-ink">{lbl}</span>
             </label>
           ))}
+          <div className="mt-2 border-t border-line pt-4">
+            <Field label="Observations et précisions complémentaires (optionnel)">
+              <Textarea
+                rows={4}
+                value={f.observations}
+                onChange={e => upd("observations", e.target.value)}
+                placeholder="Précisions particulières, clauses spécifiques, remarques… Ce champ n'apparaît dans le document que s'il est renseigné."
+              />
+            </Field>
+          </div>
         </div>
       )}
 
@@ -664,6 +677,16 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
           </Grid2>
           <Field label="Détail des sommes dues"><Textarea rows={2} value={f.detailSommesDues} onChange={e => upd("detailSommesDues", e.target.value)} /></Field>
           <Field label="Détail travaux votés"><Textarea rows={3} value={f.detailTravauxVotes} onChange={e => upd("detailTravauxVotes", e.target.value)} /></Field>
+          <div className="mt-2 border-t border-line pt-4">
+            <Field label="Observations et précisions complémentaires (optionnel)">
+              <Textarea
+                rows={4}
+                value={f.observations}
+                onChange={e => upd("observations", e.target.value)}
+                placeholder="Précisions particulières, clauses spécifiques, remarques… Ce champ n'apparaît dans le document que s'il est renseigné."
+              />
+            </Field>
+          </div>
         </div>
       )}
 
@@ -846,6 +869,16 @@ function OffreForm({ f, setF }: { f: OffreAchat; setF: (v: OffreAchat) => void }
               <Textarea rows={2} value={f.autresConditions} onChange={e => upd("autresConditions", e.target.value)} placeholder="Conditions particulières éventuelles…" />
             </Field>
           </div>
+          <div className="mt-2 border-t border-line pt-4">
+            <Field label="Observations et précisions complémentaires (optionnel)">
+              <Textarea
+                rows={4}
+                value={f.observations}
+                onChange={e => upd("observations", e.target.value)}
+                placeholder="Précisions particulières, remarques… Ce champ n'apparaît dans le document que s'il est renseigné."
+              />
+            </Field>
+          </div>
         </div>
       )}
 
@@ -866,10 +899,11 @@ function OffreForm({ f, setF }: { f: OffreAchat; setF: (v: OffreAchat) => void }
 }
 
 // ─── Vue principale ───────────────────────────────────────────────────────────
-const DOC_LIST = [
-  { id: "mandat"   as DocType, label: "Mandat de vente",    icon: "📋", sub: "10 articles · Hoguet/ALUR" },
-  { id: "compromis"as DocType, label: "Compromis de vente", icon: "✍️", sub: "17 articles · Loi ALUR" },
-  { id: "offre"    as DocType, label: "Offre d'achat",      icon: "🤝", sub: "Offre ferme · conditions suspensives" },
+const DOC_LIST: { id: DocType; label: string; icon: string; sub: string; navigateTo?: ViewId }[] = [
+  { id: "mandat",    label: "Mandat de vente",              icon: "📋", sub: "10 articles · Hoguet/ALUR" },
+  { id: "compromis", label: "Compromis de vente",           icon: "✍️", sub: "17 articles · Loi ALUR" },
+  { id: "offre",     label: "Offre d'achat",                icon: "🤝", sub: "Offre ferme · conditions suspensives" },
+  { id: "expertise", label: "Rapport d'expertise immob.",   icon: "🏠", sub: "Valeur vénale · INIGEP®", navigateTo: "estimation" },
 ];
 
 export function RedacteurView() {
@@ -878,7 +912,7 @@ export function RedacteurView() {
   const [compromis, setCompromis] = useState<CompromisVente>(defaultCompromis);
   const [offre, setOffre] = useState<OffreAchat>(defaultOffre);
 
-  const { prefillRedacteur, setPrefillRedacteur } = useUiStore();
+  const { prefillRedacteur, setPrefillRedacteur, setView } = useUiStore();
   const { data } = useAgencyData();
 
   // Appliquer un prefill depuis BiensView ou PilotageView
@@ -927,12 +961,13 @@ export function RedacteurView() {
   const resetDoc = () => {
     if (docType === "mandat") setMandat(defaultMandat());
     else if (docType === "compromis") setCompromis(defaultCompromis());
-    else setOffre(defaultOffre());
+    else if (docType === "offre") setOffre(defaultOffre());
   };
 
-  const docTitle = docType === "mandat" ? "📋 Mandat de vente"
+  const docTitle = docType === "mandat"    ? "📋 Mandat de vente"
     : docType === "compromis" ? "✍️ Compromis de vente"
-    : "🤝 Offre d'achat";
+    : docType === "offre"     ? "🤝 Offre d'achat"
+    : "🏠 Rapport d'expertise immobilière";
 
   return (
     <div className="flex h-full">
@@ -940,7 +975,8 @@ export function RedacteurView() {
       <aside className="w-52 shrink-0 border-r border-line bg-surface p-3 overflow-y-auto">
         <div className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Documents</div>
         {DOC_LIST.map(d => (
-          <button key={d.id} onClick={() => setDocType(d.id)}
+          <button key={d.id}
+            onClick={() => d.navigateTo ? setView(d.navigateTo) : setDocType(d.id)}
             className={`flex w-full flex-col items-start gap-0.5 rounded px-3 py-2.5 text-left mb-1 ${docType === d.id ? "bg-primary-soft" : "hover:bg-line/50"}`}>
             <span className={`text-[13px] font-medium ${docType === d.id ? "font-semibold text-primary" : "text-ink-sub"}`}>{d.icon} {d.label}</span>
             <span className="text-[10px] text-ink-muted">{d.sub}</span>
