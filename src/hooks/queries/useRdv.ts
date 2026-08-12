@@ -1,9 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { rdvService } from "../../services/entity.services";
+import { supabase } from "../../services/supabase.client";
 import { useSessionStore } from "../../store/session.store";
 import type { Rdv } from "../../types/domain";
 
 const KEY = ["rdv"] as const;
+
+async function notifyRdv(rdv: Rdv, isNew: boolean) {
+  if (!rdv.participantNom) return;
+  try {
+    await supabase.functions.invoke("notify-rdv", { body: { ...rdv, _isNew: isNew } });
+  } catch {
+    // notification silencieuse — ne bloque pas la sauvegarde
+  }
+}
 
 export function useRdv() {
   const user = useSessionStore((s) => s.user);
@@ -28,7 +38,13 @@ export function useSaveRdv() {
   const qc = useQueryClient();
   const user = useSessionStore((s) => s.user);
   return useMutation({
-    mutationFn: (rdv: Rdv) => rdvService.save(rdv, user?.id),
+    mutationFn: async (rdv: Rdv) => {
+      const existing = qc.getQueryData<Rdv[]>([...KEY, user?.id]) ?? [];
+      const isNew = !existing.some((x) => x.id === rdv.id);
+      const saved = await rdvService.save(rdv, user?.id);
+      notifyRdv(saved, isNew);
+      return saved;
+    },
     onSuccess: (saved) => {
       qc.setQueryData<Rdv[]>([...KEY, user?.id], (prev = []) => upsert(prev, saved));
     },
