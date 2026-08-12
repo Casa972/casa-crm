@@ -199,10 +199,12 @@ export const estimationSchema = z.object({
 
   statut: z.enum(["Brouillon", "Finalisée"]).default("Brouillon"),
   agentId: z.string().optional(),
+  typeDoc: z.enum(["valeur_venale", "expertise"]).default("expertise"),
 });
 
 export type Estimation = z.infer<typeof estimationSchema>;
 export type EstimationForm = Omit<Estimation, "id">;
+export type EstimationTypeDoc = "valeur_venale" | "expertise";
 
 // ── Conversion valeur en lettres ───────────────────────────────────────────────
 

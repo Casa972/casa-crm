@@ -6,14 +6,26 @@ if (typeof globalThis.Buffer === "undefined") {
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react-query";
+import { toast } from "./store/toast.store";
 import { App } from "./App";
 import { ErrorBoundary } from "./context/ErrorBoundary";
 import "./styles/globals.css";
 
 const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      const msg = error instanceof Error ? error.message : "Erreur lors de la sauvegarde";
+      toast.error(msg);
+    },
+  }),
   defaultOptions: {
-    queries: { retry: 1, refetchOnWindowFocus: false },
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      // Affiche les erreurs de chargement via toast
+      throwOnError: false,
+    },
   },
 });
 

@@ -267,6 +267,14 @@ export function OffreAchatPDF({ f }: { f: OffreAchat }) {
           signature de l'avant-contrat, entre les mains du notaire désigné.
         </Text>
 
+        {/* Observations complémentaires — affichées uniquement si renseignées */}
+        {!!f.observations && (
+          <View wrap={false} style={{ marginTop: 14, border: `0.5 solid ${LINE}`, borderRadius: 4, padding: "8 12" }}>
+            <Text style={[s.articleTitle, { marginTop: 0, marginBottom: 6 }]}>Observations et précisions complémentaires</Text>
+            <Text style={s.body}>{f.observations}</Text>
+          </View>
+        )}
+
         {/* Section SIGNATURES */}
         <Text style={s.articleTitle}>SIGNATURES</Text>
         <View wrap={false} style={{ marginTop: 4, border: `0.5 solid ${LINE}` }}>

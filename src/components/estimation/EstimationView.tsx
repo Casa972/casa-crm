@@ -95,7 +95,7 @@ function calculerPrix(e: Estimation): PrixSuggestion | null {
 
 function newEstimation(agentId?: string): Estimation {
   return {
-    id: uid(), clientId: "", agentId, statut: "Brouillon",
+    id: uid(), clientId: "", agentId, statut: "Brouillon", typeDoc: "expertise",
     typeBien: "Appartement en copropriété", residence: "", adresse: "", commune: "Les Trois-Îlets", codePostal: "97229",
     sectionCadastrale: "", parcelles: "", demandeur: "", redacteur: "M. Luc CLEMENTE",
     dateEstimation: today(), photoBase64: "",
@@ -775,7 +775,8 @@ function EstimationEditor({ initial, onSave, onBack }: {
 
 // ─── Liste des estimations ────────────────────────────────────────────────────
 export function EstimationView() {
-  const { data: estimations, isLoading } = useEstimations();
+  const { data: allEstimations, isLoading } = useEstimations();
+  const estimations = allEstimations.filter(e => e.typeDoc === "expertise" || !e.typeDoc);
   const save = useSaveEstimation();
   const del = useDeleteEstimation();
   const user = useSessionStore(s => s.user);

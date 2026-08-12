@@ -262,6 +262,14 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
           {"  "}— Titre de propriété du VENDEUR
         </Text>
 
+        {/* Observations complémentaires — affichées uniquement si renseignées */}
+        {!!f.observations && (
+          <View wrap={false} style={{ marginTop: 14, border: `0.5 solid ${LINE}`, borderRadius: 4, padding: "8 12" }}>
+            <Text style={[s.art, { marginTop: 0, marginBottom: 6 }]}>Observations et précisions complémentaires</Text>
+            <Text style={s.body}>{f.observations}</Text>
+          </View>
+        )}
+
         {/* Signatures */}
         <View style={s.sigSection}>
           <Text style={[s.body, { marginBottom: 8 }]}>Fait à {f.lieu || "Fort-de-France"}, le {fd(f.date)}, en quatre (4) exemplaires.</Text>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import { Plus, Edit2, Trash2, Clock, Upload } from "lucide-react";
 import { DataTable } from "../shared/DataTable";
@@ -12,6 +12,7 @@ import { ImportCSVModal } from "../import/ImportCSVModal";
 import { eur, fdate } from "../../lib/format";
 import { useAgencyData, useSaveClient, useDeleteClient } from "../../hooks/queries/useAgencyData";
 import { useFiltersStore } from "../../store/filters.store";
+import { useUiStore } from "../../store/ui.store";
 import type { Client } from "../../types/domain";
 
 const col = createColumnHelper<Client>();
@@ -24,6 +25,17 @@ export function ClientsView() {
   const [modal, setModal] = useState<{ item?: Client } | null>(null);
   const [historiqueClient, setHistoriqueClient] = useState<Client | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+
+  // Auto-ouvre la fiche si on vient de TodayView via "À relancer"
+  const focusClientId = useUiStore((s) => s.focusClientId);
+  const setFocusClientId = useUiStore((s) => s.setFocusClientId);
+  useEffect(() => {
+    if (focusClientId && data.clients.length > 0) {
+      const client = data.clients.find((c) => c.id === focusClientId);
+      if (client) setModal({ item: client });
+      setFocusClientId(null);
+    }
+  }, [focusClientId, data.clients, setFocusClientId]);
 
   const columns = useMemo<ColumnDef<Client, any>[]>(() => [
     col.accessor((c) => `${c.prenom} ${c.nom}`, {

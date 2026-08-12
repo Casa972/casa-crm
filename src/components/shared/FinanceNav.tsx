@@ -1,6 +1,7 @@
 import { useUiStore, type ViewId } from "../../store/ui.store";
 
 const TABS = [
+  { id: "finance"  as ViewId,  label: "Tableau financier",   icon: "🏦" },
   { id: "pilotage" as ViewId,  label: "Pilotage des ventes",  icon: "🤝" },
   { id: "revenus"  as ViewId,  label: "Journal des flux",     icon: "💰" },
   { id: "reporting" as ViewId, label: "Reporting",            icon: "📊" },

@@ -19,6 +19,32 @@ export interface MonthStat {
   enAttente: number;
 }
 
+export interface MonthExtStat extends MonthStat {
+  previsionnel: number;
+  isFuture: boolean;
+  isCurrent: boolean;
+}
+
+export interface ActeAvenir {
+  id: string;
+  ref: string;
+  acheteur: string;
+  dateActePrev: string;
+  statut: string;
+  comm: number;
+  diff: number | null;
+  agentId?: string;
+}
+
+export interface PipelineHorizon {
+  retard: number;
+  j30: number;
+  j60: number;
+  j90: number;
+  j90plus: number;
+  sans: number;
+}
+
 export interface Financials {
   globalEncaisse: number;
   globalAEncaisser: number;
@@ -36,6 +62,7 @@ export interface Financials {
   commMontant: (c: Compromis) => number;
   agentPerformance: AgentPerf[];
   monthly: MonthStat[];
+  monthlyExt: MonthExtStat[];
   funnel: {
     mandats: number;
     compromis: number;
@@ -43,6 +70,9 @@ export interface Financials {
     txMC: number;
     txCA: number;
   };
+  ticketMoyen: number;
+  pipelineHorizon: PipelineHorizon;
+  actesAvenir: ActeAvenir[];
 }
 
 const AGENT_META: Record<string, { name: string; color: string }> = {
@@ -116,6 +146,66 @@ export function useFinancials(data: AgencyData): Financials {
       monthly.push({ month: monthKey, label, encaisse, enAttente });
     }
 
+    // Données étendues : 6 mois passés + mois courant + 5 mois futurs (prévisionnel)
+    const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const monthlyExt: MonthExtStat[] = [];
+    for (let i = 5; i >= 1; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+      const encaisse = revenus.filter(r => r.statut === "Encaissé" && r.date?.startsWith(monthKey)).reduce((s, r) => s + r.montant, 0);
+      monthlyExt.push({ month: monthKey, label, encaisse, enAttente: 0, previsionnel: 0, isFuture: false, isCurrent: false });
+    }
+    const encaisseNow = revenus.filter(r => r.statut === "Encaissé" && r.date?.startsWith(currentKey)).reduce((s, r) => s + r.montant, 0);
+    const labelNow = now.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+    monthlyExt.push({ month: currentKey, label: labelNow, encaisse: encaisseNow, enAttente: 0, previsionnel: 0, isFuture: false, isCurrent: true });
+    for (let i = 1; i <= 5; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+      const previsionnel = compromis
+        .filter(c => !["Acte signé", "Annulé"].includes(c.statut) && c.dateActePrev?.startsWith(monthKey))
+        .reduce((s, c) => s + commissionMontant(c), 0);
+      monthlyExt.push({ month: monthKey, label, encaisse: 0, enAttente: 0, previsionnel, isFuture: true, isCurrent: false });
+    }
+
+    // Ticket moyen
+    const nbTransactions = revenus.filter(r => r.statut === "Encaissé").length;
+    const ticketMoyen = nbTransactions > 0 ? Math.round(totalRevEnc / nbTransactions) : 0;
+
+    // Pipeline par horizon de trésorerie
+    const pipelineHorizon: PipelineHorizon = { retard: 0, j30: 0, j60: 0, j90: 0, j90plus: 0, sans: 0 };
+    for (const c of compromis.filter(cp => !["Acte signé", "Annulé"].includes(cp.statut) && cp.commissionStatut !== "Encaissée")) {
+      const diff = c.dateActePrev ? daysDiff(c.dateActePrev) : null;
+      const comm = commissionMontant(c);
+      if (diff === null) pipelineHorizon.sans += comm;
+      else if (diff <= 0) pipelineHorizon.retard += comm;
+      else if (diff <= 30) pipelineHorizon.j30 += comm;
+      else if (diff <= 60) pipelineHorizon.j60 += comm;
+      else if (diff <= 90) pipelineHorizon.j90 += comm;
+      else pipelineHorizon.j90plus += comm;
+    }
+
+    // Actes à venir triés par date
+    const actesAvenir: ActeAvenir[] = compromis
+      .filter(c => !["Acte signé", "Annulé"].includes(c.statut))
+      .map(c => ({
+        id: c.id,
+        ref: c.ref,
+        acheteur: c.acheteur,
+        dateActePrev: c.dateActePrev,
+        statut: c.statut,
+        comm: commissionMontant(c),
+        diff: c.dateActePrev ? daysDiff(c.dateActePrev) : null,
+        agentId: c.agentId,
+      }))
+      .sort((a, b) => {
+        if (!a.dateActePrev && !b.dateActePrev) return 0;
+        if (!a.dateActePrev) return 1;
+        if (!b.dateActePrev) return -1;
+        return a.dateActePrev.localeCompare(b.dateActePrev);
+      });
+
     // Funnel de conversion
     const funnelMandats = mandats.filter(m => m.statut !== "Expiré").length;
     const funnelCompromis = compromis.filter(c => c.statut !== "Annulé").length;
@@ -149,7 +239,11 @@ export function useFinancials(data: AgencyData): Financials {
       commMontant: commissionMontant,
       agentPerformance: Object.values(perf),
       monthly,
+      monthlyExt,
       funnel: { mandats: funnelMandats, compromis: funnelCompromis, actes: funnelActes, txMC, txCA },
+      ticketMoyen,
+      pipelineHorizon,
+      actesAvenir,
     };
   }, [data]);
 }

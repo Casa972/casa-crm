@@ -75,6 +75,7 @@ function toRow(e: Estimation): Record<string, unknown> {
       delaiRelocation: e.delaiRelocation ?? "",
       cibleLocataire: e.cibleLocataire ?? "",
     }),
+    type_doc: e.typeDoc ?? "expertise",
     updated_at: new Date().toISOString(),
   };
 }
@@ -90,6 +91,7 @@ function fromRow(r: Record<string, unknown>): Estimation {
     clientId: String(r.client_id ?? ""),
     agentId: r.agent_id ? String(r.agent_id) : undefined,
     statut: (r.statut as Estimation["statut"]) ?? "Brouillon",
+    typeDoc: (r.type_doc as "valeur_venale" | "expertise") ?? "expertise",
     typeBien: (r.type_bien as Estimation["typeBien"]) ?? "Appartement en copropriété",
     residence: String(r.residence ?? ""),
     adresse: String(r.adresse ?? ""),
