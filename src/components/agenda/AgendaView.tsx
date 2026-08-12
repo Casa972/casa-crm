@@ -35,7 +35,7 @@ function emptyRdv(): Rdv {
   };
 }
 
-const RAPPEL_OPTIONS = [
+const RAPPEL_OPTIONS: readonly { value: string; label: string }[] = [
   { value: "", label: "— Aucun rappel —" },
   { value: "10", label: "10 min avant" },
   { value: "30", label: "30 min avant" },
@@ -43,7 +43,7 @@ const RAPPEL_OPTIONS = [
   { value: "1440", label: "La veille" },
 ];
 
-const RECURRENCE_OPTIONS = [
+const RECURRENCE_OPTIONS: readonly { value: string; label: string }[] = [
   { value: "0", label: "— Pas de récurrence —" },
   { value: "4", label: "4 semaines" },
   { value: "8", label: "8 semaines" },

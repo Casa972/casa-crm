@@ -57,6 +57,9 @@ export const offreAchatSchema = z.object({
   dateEntreeJouissance: z.string().default(""),
   sequestre: positiveNumber.default(0),
   notaire: z.string().default(""),
+
+  // Observations libres (optionnel — visible dans le PDF seulement si renseigné)
+  observations: z.string().default(""),
 });
 
 export type OffreAchat = z.infer<typeof offreAchatSchema>;

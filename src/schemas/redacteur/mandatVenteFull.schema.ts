@@ -102,6 +102,9 @@ export const mandatVenteFullSchema = z.object({
 
   // Contact agence
   redacteur: z.string().default("M. Luc CLEMENTE"),
+
+  // Observations libres (optionnel — visible dans le PDF seulement si renseigné)
+  observations: z.string().default(""),
 });
 
 export type MandatVenteFull = z.infer<typeof mandatVenteFullSchema>;

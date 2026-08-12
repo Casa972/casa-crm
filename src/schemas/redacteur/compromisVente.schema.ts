@@ -94,6 +94,9 @@ export const compromisVenteSchema = z.object({
   // Agence
   redacteur: z.string().default("M. Luc CLEMENTE"),
   mandatRef: z.string().default(""),
+
+  // Observations libres (optionnel — visible dans le PDF seulement si renseigné)
+  observations: z.string().default(""),
 });
 
 export type CompromisVente = z.infer<typeof compromisVenteSchema>;
