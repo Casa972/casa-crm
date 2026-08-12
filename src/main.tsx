@@ -30,7 +30,7 @@ const queryClient = new QueryClient({
 });
 
 const root = document.getElementById("root");
-if (!root) throw new Error("Élément #root introuvable");
+if (!root) throw new Error("Élément #root introuvable — v1.1.0");
 
 createRoot(root).render(
   <StrictMode>
