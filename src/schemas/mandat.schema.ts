@@ -38,5 +38,8 @@ export const mandatSchema = z.object({
   statut: StatutMandat,
   notes: z.string(),
   agentId: z.string().optional(),
+  numeroRegistre: z.number().optional(),
+  dateEnregistrement: z.string().optional(),
+  regularisation: z.boolean().optional(),
 });
 export type Mandat = z.infer<typeof mandatSchema>;

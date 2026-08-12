@@ -38,6 +38,9 @@ export interface MandatRow {
   agent_id: string | null;
   client_id: string | null;
   created_at?: string;
+  numero_registre?: number | null;
+  date_enregistrement?: string | null;
+  regularisation?: boolean | null;
 }
 
 export interface CompromisRow {

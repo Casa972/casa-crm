@@ -12,18 +12,22 @@ import { PilotageView } from "./components/pilotage/PilotageView";
 import { PilotageAgentView } from "./components/pilotage/PilotageAgentView";
 import { RevenusView } from "./components/revenus/RevenusView";
 import { ReportingView } from "./components/reporting/ReportingView";
+import { FinanceView } from "./components/finance/FinanceView";
 import { RedacteurView } from "./components/redacteur/RedacteurView";
 import { EstimationView } from "./components/estimation/EstimationView";
+import { ValeurVenaleView } from "./components/estimation/ValeurVenaleView";
 import { CompteRenduView } from "./components/compteRendu/CompteRenduView";
 import { CalculatriceView } from "./components/tools/CalculatriceView";
 import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
 import { KanbanView } from "./components/kanban/KanbanView";
 import { MatchingView } from "./components/matching/MatchingView";
 import { DocumentsView } from "./components/documents/DocumentsView";
+import { RegistreView } from "./components/registre/RegistreView";
 import { daysDiff } from "./lib/format";
+import { Toaster } from "./components/ui/Toaster";
 
 /** Vues réservées au directeur — un agent est redirigé vers son tableau de bord. */
-const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage"];
+const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance"];
 
 function CurrentView(): ReactElement {
   const view = useUiStore((s) => s.activeView);
@@ -39,7 +43,9 @@ function CurrentView(): ReactElement {
     case "pilotage_agent": return <PilotageAgentView />;
     case "revenus": return <RevenusView />;
     case "reporting": return <ReportingView />;
+    case "finance": return <FinanceView />;
     case "estimation": return <EstimationView />;
+    case "valeur_venale": return <ValeurVenaleView />;
     case "compte_rendu": return <CompteRenduView />;
     case "agenda": return <AgendaView />;
     case "taches": return <TachesView />;
@@ -47,6 +53,7 @@ function CurrentView(): ReactElement {
     case "kanban": return <KanbanView />;
     case "matching": return <MatchingView />;
     case "documents": return <DocumentsView />;
+    case "registre": return <RegistreView />;
     case "import": return <TodayView />;
     default: return <TodayView />;
   }
@@ -76,8 +83,11 @@ export function App() {
   if (isError) return <div className="flex h-screen items-center justify-center text-danger">Erreur de chargement des données.</div>;
 
   return (
-    <AppShell alertCount={alertCount}>
-      <CurrentView />
-    </AppShell>
+    <>
+      <AppShell alertCount={alertCount}>
+        <CurrentView />
+      </AppShell>
+      <Toaster />
+    </>
   );
 }

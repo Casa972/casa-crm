@@ -71,6 +71,9 @@ export const mandatFromRow = (r: MandatRow): Mandat => ({
   statut: r.statut as StatutMandat,
   notes: s(r.notes),
   agentId: r.agent_id ?? undefined,
+  numeroRegistre: r.numero_registre ?? undefined,
+  dateEnregistrement: r.date_enregistrement ?? undefined,
+  regularisation: r.regularisation ?? undefined,
 });
 
 export const mandatToRow = (m: Mandat, agentId?: string): Partial<MandatRow> => ({
@@ -87,6 +90,7 @@ export const mandatToRow = (m: Mandat, agentId?: string): Partial<MandatRow> => 
   honoraires: nz(m.honoraires),
   statut: m.statut,
   notes: nn(m.notes),
+  ...(m.regularisation !== undefined ? { regularisation: m.regularisation } : {}),
   ...(agentId ? { agent_id: agentId } : {}),
 });
 

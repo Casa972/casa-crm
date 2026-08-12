@@ -1,44 +1,77 @@
 import {
-  Sun, Users, Building2, FileText, Target, TrendingUp, Home, ClipboardList,
+  Sun, Users, Building2, FileText, Target, TrendingUp, ClipboardList,
   BarChart2, Calendar, CheckCircle, Calculator, LogOut, Kanban, Shuffle, Library,
+  GraduationCap, ExternalLink, Landmark, FileSearch, Award, BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useUiStore, type ViewId } from "../../store/ui.store";
 import { useSessionStore } from "../../store/session.store";
 
-interface NavItem { id: ViewId; label: string; Icon: LucideIcon; }
+const FORMATION_URL = "https://casa-formation.vercel.app";
 
-const NAV_DIR: NavItem[] = [
-  { id: "today", label: "Aujourd'hui", Icon: Sun },
-  { id: "clients", label: "Clients", Icon: Users },
-  { id: "kanban", label: "Pipeline Kanban", Icon: Kanban },
-  { id: "matching", label: "Matching", Icon: Shuffle },
-  { id: "biens", label: "Biens & Mandats", Icon: Building2 },
-  { id: "estimation", label: "Estimations", Icon: Home },
-  { id: "compte_rendu", label: "Comptes rendus", Icon: ClipboardList },
-  { id: "redacteur", label: "Rédacteur Actes", Icon: FileText },
-  { id: "documents", label: "Documents", Icon: Library },
-  { id: "agenda", label: "Agenda", Icon: Calendar },
-  { id: "taches", label: "Tâches", Icon: CheckCircle },
-  { id: "pilotage", label: "Pilotage", Icon: Target },
-  { id: "revenus", label: "Revenus", Icon: TrendingUp },
-  { id: "reporting", label: "Reporting", Icon: BarChart2 },
+interface NavItem  { kind: "item";  id: ViewId; label: string; Icon: LucideIcon; href?: string; }
+interface NavGroup { kind: "group"; label: string; }
+type NavEntry = NavItem | NavGroup;
+
+const NAV_DIR: NavEntry[] = [
+  { kind: "group", label: "Tableau de bord" },
+  { kind: "item", id: "today",       label: "Aujourd'hui",    Icon: Sun },
+
+  { kind: "group", label: "Pipeline" },
+  { kind: "item", id: "clients",     label: "Clients",        Icon: Users },
+  { kind: "item", id: "kanban",      label: "Pipeline Kanban",Icon: Kanban },
+  { kind: "item", id: "matching",    label: "Matching",       Icon: Shuffle },
+
+  { kind: "group", label: "Terrain" },
+  { kind: "item", id: "biens",        label: "Biens & Mandats", Icon: Building2 },
+  { kind: "item", id: "valeur_venale",label: "Estimations",     Icon: FileSearch },
+  { kind: "item", id: "estimation",   label: "Expertises",      Icon: Award },
+  { kind: "item", id: "compte_rendu", label: "Comptes rendus",  Icon: ClipboardList },
+  { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
+  { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },
+
+  { kind: "group", label: "Documents" },
+  { kind: "item", id: "redacteur",    label: "Rédacteur Actes", Icon: FileText },
+  { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
+  { kind: "item", id: "registre",     label: "Registre mandats",Icon: BookOpen },
+
+  { kind: "group", label: "Analyse" },
+  { kind: "item", id: "finance",     label: "Tableau financier", Icon: Landmark },
+  { kind: "item", id: "pilotage",    label: "Pilotage",       Icon: Target },
+  { kind: "item", id: "revenus",     label: "Revenus",        Icon: TrendingUp },
+  { kind: "item", id: "reporting",   label: "Reporting",      Icon: BarChart2 },
+
+  { kind: "group", label: "Ressources" },
+  { kind: "item", id: "import", label: "Formation", Icon: GraduationCap, href: FORMATION_URL },
 ];
 
-const NAV_AGENT: NavItem[] = [
-  { id: "pilotage_agent", label: "Mon tableau de bord", Icon: Target },
-  { id: "clients", label: "Mes clients", Icon: Users },
-  { id: "kanban", label: "Pipeline Kanban", Icon: Kanban },
-  { id: "matching", label: "Matching", Icon: Shuffle },
-  { id: "biens", label: "Biens & Mandats", Icon: Building2 },
-  { id: "estimation", label: "Estimations", Icon: Home },
-  { id: "compte_rendu", label: "Comptes rendus", Icon: ClipboardList },
-  { id: "redacteur", label: "Rédacteur Actes", Icon: FileText },
-  { id: "documents", label: "Documents", Icon: Library },
-  { id: "agenda", label: "Agenda", Icon: Calendar },
-  { id: "taches", label: "Tâches", Icon: CheckCircle },
-  { id: "calculatrice", label: "Calculatrice", Icon: Calculator },
+const NAV_AGENT: NavEntry[] = [
+  { kind: "group", label: "Tableau de bord" },
+  { kind: "item", id: "pilotage_agent", label: "Mon tableau de bord", Icon: Target },
+
+  { kind: "group", label: "Pipeline" },
+  { kind: "item", id: "clients",     label: "Mes clients",    Icon: Users },
+  { kind: "item", id: "kanban",      label: "Pipeline Kanban",Icon: Kanban },
+  { kind: "item", id: "matching",    label: "Matching",       Icon: Shuffle },
+
+  { kind: "group", label: "Terrain" },
+  { kind: "item", id: "biens",        label: "Biens & Mandats", Icon: Building2 },
+  { kind: "item", id: "valeur_venale",label: "Estimations",     Icon: FileSearch },
+  { kind: "item", id: "estimation",   label: "Expertises",      Icon: Award },
+  { kind: "item", id: "compte_rendu", label: "Comptes rendus",  Icon: ClipboardList },
+  { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
+  { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },
+
+  { kind: "group", label: "Documents" },
+  { kind: "item", id: "redacteur",    label: "Rédacteur Actes", Icon: FileText },
+  { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
+
+  { kind: "group", label: "Outils" },
+  { kind: "item", id: "calculatrice",label: "Calculatrice",   Icon: Calculator },
+
+  { kind: "group", label: "Ressources" },
+  { kind: "item", id: "import", label: "Formation", Icon: GraduationCap, href: FORMATION_URL },
 ];
 
 export function Sidebar() {
@@ -75,22 +108,56 @@ export function Sidebar() {
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-2">
-          {nav.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setView(id)}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] font-medium transition-colors",
-                activeView === id
-                  ? "bg-primary-soft font-semibold text-primary"
-                  : "text-ink-sub hover:bg-line/50 hover:text-ink",
-              )}
-            >
-              <Icon size={15} className="shrink-0" />
-              {label}
-            </button>
-          ))}
+        <nav className="flex-1 overflow-y-auto px-2 py-2">
+          {nav.map((entry, i) => {
+            if (entry.kind === "group") {
+              return (
+                <div
+                  key={`g-${i}`}
+                  className={cn(
+                    "px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-ink-muted",
+                    i > 0 && "mt-4",
+                  )}
+                >
+                  {entry.label}
+                </div>
+              );
+            }
+
+            const { id, label, Icon, href } = entry;
+
+            if (href) {
+              return (
+                <a
+                  key={id}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] font-medium transition-colors text-ink-sub hover:bg-line/50 hover:text-ink"
+                >
+                  <Icon size={15} className="shrink-0" />
+                  {label}
+                  <ExternalLink size={11} className="ml-auto shrink-0 opacity-40" />
+                </a>
+              );
+            }
+
+            return (
+              <button
+                key={id}
+                onClick={() => setView(id)}
+                className={cn(
+                  "flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] font-medium transition-colors",
+                  activeView === id
+                    ? "bg-primary-soft font-semibold text-primary"
+                    : "text-ink-sub hover:bg-line/50 hover:text-ink",
+                )}
+              >
+                <Icon size={15} className="shrink-0" />
+                {label}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="border-t border-line p-2">

@@ -17,24 +17,25 @@ export function Select({
 }: {
   value: string;
   onChange: (v: string) => void;
-  options: readonly string[];
+  options: readonly (string | { value: string; label: string })[];
   placeholder?: string;
   className?: string;
 }) {
+  const chevron =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239B9B97' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")";
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className={cn(base, "cursor-pointer appearance-none bg-[length:12px] bg-[right_10px_center] bg-no-repeat pr-8", className)}
-      style={{
-        backgroundImage:
-          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239B9B97' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-      }}
+      style={{ backgroundImage: chevron }}
     >
       <option value="">{placeholder}</option>
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
+      {(options as readonly (string | { value: string; label: string })[]).map((o) =>
+        typeof o === "string"
+          ? <option key={o} value={o}>{o}</option>
+          : <option key={o.value} value={o.value}>{o.label}</option>
+      )}
     </select>
   );
 }
