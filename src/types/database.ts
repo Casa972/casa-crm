@@ -104,10 +104,12 @@ export interface RdvRow {
   titre: string;
   client_id: string | null;
   bien_ref: string | null;
+  participant_nom: string | null;
   date: string;
   heure_debut: string;
   heure_fin: string;
   type_rdv: string;
+  rappel_minutes: number | null;
   notes: string | null;
   statut: string;
   created_at?: string;

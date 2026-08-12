@@ -25,7 +25,7 @@ const DAY_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 const TYPE_TONE: Record<string, string> = {
   Visite: "primary", Appel: "emerald", "RDV Signature": "violet",
-  Estimation: "amber", Autre: "neutral",
+  Estimation: "amber", "Suivi Agent": "sky", Autre: "neutral",
 };
 
 function emptyRdv(): Rdv {
@@ -35,16 +35,68 @@ function emptyRdv(): Rdv {
   };
 }
 
+const RAPPEL_OPTIONS = [
+  { value: "", label: "— Aucun rappel —" },
+  { value: "10", label: "10 min avant" },
+  { value: "30", label: "30 min avant" },
+  { value: "60", label: "1h avant" },
+  { value: "1440", label: "La veille" },
+];
+
+const RECURRENCE_OPTIONS = [
+  { value: "0", label: "— Pas de récurrence —" },
+  { value: "4", label: "4 semaines" },
+  { value: "8", label: "8 semaines" },
+  { value: "12", label: "12 semaines" },
+];
+
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function scheduleNotification(rdv: Rdv) {
+  if (!rdv.rappelMinutes || Notification.permission !== "granted") return;
+  const rdvDate = new Date(`${rdv.date}T${rdv.heureDebut}`);
+  const fireAt = rdvDate.getTime() - rdv.rappelMinutes * 60 * 1000;
+  const delay = fireAt - Date.now();
+  if (delay <= 0) return;
+  setTimeout(() => {
+    new Notification(`Rappel RDV — ${rdv.titre}`, {
+      body: `Aujourd'hui à ${rdv.heureDebut}${rdv.participantNom ? ` avec ${rdv.participantNom}` : ""}`,
+      icon: "/favicon.ico",
+    });
+  }, delay);
+}
+
 function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void }) {
   const save = useSaveRdv();
   const { data } = useAgencyData();
   const [form, setForm] = useState<Rdv>(initial ?? emptyRdv());
+  const [recurrenceWeeks, setRecurrenceWeeks] = useState("0");
 
   const set = (k: keyof Rdv, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.titre.trim() || !form.date) return;
-    save.mutate({ ...form, id: form.id || uid() });
+
+    if (Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+
+    const weeks = parseInt(recurrenceWeeks, 10);
+    if (weeks > 0 && !initial) {
+      for (let i = 0; i < weeks; i++) {
+        const occurrence: Rdv = { ...form, id: uid(), date: addDays(form.date, i * 7) };
+        save.mutate(occurrence);
+        scheduleNotification(occurrence);
+      }
+    } else {
+      const rdv = { ...form, id: form.id || uid() };
+      save.mutate(rdv);
+      scheduleNotification(rdv);
+    }
     onClose();
   };
 
@@ -52,19 +104,33 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
     <>
       <Grid2>
         <Field label="Titre *">
-          <Input value={form.titre} onChange={(e) => set("titre", e.target.value)} placeholder="Ex: Visite villa Le Diamant" />
+          <Input value={form.titre} onChange={(e) => set("titre", e.target.value)} placeholder="Ex: Suivi formation — Module 1" />
         </Field>
         <Field label="Type">
           <Select value={form.typeRdv} onChange={(v) => set("typeRdv", v)} options={TYPE_RDV_OPTIONS} />
         </Field>
       </Grid2>
       <Grid2>
-        <Field label="Date *">
-          <Input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} />
+        <Field label="Avec (commercial / agent)">
+          <Input
+            value={form.participantNom ?? ""}
+            onChange={(e) => setForm((f) => ({ ...f, participantNom: e.target.value || undefined }))}
+            placeholder="Nom du commercial présent"
+          />
         </Field>
         <Field label="Statut">
           <Select value={form.statut} onChange={(v) => set("statut", v)} options={STATUT_RDV_OPTIONS} />
         </Field>
+      </Grid2>
+      <Grid2>
+        <Field label="Date *">
+          <Input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} />
+        </Field>
+        {!initial && (
+          <Field label="Récurrence hebdomadaire">
+            <Select value={recurrenceWeeks} onChange={setRecurrenceWeeks} options={RECURRENCE_OPTIONS} />
+          </Field>
+        )}
       </Grid2>
       <Grid2>
         <Field label="Heure début">
@@ -75,22 +141,26 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
         </Field>
       </Grid2>
       <Grid2>
+        <Field label="Rappel navigateur">
+          <Select
+            value={form.rappelMinutes?.toString() ?? ""}
+            onChange={(v) => setForm((f) => ({ ...f, rappelMinutes: v ? parseInt(v, 10) : undefined }))}
+            options={RAPPEL_OPTIONS}
+          />
+        </Field>
         <Field label="Client lié">
           <Select
             value={form.clientId ?? ""}
             onChange={(v) => setForm((f) => ({ ...f, clientId: v || undefined }))}
-            options={data.clients.map((c) => `${c.prenom} ${c.nom}` )}
+            options={data.clients.map((c) => ({ value: c.id, label: `${c.prenom} ${c.nom}` }))}
             placeholder="— Aucun —"
           />
         </Field>
-        <Field label="Bien réf.">
-          <Input value={form.bienRef ?? ""} onChange={(e) => setForm((f) => ({ ...f, bienRef: e.target.value || undefined }))} placeholder="Ex: B-042" />
-        </Field>
       </Grid2>
       <Field label="Notes">
-        <Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || undefined }))} placeholder="Détails du rendez-vous..." />
+        <Textarea rows={3} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || undefined }))} placeholder="Détails du rendez-vous, points à aborder..." />
       </Field>
-      <FormActions onSave={handleSave} onClose={onClose} label={initial ? "Modifier" : "Créer le RDV"} disabled={save.isPending} />
+      <FormActions onSave={handleSave} onClose={onClose} label={initial ? "Modifier" : recurrenceWeeks !== "0" ? `Créer ${recurrenceWeeks} RDV` : "Créer le RDV"} disabled={save.isPending} />
     </>
   );
 }
@@ -110,6 +180,7 @@ function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDe
         </div>
         <div className="text-xs text-ink-muted mt-0.5">
           {rdv.heureDebut} → {rdv.heureFin}
+          {rdv.participantNom && ` · avec ${rdv.participantNom}`}
           {rdv.bienRef && ` · Bien ${rdv.bienRef}`}
         </div>
         {rdv.notes && <div className="text-[12px] text-ink-sub mt-1 line-clamp-1">{rdv.notes}</div>}
