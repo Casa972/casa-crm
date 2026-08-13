@@ -35,6 +35,13 @@ function emptyRdv(): Rdv {
   };
 }
 
+const AGENTS_OPTIONS: readonly { value: string; label: string }[] = [
+  { value: "Steeve", label: "Steeve" },
+  { value: "Noham", label: "Noham" },
+  { value: "Luc", label: "Luc" },
+];
+
+
 const RAPPEL_OPTIONS: readonly { value: string; label: string }[] = [
   { value: "", label: "— Aucun rappel —" },
   { value: "10", label: "10 min avant" },
@@ -112,10 +119,11 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
       </Grid2>
       <Grid2>
         <Field label="Avec (commercial / agent)">
-          <Input
+          <Select
             value={form.participantNom ?? ""}
-            onChange={(e) => setForm((f) => ({ ...f, participantNom: e.target.value || undefined }))}
-            placeholder="Nom du commercial présent"
+            onChange={(v) => setForm((f) => ({ ...f, participantNom: v || undefined }))}
+            options={AGENTS_OPTIONS}
+            placeholder="— Choisir —"
           />
         </Field>
         <Field label="Statut">

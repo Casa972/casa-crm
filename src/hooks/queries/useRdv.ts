@@ -6,10 +6,18 @@ import type { Rdv } from "../../types/domain";
 
 const KEY = ["rdv"] as const;
 
+const AGENTS_EMAILS: Record<string, string> = {
+  Steeve: "steeve@casacaraibes.com",
+  Noham: "noham@casacaraibes.com",
+  Luc: "contact@casacaraibes.com",
+};
+
 async function notifyRdv(rdv: Rdv, isNew: boolean) {
   if (!rdv.participantNom) return;
+  const to = AGENTS_EMAILS[rdv.participantNom];
+  if (!to) return;
   try {
-    await supabase.functions.invoke("notify-rdv", { body: { ...rdv, _isNew: isNew } });
+    await supabase.functions.invoke("notify-rdv", { body: { ...rdv, _isNew: isNew, _to: to } });
   } catch {
     // notification silencieuse — ne bloque pas la sauvegarde
   }

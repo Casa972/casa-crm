@@ -23,7 +23,7 @@ serve(async (req) => {
   const rdv = await req.json();
 
   // N'envoie que si un participant est désigné
-  if (!rdv.participantNom) {
+  if (!rdv.participantNom || !rdv._to) {
     return new Response(JSON.stringify({ skipped: true }), { headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
@@ -94,13 +94,14 @@ serve(async (req) => {
 </body>
 </html>`;
 
+  const to = rdv._to as string;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${RESEND_KEY}`,
     },
-    body: JSON.stringify({ from: FROM_EMAIL, to: [COMMERCIAL_EMAIL], subject, html }),
+    body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
   });
 
   const data = await res.json();
