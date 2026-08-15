@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Plus, Trash2, Edit2, ChevronLeft, ChevronRight, List, CalendarDays,
+  Plus, Trash2, Edit2, ChevronLeft, ChevronRight, List, CalendarDays, ExternalLink,
 } from "lucide-react";
 import { Modal, FormActions, EmptyState } from "../ui/Modal";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
@@ -197,6 +197,22 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
   );
 }
 
+function googleCalendarUrl(rdv: Rdv): string {
+  const fmt = (date: string, time: string) =>
+    date.replace(/-/g, "") + "T" + time.replace(/:/g, "") + "00";
+  const start = fmt(rdv.date, rdv.heureDebut);
+  const end = fmt(rdv.date, rdv.heureFin);
+  const details = [rdv.typeRdv, rdv.notes].filter(Boolean).join(" - ");
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: rdv.titre,
+    dates: start + "/" + end,
+    details,
+    ctz: "America/Martinique",
+  });
+  return "https://calendar.google.com/calendar/render?" + params.toString();
+}
+
 function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDelete: () => void }) {
   const tone = (TYPE_TONE[rdv.typeRdv] ?? "neutral") as any;
   return (
@@ -218,6 +234,7 @@ function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDe
         {rdv.notes && <div className="text-[12px] text-ink-sub mt-1 line-clamp-1">{rdv.notes}</div>}
       </div>
       <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <a href={googleCalendarUrl(rdv)} target="_blank" rel="noopener noreferrer" title="Ajouter à Google Agenda" className="flex size-7 items-center justify-center rounded text-ink-muted hover:bg-emerald-soft hover:text-emerald"><ExternalLink size={12} /></a>
         <button className="flex size-7 items-center justify-center rounded text-ink-muted hover:bg-line/60 hover:text-ink" onClick={onEdit}><Edit2 size={12} /></button>
         <button className="flex size-7 items-center justify-center rounded text-ink-muted hover:bg-danger-soft hover:text-danger" onClick={onDelete}><Trash2 size={12} /></button>
       </div>
