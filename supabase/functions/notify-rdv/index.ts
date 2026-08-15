@@ -20,10 +20,19 @@ function formatDate(iso: string): string {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
+  console.log("[notify-rdv] Request received");
+
+  if (!RESEND_KEY) {
+    console.error("[notify-rdv] RESEND_API_KEY manquante !");
+    return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
+  }
+
   const rdv = await req.json();
+  console.log("[notify-rdv] participantNom:", rdv.participantNom, "| _to:", rdv._to);
 
   // N'envoie que si un participant est désigné
   if (!rdv.participantNom || !rdv._to) {
+    console.log("[notify-rdv] Skipped — pas de participant/destinataire");
     return new Response(JSON.stringify({ skipped: true }), { headers: { ...CORS, "Content-Type": "application/json" } });
   }
 
@@ -95,6 +104,8 @@ serve(async (req) => {
 </html>`;
 
   const to = rdv._to as string;
+  console.log("[notify-rdv] Envoi email à:", to, "| sujet:", subject);
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -105,6 +116,12 @@ serve(async (req) => {
   });
 
   const data = await res.json();
+  if (!res.ok) {
+    console.error("[notify-rdv] Erreur Resend:", res.status, JSON.stringify(data));
+  } else {
+    console.log("[notify-rdv] Email envoyé avec succès. ID:", (data as any).id);
+  }
+
   return new Response(JSON.stringify(data), {
     status: res.ok ? 200 : 500,
     headers: { ...CORS, "Content-Type": "application/json" },

@@ -17,9 +17,11 @@ async function notifyRdv(rdv: Rdv, isNew: boolean) {
   const to = AGENTS_EMAILS[rdv.participantNom];
   if (!to) return;
   try {
-    await supabase.functions.invoke("notify-rdv", { body: { ...rdv, _isNew: isNew, _to: to } });
-  } catch {
-    // notification silencieuse — ne bloque pas la sauvegarde
+    const { data, error } = await supabase.functions.invoke("notify-rdv", { body: { ...rdv, _isNew: isNew, _to: to } });
+    if (error) console.error("[notifyRdv] Erreur invocation:", error);
+    else console.log("[notifyRdv] Réponse:", data);
+  } catch (e) {
+    console.error("[notifyRdv] Exception:", e);
   }
 }
 
