@@ -35,11 +35,7 @@ function emptyRdv(): Rdv {
   };
 }
 
-const AGENTS_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: "Steeve", label: "Steeve" },
-  { value: "Noham", label: "Noham" },
-  { value: "Luc", label: "Luc" },
-];
+const AGENTS_LIST = ["Steeve", "Noham", "Luc"] as const;
 
 
 const RAPPEL_OPTIONS: readonly { value: string; label: string }[] = [
@@ -75,6 +71,36 @@ function scheduleNotification(rdv: Rdv) {
       icon: "/favicon.ico",
     });
   }, delay);
+}
+
+function ParticipantsCheckboxes({ value, onChange }: { value: string | undefined; onChange: (v: string | undefined) => void }) {
+  const selected = value ? value.split(",") : [];
+  const toggle = (name: string) => {
+    const next = selected.includes(name) ? selected.filter((x) => x !== name) : [...selected, name];
+    onChange(next.length > 0 ? next.join(",") : undefined);
+  };
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {AGENTS_LIST.map((name) => {
+        const checked = selected.includes(name);
+        return (
+          <button
+            key={name}
+            type="button"
+            onClick={() => toggle(name)}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+              checked ? "border-primary bg-primary-soft text-primary" : "border-line text-ink-sub hover:bg-bg"
+            }`}
+          >
+            <span className={`flex size-4 items-center justify-center rounded border text-[10px] font-bold ${checked ? "border-primary bg-primary text-white" : "border-line"}`}>
+              {checked ? "✓" : ""}
+            </span>
+            {name}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void }) {
@@ -117,17 +143,22 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
           <Select value={form.typeRdv} onChange={(v) => set("typeRdv", v)} options={TYPE_RDV_OPTIONS} />
         </Field>
       </Grid2>
+      <Field label="Participants (commerciaux invités)">
+        <ParticipantsCheckboxes
+          value={form.participantNom}
+          onChange={(v) => setForm((f) => ({ ...f, participantNom: v }))}
+        />
+      </Field>
       <Grid2>
-        <Field label="Avec (commercial / agent)">
-          <Select
-            value={form.participantNom ?? ""}
-            onChange={(v) => setForm((f) => ({ ...f, participantNom: v || undefined }))}
-            options={AGENTS_OPTIONS}
-            placeholder="— Choisir —"
-          />
-        </Field>
         <Field label="Statut">
           <Select value={form.statut} onChange={(v) => set("statut", v)} options={STATUT_RDV_OPTIONS} />
+        </Field>
+        <Field label="Rappel navigateur">
+          <Select
+            value={form.rappelMinutes?.toString() ?? ""}
+            onChange={(v) => setForm((f) => ({ ...f, rappelMinutes: v ? parseInt(v, 10) : undefined }))}
+            options={RAPPEL_OPTIONS}
+          />
         </Field>
       </Grid2>
       <Grid2>
@@ -149,13 +180,6 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
         </Field>
       </Grid2>
       <Grid2>
-        <Field label="Rappel navigateur">
-          <Select
-            value={form.rappelMinutes?.toString() ?? ""}
-            onChange={(v) => setForm((f) => ({ ...f, rappelMinutes: v ? parseInt(v, 10) : undefined }))}
-            options={RAPPEL_OPTIONS}
-          />
-        </Field>
         <Field label="Client lié">
           <Select
             value={form.clientId ?? ""}

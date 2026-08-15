@@ -13,18 +13,16 @@ const AGENTS_EMAILS: Record<string, string> = {
 };
 
 async function notifyRdv(rdv: Rdv, isNew: boolean) {
-  console.log("[notifyRdv] appelé — participantNom:", rdv.participantNom);
-  if (!rdv.participantNom) { console.warn("[notifyRdv] participantNom vide, abandon"); return; }
-  const to = AGENTS_EMAILS[rdv.participantNom];
-  console.log("[notifyRdv] email résolu:", to);
-  if (!to) { console.warn("[notifyRdv] aucun email pour", rdv.participantNom); return; }
-  try {
-    console.log("[notifyRdv] invocation edge function...");
-    const { data, error } = await supabase.functions.invoke("notify-rdv", { body: { ...rdv, _isNew: isNew, _to: to } });
-    if (error) console.error("[notifyRdv] Erreur invocation:", error);
-    else console.log("[notifyRdv] Réponse:", data);
-  } catch (e) {
-    console.error("[notifyRdv] Exception:", e);
+  if (!rdv.participantNom) return;
+  const noms = rdv.participantNom.split(",").map((n) => n.trim()).filter(Boolean);
+  for (const nom of noms) {
+    const to = AGENTS_EMAILS[nom];
+    if (!to) continue;
+    try {
+      await supabase.functions.invoke("notify-rdv", { body: { ...rdv, participantNom: nom, _isNew: isNew, _to: to } });
+    } catch (e) {
+      console.error("[notifyRdv] Erreur pour", nom, e);
+    }
   }
 }
 
