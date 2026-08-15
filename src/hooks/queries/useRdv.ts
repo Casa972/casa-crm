@@ -13,10 +13,13 @@ const AGENTS_EMAILS: Record<string, string> = {
 };
 
 async function notifyRdv(rdv: Rdv, isNew: boolean) {
-  if (!rdv.participantNom) return;
+  console.log("[notifyRdv] appelé — participantNom:", rdv.participantNom);
+  if (!rdv.participantNom) { console.warn("[notifyRdv] participantNom vide, abandon"); return; }
   const to = AGENTS_EMAILS[rdv.participantNom];
-  if (!to) return;
+  console.log("[notifyRdv] email résolu:", to);
+  if (!to) { console.warn("[notifyRdv] aucun email pour", rdv.participantNom); return; }
   try {
+    console.log("[notifyRdv] invocation edge function...");
     const { data, error } = await supabase.functions.invoke("notify-rdv", { body: { ...rdv, _isNew: isNew, _to: to } });
     if (error) console.error("[notifyRdv] Erreur invocation:", error);
     else console.log("[notifyRdv] Réponse:", data);
