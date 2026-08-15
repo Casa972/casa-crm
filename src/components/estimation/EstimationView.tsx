@@ -59,7 +59,7 @@ const INSEE: Record<string, string> = {
   "Le Vauclin": "97234", "La Trinité": "97233", "Case-Pilote": "97201",
   "Le Carbet": "97202", "Saint-Pierre": "97230", "Schoelcher": "97232",
   "Sainte-Luce": "97226", "Rivière-Pilote": "97224", "Rivière-Salée": "97225",
-  "Ducos": "97206", "Saint-Esprit": "97229", "Gros-Morne": "97211",
+  "Ducos": "97206", "Saint-Esprit": "97240", "Gros-Morne": "97211",
 };
 
 

@@ -16,6 +16,7 @@ export function useAutosave({ estimation, onSave, intervalMs = 30_000, enabled =
   const lastSaved = useRef<string>(JSON.stringify(estimation));
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -26,9 +27,12 @@ export function useAutosave({ estimation, onSave, intervalMs = 30_000, enabled =
       onSave({ ...estimation, statut: "Brouillon" });
       lastSaved.current = current;
       setLastSavedAt(new Date());
-      setTimeout(() => setSaving(false), 800);
+      timerRef.current = setTimeout(() => setSaving(false), 800);
     }, intervalMs);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [estimation, onSave, intervalMs, enabled]);
 
   const saveNow = () => {
@@ -36,7 +40,7 @@ export function useAutosave({ estimation, onSave, intervalMs = 30_000, enabled =
     onSave({ ...estimation, statut: "Brouillon" });
     lastSaved.current = JSON.stringify(estimation);
     setLastSavedAt(new Date());
-    setTimeout(() => setSaving(false), 800);
+    timerRef.current = setTimeout(() => setSaving(false), 800);
   };
 
   return { lastSavedAt, saving, saveNow };

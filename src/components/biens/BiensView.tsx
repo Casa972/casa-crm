@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText, User } from "lucide-react";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
@@ -11,6 +11,7 @@ import { eur, fdate, daysDiff } from "../../lib/format";
 import { useAgencyData, useSaveBien, useDeleteBien, useSaveMandat, useDeleteMandat } from "../../hooks/queries/useAgencyData";
 import { useFiltersStore } from "../../store/filters.store";
 import { useUiStore } from "../../store/ui.store";
+import { useSessionStore } from "../../store/session.store";
 import { ImportCSVModal } from "../import/ImportCSVModal";
 import type { Bien, Mandat } from "../../types/domain";
 
@@ -33,6 +34,9 @@ export function BiensView() {
   const [modal, setModal] = useState<Modal_>(null);
   const [ficheBien, setFicheBien] = useState<Bien | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [monPortefeuille, setMonPortefeuille] = useState(false);
+  const user = useSessionStore((s) => s.user);
+  const isDir = useSessionStore((s) => s.isDirecteur());
 
   const mandatsExpSoon = data.mandats.filter((m) => {
     const d = daysDiff(m.dateFin);
@@ -105,14 +109,32 @@ export function BiensView() {
         </div>
       </div>
 
-      <div className="mb-4 max-w-sm">
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher..." />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="max-w-sm flex-1">
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher..." />
+        </div>
+        {!isDir && (
+          <button
+            onClick={() => setMonPortefeuille((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${monPortefeuille ? "border-primary bg-primary-soft text-primary" : "border-line text-ink-sub hover:bg-bg"}`}
+          >
+            <User size={13} /> Mon portefeuille
+          </button>
+        )}
       </div>
 
       {tab === "biens" ? (
-        <DataTable data={data.biens} columns={bienCols} globalFilter={search} emptyMessage="Aucun bien" />
+        <DataTable
+          data={monPortefeuille && user
+            ? data.biens.filter((b) => data.mandats.some((m) => (m.agentId === user.id || !m.agentId) && (m.bienId === b.id || m.bienId === b.ref)))
+            : data.biens}
+          columns={bienCols} globalFilter={search} emptyMessage="Aucun bien"
+        />
       ) : (
-        <DataTable data={data.mandats} columns={mandatCols} globalFilter={search} emptyMessage="Aucun mandat" />
+        <DataTable
+          data={monPortefeuille && user ? data.mandats.filter((m) => m.agentId === user.id || !m.agentId) : data.mandats}
+          columns={mandatCols} globalFilter={search} emptyMessage="Aucun mandat"
+        />
       )}
 
       {modal?.kind === "biens" && (

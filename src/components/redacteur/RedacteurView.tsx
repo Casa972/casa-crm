@@ -7,6 +7,7 @@ import { mandatVenteFullSchema, calcMandatVente, isTerrain, isFonds, needsDPE, t
 import { compromisVenteSchema, calcCompromis, type CompromisVente, type PartieCompromis } from "../../schemas/redacteur/compromisVente.schema";
 import { offreAchatSchema, type OffreAchat, type PartieOffre } from "../../schemas/redacteur/offreAchat.schema";
 import { COMMUNES_MARTINIQUE } from "../../schemas/enums";
+import { commissionMontant } from "../../schemas/compromis.schema";
 import { eur } from "../../lib/format";
 
 import { MandatPDFDownload, MandatDOCXDownload, CompromisPDFDownload, CompromisDOCXDownload, OffrePDFDownload, OffreDOCXDownload } from "./DocPDFDownloads";
@@ -945,10 +946,12 @@ export function RedacteurView() {
         setCompromis(prev => ({
           ...prev,
           prixFAI: comp.prixVente || 0,
-          honorairesTTC: comp.honoraires && comp.prixVente ? Math.round(comp.prixVente * comp.honoraires / 100) : 0,
+          honorairesTTC: commissionMontant(comp),
           mandatRef: comp.ref || "",
           notaire: comp.notaire || "",
-          typeFinancement: (comp.financement as CompromisVente["typeFinancement"]) || "Prêt bancaire",
+          typeFinancement: (["Prêt bancaire", "Fonds propres", "Mixte"] as const).includes(comp.financement as CompromisVente["typeFinancement"])
+            ? comp.financement as CompromisVente["typeFinancement"]
+            : "Prêt bancaire",
           vendeurs: [{ ...newPartie(), nom: comp.vendeur?.toUpperCase() || "" }],
           acquereurs: [{ ...newPartie(), nom: comp.acheteur?.toUpperCase() || "" }],
         }));

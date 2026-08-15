@@ -8,7 +8,7 @@ import {
   BarChart2, FileDown,
   ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
-import { exportGrandLivreCSV } from "../../services/export.csv";
+import { exportGrandLivreCSV, exportPipelineCSV } from "../../services/export.csv";
 import { useUiStore } from "../../store/ui.store";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, CartesianGrid, Tooltip, YAxis,
@@ -131,6 +131,9 @@ export function ReportingView() {
         subtitle={`Vue consolidée — Année ${yearNow}`}
         actions={
           <div className="flex gap-2">
+            <button className="btn-ghost" onClick={() => exportPipelineCSV(data)}>
+              <FileDown size={14} /> Pipeline (CSV)
+            </button>
             <button className="btn-ghost" onClick={() => exportGrandLivreCSV(data, fin)}>
               <FileDown size={14} /> Grand Livre (CSV)
             </button>
@@ -333,6 +336,54 @@ export function ReportingView() {
           )}
         </div>
       </div>
+
+      {/* ── Qualité pipeline par agent ── */}
+      {fin.agentPerformance.length > 0 && (
+        <div className="mt-4 card p-5">
+          <div className="mb-4 text-[13.5px] font-semibold text-ink">Qualité pipeline par négociateur</div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-[12.5px]">
+              <thead>
+                <tr className="border-b border-line">
+                  {["Négociateur", "Clients actifs", "Compromis", "Ticket moyen", "Taux conv. (C→A)", "CA généré"].map((h) => (
+                    <th key={h} className="pb-2.5 pr-4 text-left text-[10px] font-bold uppercase tracking-wider text-ink-muted">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {fin.agentPerformance.map((a) => {
+                  const ticket = a.compromis > 0 ? Math.round(a.caVentes / a.compromis) : 0;
+                  const agentClients = data.clients.filter((c) => c.agentId === a.id);
+                  const agentActes = data.compromis.filter((c) => c.agentId === a.id && c.statut === "Acte signé").length;
+                  const txConv = a.compromis > 0 ? Math.round((agentActes / a.compromis) * 100) : 0;
+                  return (
+                    <tr key={a.id} className="border-b border-line/50 hover:bg-bg/50 transition-colors">
+                      <td className="py-2.5 pr-4">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white" style={{ background: a.color }}>{a.name[0]}</span>
+                          <span className="font-medium text-ink">{a.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 pr-4 font-semibold text-ink">{agentClients.filter((c) => !["Acte", "Perdu"].includes(c.statut)).length}</td>
+                      <td className="py-2.5 pr-4 font-semibold text-ink">{a.compromis}</td>
+                      <td className="py-2.5 pr-4 font-semibold text-ink">{ticket > 0 ? eur(ticket) : "—"}</td>
+                      <td className="py-2.5 pr-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-1.5 rounded-full bg-line overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${txConv}%`, background: a.color }} />
+                          </div>
+                          <span className="font-semibold" style={{ color: a.color }}>{txConv}%</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 font-heading font-bold" style={{ color: a.color }}>{eur(a.caVentes)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

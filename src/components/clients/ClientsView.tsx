@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, Clock, Upload } from "lucide-react";
+import { Plus, Edit2, Trash2, Clock, Upload, User } from "lucide-react";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
@@ -9,10 +9,11 @@ import { PageHeader } from "../shared/PageHeader";
 import { ClientForm } from "../pilotage/forms";
 import { ClientHistorique } from "./ClientHistorique";
 import { ImportCSVModal } from "../import/ImportCSVModal";
-import { eur, fdate } from "../../lib/format";
+import { eur, fdate, daysDiff } from "../../lib/format";
 import { useAgencyData, useSaveClient, useDeleteClient } from "../../hooks/queries/useAgencyData";
 import { useFiltersStore } from "../../store/filters.store";
 import { useUiStore } from "../../store/ui.store";
+import { useSessionStore } from "../../store/session.store";
 import type { Client } from "../../types/domain";
 
 const col = createColumnHelper<Client>();
@@ -25,6 +26,9 @@ export function ClientsView() {
   const [modal, setModal] = useState<{ item?: Client } | null>(null);
   const [historiqueClient, setHistoriqueClient] = useState<Client | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [monPortefeuille, setMonPortefeuille] = useState(false);
+  const user = useSessionStore((s) => s.user);
+  const isDir = useSessionStore((s) => s.isDirecteur());
 
   // Auto-ouvre la fiche si on vient de TodayView via "À relancer"
   const focusClientId = useUiStore((s) => s.focusClientId);
@@ -36,6 +40,11 @@ export function ClientsView() {
       setFocusClientId(null);
     }
   }, [focusClientId, data.clients, setFocusClientId]);
+
+  const filteredClients = useMemo(() => {
+    if (!monPortefeuille || !user) return data.clients;
+    return data.clients.filter((c) => c.agentId === user.id || !c.agentId);
+  }, [data.clients, monPortefeuille, user]);
 
   const columns = useMemo<ColumnDef<Client, any>[]>(() => [
     col.accessor((c) => `${c.prenom} ${c.nom}`, {
@@ -72,7 +81,24 @@ export function ClientsView() {
     }),
     col.accessor("relanceDate", {
       header: "Relance",
-      cell: (i) => fdate(i.getValue<string>()),
+      cell: (i) => {
+        const d = i.getValue<string>();
+        const diff = d ? daysDiff(d) : null;
+        if (!d) return <span className="text-ink-muted text-sm">—</span>;
+        if (diff !== null && diff <= 0) return <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-bold text-danger">{fdate(d)}</span>;
+        return <span className="text-sm text-ink-sub">{fdate(d)}</span>;
+      },
+    }),
+    col.accessor("dernierContact", {
+      header: "Dernier contact",
+      cell: (i) => {
+        const d = i.getValue<string>();
+        if (!d) return <span className="text-ink-muted text-sm">—</span>;
+        const jours = -(daysDiff(d) ?? 0);
+        const label = jours === 0 ? "Aujourd'hui" : jours === 1 ? "Hier" : `il y a ${jours}j`;
+        const stale = jours > 30;
+        return <span className={`text-[12px] ${stale ? "text-danger font-medium" : "text-ink-sub"}`}>{label}</span>;
+      },
     }),
     col.display({
       id: "actions", header: "",
@@ -84,13 +110,13 @@ export function ClientsView() {
         </div>
       ),
     }),
-  ], [del, data.biens, setHistoriqueClient]);
+  ], [del, setHistoriqueClient]);
 
   return (
-    <div className="mx-auto max-w-[1000px] px-6 py-5">
+    <div className="mx-auto max-w-[1100px] px-6 py-5">
       <PageHeader
         title="Clients"
-        subtitle={`${data.clients.length} fiche(s) au portefeuille`}
+        subtitle={`${filteredClients.length} fiche(s)${monPortefeuille ? " dans mon portefeuille" : " au total"}`}
         actions={
           <div className="flex gap-2">
             <button className="btn-ghost" onClick={() => setImportOpen(true)}><Upload size={14} /> Importer CSV</button>
@@ -98,10 +124,20 @@ export function ClientsView() {
           </div>
         }
       />
-      <div className="mb-3 max-w-xs">
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un client..." />
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <div className="max-w-xs flex-1">
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un client..." />
+        </div>
+        {!isDir && (
+          <button
+            onClick={() => setMonPortefeuille((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors ${monPortefeuille ? "border-primary bg-primary-soft text-primary" : "border-line text-ink-sub hover:bg-bg"}`}
+          >
+            <User size={13} /> Mon portefeuille
+          </button>
+        )}
       </div>
-      <DataTable data={data.clients} columns={columns} globalFilter={search} emptyMessage="Aucun client" />
+      <DataTable data={filteredClients} columns={columns} globalFilter={search} emptyMessage="Aucun client" />
       {modal && (
         <Modal title={modal.item ? "Modifier le client" : "Nouveau client"} wide onClose={() => setModal(null)}>
           <ClientForm initial={modal.item} onClose={() => setModal(null)} onSave={(c) => { save.mutate(c); setModal(null); }} />

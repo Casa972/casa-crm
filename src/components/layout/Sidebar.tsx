@@ -1,16 +1,18 @@
 import {
   Sun, Users, Building2, FileText, Target, TrendingUp, ClipboardList,
   BarChart2, Calendar, CheckCircle, Calculator, LogOut, Kanban, Shuffle, Library,
-  GraduationCap, ExternalLink, Landmark, FileSearch, Award, BookOpen,
+  GraduationCap, ExternalLink, Landmark, FileSearch, Award, BookOpen, Briefcase,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useUiStore, type ViewId } from "../../store/ui.store";
 import { useSessionStore } from "../../store/session.store";
+import { useAgencyData } from "../../hooks/queries/useAgencyData";
+import { daysDiff } from "../../lib/format";
 
 const FORMATION_URL = "https://casa-formation.vercel.app";
 
-interface NavItem  { kind: "item";  id: ViewId; label: string; Icon: LucideIcon; href?: string; }
+interface NavItem  { kind: "item";  id: ViewId; label: string; Icon: LucideIcon; href?: string; badge?: () => number; }
 interface NavGroup { kind: "group"; label: string; }
 type NavEntry = NavItem | NavGroup;
 
@@ -34,7 +36,7 @@ const NAV_DIR: NavEntry[] = [
   { kind: "group", label: "Documents" },
   { kind: "item", id: "redacteur",    label: "Rédacteur Actes", Icon: FileText },
   { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
-  { kind: "item", id: "registre",     label: "Registre mandats",Icon: BookOpen },
+  { kind: "item", id: "registre",     label: "Registre mandats", Icon: BookOpen },
 
   { kind: "group", label: "Analyse" },
   { kind: "item", id: "finance",     label: "Tableau financier", Icon: Landmark },
@@ -52,6 +54,7 @@ const NAV_AGENT: NavEntry[] = [
 
   { kind: "group", label: "Pipeline" },
   { kind: "item", id: "clients",     label: "Mes clients",    Icon: Users },
+  { kind: "item", id: "mes_dossiers",label: "Mes dossiers",   Icon: Briefcase },
   { kind: "item", id: "kanban",      label: "Pipeline Kanban",Icon: Kanban },
   { kind: "item", id: "matching",    label: "Matching",       Icon: Shuffle },
 
@@ -74,12 +77,23 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "item", id: "import", label: "Formation", Icon: GraduationCap, href: FORMATION_URL },
 ];
 
+/** Badge rouge sur "Registre mandats" si des mandats expirent dans < 30j */
+function useMandatExpBadge(): number {
+  const { data } = useAgencyData();
+  return data.mandats.filter((m) => {
+    const d = daysDiff(m.dateFin);
+    return m.statut === "Actif" && d !== null && d >= 0 && d <= 30;
+  }).length;
+}
+
 export function Sidebar() {
   const { activeView, setView, sidebarOpen, closeSidebar } = useUiStore();
   const { user, setUser, isDirecteur } = useSessionStore();
+  const mandatBadge = useMandatExpBadge();
   if (!user) return null;
 
-  const nav = isDirecteur() ? NAV_DIR : NAV_AGENT;
+  const isDir = isDirecteur();
+  const nav = isDir ? NAV_DIR : NAV_AGENT;
 
   return (
     <>
@@ -102,7 +116,7 @@ export function Sidebar() {
             <div>
               <div className="font-heading text-sm font-semibold text-ink">Casa Caraïbes</div>
               <div className="text-[11px] font-medium text-primary">
-                {isDirecteur() ? "Espace directeur" : `Espace ${user.name}`}
+                {isDir ? "Espace directeur" : `Espace ${user.name}`}
               </div>
             </div>
           </div>
@@ -125,6 +139,9 @@ export function Sidebar() {
             }
 
             const { id, label, Icon, href } = entry;
+
+            // Badge mandats expirants sur "registre" (directeur)
+            const showBadge = id === "registre" && mandatBadge > 0;
 
             if (href) {
               return (
@@ -154,11 +171,23 @@ export function Sidebar() {
                 )}
               >
                 <Icon size={15} className="shrink-0" />
-                {label}
+                <span className="flex-1">{label}</span>
+                {showBadge && (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white">
+                    {mandatBadge > 9 ? "9+" : mandatBadge}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
+
+        {/* Raccourcis clavier hint */}
+        <div className="border-t border-line px-3 py-2">
+          <div className="mb-1 text-[10px] text-ink-muted opacity-60">
+            Alt+1–6 pour navigation rapide
+          </div>
+        </div>
 
         <div className="border-t border-line p-2">
           <div className="mb-1.5 flex items-center gap-2.5 rounded bg-bg px-2.5 py-2">

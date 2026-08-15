@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef } from "react";
-import { BookOpen, Printer, AlertTriangle, CheckCircle2, Clock, XCircle, Filter } from "lucide-react";
+import { BookOpen, Printer, AlertTriangle, CheckCircle2, Clock, XCircle, Filter, RefreshCw, Copy, Check, Phone } from "lucide-react";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
-import { fdate, eur } from "../../lib/format";
+import { fdate, eur, daysDiff } from "../../lib/format";
 import { cn } from "../../lib/cn";
 import type { Mandat } from "../../types/domain";
 import type { Bien } from "../../schemas/bien.schema";
@@ -32,6 +32,79 @@ function StatutIcon({ statut }: { statut: string }) {
   if (statut === "Expiré")   return <Clock size={13} className="text-amber-500" />;
   if (statut === "Résilié")  return <XCircle size={13} className="text-red-500" />;
   return <AlertTriangle size={13} className="text-gray-400" />;
+}
+
+function RenewalPanel({ mandats, biens }: { mandats: Mandat[]; biens: Bien[] }) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const expiring = mandats.filter((m) => {
+    const d = daysDiff(m.dateFin);
+    return m.statut === "Actif" && d !== null && d >= 0 && d <= 30;
+  }).sort((a, b) => a.dateFin.localeCompare(b.dateFin));
+
+  if (expiring.length === 0) return null;
+
+  const copyEmail = (m: Mandat) => {
+    const bien = biens.find((b) => b.id === m.bienId || b.ref === m.bienId);
+    const template = `Bonjour ${m.mandant},
+
+Je me permets de vous contacter concernant le mandat de vente n°${m.ref ?? m.id.slice(0, 8)} ${bien ? `portant sur le bien situé au ${bien.adresse || bien.commune}` : ""}, qui arrive à échéance le ${fdate(m.dateFin)}.
+
+Votre bien n'ayant pas encore trouvé acquéreur, je souhaite vous proposer le renouvellement de notre mandat afin de poursuivre les démarches de commercialisation.
+
+Pouvez-vous me confirmer votre souhait de renouveler ou de mettre fin à notre collaboration ?
+
+Je reste disponible pour en discuter à votre convenance.
+
+Cordialement,
+L'équipe Casa Caraïbes`;
+    navigator.clipboard.writeText(template).then(() => {
+      setCopiedId(m.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
+  return (
+    <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <RefreshCw size={15} className="text-amber-600" />
+        <h3 className="text-[13px] font-bold text-amber-800">
+          {expiring.length} mandat{expiring.length > 1 ? "s" : ""} à renouveler sous 30 jours
+        </h3>
+      </div>
+      <div className="flex flex-col gap-2">
+        {expiring.map((m) => {
+          const d = daysDiff(m.dateFin);
+          const urgent = d !== null && d <= 10;
+          return (
+            <div key={m.id} className="flex items-center justify-between gap-3 rounded-lg bg-white border border-amber-100 px-3 py-2.5">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-ink text-[13px]">{m.ref || m.mandant}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${urgent ? "bg-danger-soft text-danger" : "bg-amber-100 text-amber-700"}`}>
+                    {d !== null ? `${d}j restants` : ""} · {fdate(m.dateFin)}
+                  </span>
+                </div>
+                <div className="mt-0.5 text-[12px] text-ink-muted">{m.mandant}{m.tel && ` · ${m.tel}`}</div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {m.tel && (
+                  <a href={`tel:${m.tel}`} className="flex items-center gap-1 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[11px] font-medium text-ink-sub hover:bg-bg hover:text-ink">
+                    <Phone size={11} /> Appeler
+                  </a>
+                )}
+                <button
+                  onClick={() => copyEmail(m)}
+                  className="flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-100 px-2.5 py-1.5 text-[11px] font-medium text-amber-800 hover:bg-amber-200 transition-colors"
+                >
+                  {copiedId === m.id ? <><Check size={11} /> Copié !</> : <><Copy size={11} /> Email renouvellement</>}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function RegistreView() {
@@ -165,6 +238,9 @@ export function RegistreView() {
           </div>
         </div>
       )}
+
+      {/* Renouvellements */}
+      <RenewalPanel mandats={data.mandats} biens={data.biens} />
 
       {/* Filtres */}
       <div className="mb-4 flex flex-wrap items-center gap-2">

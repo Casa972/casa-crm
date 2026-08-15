@@ -153,7 +153,7 @@ export function FinanceView() {
   const objOk = obj > 0 && fin.revAnneeCourante >= obj;
 
   const saveObj = () => {
-    const v = parseInt(objDraft.replace(/\s/g, "").replace(",", "."), 10);
+    const v = Math.round(parseFloat(objDraft.replace(/\s/g, "").replace(",", ".")));
     if (!isNaN(v) && v >= 0) {
       setObj(v);
       localStorage.setItem(OBJ_KEY, String(v));

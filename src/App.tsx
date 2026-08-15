@@ -23,6 +23,7 @@ import { KanbanView } from "./components/kanban/KanbanView";
 import { MatchingView } from "./components/matching/MatchingView";
 import { DocumentsView } from "./components/documents/DocumentsView";
 import { RegistreView } from "./components/registre/RegistreView";
+import { MesDossiersView } from "./components/pilotage/MesDossiersView";
 import { daysDiff } from "./lib/format";
 import { Toaster } from "./components/ui/Toaster";
 
@@ -54,6 +55,7 @@ function CurrentView(): ReactElement {
     case "matching": return <MatchingView />;
     case "documents": return <DocumentsView />;
     case "registre": return <RegistreView />;
+    case "mes_dossiers": return <MesDossiersView />;
     case "import": return <TodayView />;
     default: return <TodayView />;
   }
@@ -66,17 +68,41 @@ function useAlertCount(): number {
   return relances + fin.alertesDelais.length;
 }
 
+/** Raccourcis clavier globaux */
+function useKeyboardShortcuts() {
+  const setView = useUiStore((s) => s.setView);
+  const isDir = useSessionStore((s) => s.isDirecteur());
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (!e.altKey) return;
+      switch (e.key) {
+        case "1": setView(isDir ? "today" : "pilotage_agent"); break;
+        case "2": setView("clients"); break;
+        case "3": setView("biens"); break;
+        case "4": setView("agenda"); break;
+        case "5": setView(isDir ? "pilotage" : "mes_dossiers"); break;
+        case "6": setView("redacteur"); break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [setView, isDir]);
+}
+
 export function App() {
   const user = useSessionStore((s) => s.user);
   const { isLoading, isError } = useAgencyData();
   const alertCount = useAlertCount();
 
-  // Réinitialise la vue active vers une vue autorisée au login agent.
   const setView = useUiStore((s) => s.setView);
   const isDir = useSessionStore((s) => s.isDirecteur());
   useEffect(() => {
     if (user && !isDir) setView("pilotage_agent");
   }, [user, isDir, setView]);
+
+  useKeyboardShortcuts();
 
   if (!user) return <Login />;
   if (isLoading) return <div className="flex h-screen items-center justify-center text-ink-sub">Chargement…</div>;

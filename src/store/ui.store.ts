@@ -5,7 +5,7 @@ export type ViewId =
   | "pilotage" | "revenus" | "reporting" | "finance" | "estimation"
   | "valeur_venale"
   | "pilotage_agent" | "agenda" | "taches" | "calculatrice" | "compte_rendu"
-  | "kanban" | "matching" | "import" | "registre";
+  | "kanban" | "matching" | "import" | "registre" | "mes_dossiers";
 
 export type PrefillRedacteur = {
   docType: "mandat" | "compromis" | "offre";

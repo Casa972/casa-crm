@@ -25,6 +25,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   matching: "Matching clients ↔ biens",
   documents: "Bibliothèque de documents",
   registre: "Registre des mandats",
+  mes_dossiers: "Mes dossiers",
   import: "Import CSV",
 };
 

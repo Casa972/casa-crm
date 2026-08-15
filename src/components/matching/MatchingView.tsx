@@ -92,7 +92,7 @@ function ClientMatchRow({ client, biens }: { client: Client; biens: Bien[] }) {
         onClick={() => setOpen((o) => !o)}
       >
         <div className="flex size-9 shrink-0 items-center justify-center rounded bg-primary-soft font-bold text-primary text-sm">
-          {client.prenom[0]}
+          {client.prenom?.[0] ?? "?"}
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[13.5px] font-semibold text-ink">{client.prenom} {client.nom}</div>

@@ -1,6 +1,34 @@
 import type { AgencyData } from "../types/domain";
 import type { Financials } from "../hooks/useFinancials";
 
+/** Export pipeline clients (tous statuts) pour analyse externe. */
+export function exportPipelineCSV(data: AgencyData): void {
+  const sep = ";";
+  const q = (v: string | number | null | undefined) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const rows: string[] = [];
+  rows.push(["Prénom", "Nom", "Type", "Statut", "Budget max (€)", "Commune", "Dernier contact", "Relance", "Agent", "Notes"].map(q).join(sep));
+
+  for (const c of data.clients) {
+    rows.push([
+      c.prenom, c.nom, c.type, c.statut,
+      c.budgetMax || "",
+      c.commune || "",
+      c.dernierContact || "",
+      c.relanceDate || "",
+      c.agentId || "—",
+      c.notes || "",
+    ].map(q).join(sep));
+  }
+
+  const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `CasaCaraibes_Pipeline_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /** Export du grand livre comptable filtrable (séparateur ; pour Excel FR). */
 export function exportGrandLivreCSV(data: AgencyData, fin: Financials): void {
   const sep = ";";
