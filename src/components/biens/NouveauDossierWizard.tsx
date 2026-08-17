@@ -54,6 +54,8 @@ export function NouveauDossierWizard({ onClose }: Props) {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate1 = () => {
     const e: Record<string, string> = {};
@@ -93,43 +95,50 @@ export function NouveauDossierWizard({ onClose }: Props) {
   };
 
   const handleFinish = async () => {
-    if (!validate3()) return;
+    if (!validate3() || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
 
-    // Résoudre le propriétaire
-    let savedClient: Client;
-    if (useExistingClient) {
-      savedClient = data.clients.find((c) => c.id === selectedClientId)!;
-    } else {
-      savedClient = await saveClient.mutateAsync({
-        id: "", prenom: client.prenom, nom: client.nom,
-        tel: client.tel, email: client.email, type: "Vendeur",
-        statut: "Prospect", budgetMax: 0, commune: "", typeBien: "",
-        chambresMin: 0, notes: client.notes, bienId: "",
-        dernierContact: today(), relanceDate: "",
-        agentId: user?.id,
-      } as Client);
+    try {
+      // Résoudre le propriétaire
+      let savedClient: Client;
+      if (useExistingClient) {
+        savedClient = data.clients.find((c) => c.id === selectedClientId)!;
+      } else {
+        savedClient = await saveClient.mutateAsync({
+          id: "", prenom: client.prenom, nom: client.nom,
+          tel: client.tel, email: client.email, type: "Vendeur",
+          statut: "Prospect", budgetMax: 0, commune: "", typeBien: "",
+          chambresMin: 0, notes: client.notes, bienId: "",
+          dernierContact: today(), relanceDate: "",
+          agentId: user?.id,
+        } as Client);
+      }
+
+      // Créer le bien
+      const savedBien = await saveBien.mutateAsync({
+        id: "", ref: bien.ref, type: bien.type as any, adresse: bien.adresse,
+        commune: bien.commune, surface: Number(bien.surface) || 0,
+        chambres: Number(bien.chambres) || 0, prix: Number(bien.prix) || 0,
+        cat: bien.cat as any, statut: "Disponible", desc: bien.desc, mandatId: "",
+      } as Bien);
+
+      // Créer le mandat lié
+      await saveMandat.mutateAsync({
+        id: "", ref: mandat.ref, type: mandat.type as any,
+        bienId: savedBien.ref, clientId: savedClient.id,
+        mandant: `${savedClient.prenom} ${savedClient.nom}`.trim(),
+        tel: savedClient.tel, email: savedClient.email,
+        dateDebut: mandat.dateDebut, dateFin: mandat.dateFin,
+        honoraires: Number(mandat.honoraires), statut: "Actif",
+        notes: mandat.notes,
+      } as Mandat);
+
+      setDone(true);
+    } catch (err) {
+      setSubmitError("Erreur lors de la création. Vérifiez votre connexion et réessayez.");
+      setSubmitting(false);
     }
-
-    // Créer le bien
-    const savedBien = await saveBien.mutateAsync({
-      id: "", ref: bien.ref, type: bien.type as any, adresse: bien.adresse,
-      commune: bien.commune, surface: Number(bien.surface) || 0,
-      chambres: Number(bien.chambres) || 0, prix: Number(bien.prix) || 0,
-      cat: bien.cat as any, statut: "Disponible", desc: bien.desc, mandatId: "",
-    } as Bien);
-
-    // Créer le mandat lié
-    await saveMandat.mutateAsync({
-      id: "", ref: mandat.ref, type: mandat.type as any,
-      bienId: savedBien.ref, clientId: savedClient.id,
-      mandant: `${savedClient.prenom} ${savedClient.nom}`.trim(),
-      tel: savedClient.tel, email: savedClient.email,
-      dateDebut: mandat.dateDebut, dateFin: mandat.dateFin,
-      honoraires: Number(mandat.honoraires), statut: "Actif",
-      notes: mandat.notes,
-    } as Mandat);
-
-    setDone(true);
   };
 
   if (done) {
@@ -324,13 +333,18 @@ export function NouveauDossierWizard({ onClose }: Props) {
             Suivant <ChevronRight size={14} />
           </button>
         ) : (
-          <button
-            onClick={handleFinish}
-            disabled={saveClient.isPending || saveBien.isPending || saveMandat.isPending}
-            className="flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2 text-[13px] font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
-          >
-            <CheckCircle size={14} /> Créer le dossier
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            {submitError && (
+              <div className="text-[12px] text-danger">{submitError}</div>
+            )}
+            <button
+              onClick={handleFinish}
+              disabled={submitting}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2 text-[13px] font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+            >
+              <CheckCircle size={14} /> {submitting ? "Création…" : "Créer le dossier"}
+            </button>
+          </div>
         )}
       </div>
     </div>
