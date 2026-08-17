@@ -35,7 +35,8 @@ function calculerPrix(e: Estimation): PrixSuggestion | null {
   if (allRefs.length === 0 || e.surfaceHabitable === 0) return null;
   const vals = allRefs.map(r => r.prixM2).sort((a, b) => a - b);
   const trim = Math.floor(vals.length * 0.1);
-  const trimmed = vals.slice(trim, vals.length - trim || undefined);
+  const trimEnd = vals.length - trim;
+  const trimmed = vals.slice(trim, trimEnd > trim ? trimEnd : vals.length);
   const moy = Math.round(trimmed.reduce((s, v) => s + v, 0) / trimmed.length);
   const COEF: Record<string, number> = {
     "Parfait état": 1.08, "Très bon état": 1.04, "Bon état": 1.0,
@@ -50,13 +51,15 @@ function calculerPrix(e: Estimation): PrixSuggestion | null {
   const m2 = Math.round(moy * coef * bonus);
   const round = (n: number) => Math.round(n / 1000) * 1000;
   return {
-    prixMin: round((vals[0] ?? moy) * coef * e.surfaceHabitable),
+    prixMin: round((vals[0] ?? moy) * coef * bonus * e.surfaceHabitable),
     prixRetenu: round(m2 * e.surfaceHabitable),
     prixMax: round((vals[vals.length - 1] ?? moy) * coef * bonus * e.surfaceHabitable),
-    prixM2Moyen: moy, prixM2Min: vals[0] ?? moy, prixM2Max: vals[vals.length - 1] ?? moy,
+    prixM2Moyen: m2,
+    prixM2Min: Math.round((vals[0] ?? moy) * coef * bonus),
+    prixM2Max: Math.round((vals[vals.length - 1] ?? moy) * coef * bonus),
     nbRefs: allRefs.length,
     coupDeCœur: round(round((vals[vals.length - 1] ?? moy) * coef * bonus * e.surfaceHabitable) * 1.05),
-    methode: `Médiane ajustée × état (${coef}) × prestations (${bonus.toFixed(2)})`,
+    methode: `Moyenne ajustée × état (${coef}) × prestations (${bonus.toFixed(2)})`,
   };
 }
 

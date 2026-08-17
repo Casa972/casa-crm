@@ -66,12 +66,13 @@ const INSEE: Record<string, string> = {
 // ─── Proposition de prix ──────────────────────────────────────────────────────
 interface PrixSuggestion { prixMin: number; prixRetenu: number; prixMax: number; prixM2Moyen: number; prixM2Min: number; prixM2Max: number; nbRefs: number; coupDeCœur: number; methode: string; }
 
-function calculerPrix(e: Estimation): PrixSuggestion | null {
+function calculerPrix(e: Estimation, adjCriteres = 0): PrixSuggestion | null {
   const allRefs = [...e.refsAnnonces, ...e.refsDVF].filter(r => r.prixM2 > 0 && r.surface > 0);
   if (allRefs.length === 0 || e.surfaceHabitable === 0) return null;
   const vals = allRefs.map(r => r.prixM2).sort((a, b) => a - b);
   const trim = Math.floor(vals.length * 0.1);
-  const trimmed = vals.slice(trim, vals.length - trim || undefined);
+  const trimEnd = vals.length - trim;
+  const trimmed = vals.slice(trim, trimEnd > trim ? trimEnd : vals.length);
   const moy = Math.round(trimmed.reduce((s, v) => s + v, 0) / trimmed.length);
   const COEF: Record<string, number> = { "Parfait état": 1.08, "Très bon état": 1.04, "Bon état": 1.0, "État moyen": 0.93, "Travaux à prévoir": 0.85 };
   const coef = COEF[e.etatGeneral] ?? 1.0;
@@ -80,17 +81,29 @@ function calculerPrix(e: Estimation): PrixSuggestion | null {
   if (e.surfaceTerrasse > e.surfaceHabitable * 0.3) bonus += 0.04;
   if (e.cave) bonus += 0.01;
   if (e.piscine) bonus += 0.03;
-  const m2 = Math.round(moy * coef * bonus);
+  const adj = 1 + adjCriteres;
+  const m2 = Math.round(moy * coef * bonus * adj);
   const round = (n: number) => Math.round(n / 1000) * 1000;
   return {
-    prixMin: round((vals[0] ?? moy) * coef * e.surfaceHabitable),
+    prixMin: round((vals[0] ?? moy) * coef * bonus * e.surfaceHabitable),
     prixRetenu: round(m2 * e.surfaceHabitable),
     prixMax: round((vals[vals.length - 1] ?? moy) * coef * bonus * e.surfaceHabitable),
-    prixM2Moyen: moy, prixM2Min: vals[0] ?? moy, prixM2Max: vals[vals.length - 1] ?? moy,
+    prixM2Moyen: m2,
+    prixM2Min: Math.round((vals[0] ?? moy) * coef * bonus),
+    prixM2Max: Math.round((vals[vals.length - 1] ?? moy) * coef * bonus),
     nbRefs: allRefs.length,
     coupDeCœur: round(round((vals[vals.length - 1] ?? moy) * coef * bonus * e.surfaceHabitable) * 1.05),
-    methode: `Médiane ajustée × état (${coef}) × prestations (${bonus.toFixed(2)})`,
+    methode: `Moyenne ajustée × état (${coef}) × prestations (${bonus.toFixed(2)})${adjCriteres !== 0 ? ` × critères (${adjCriteres > 0 ? "+" : ""}${(adjCriteres * 100).toFixed(0)}%)` : ""}`,
   };
+}
+
+function calculerCapitalisation(e: Estimation): number {
+  const loyer = e.loyerRetenu || e.loyerBrut;
+  if (!loyer) return 0;
+  const chargesAnnuelles = (e.chargesLocatif || 0) + (e.taxeFonciere || 0) + (e.partNonRecuperable || 0);
+  const revenuNetAnnuel = loyer * 12 - chargesAnnuelles;
+  if (revenuNetAnnuel <= 0) return 0;
+  return Math.round(revenuNetAnnuel / 0.065 / 1000) * 1000;
 }
 
 function newEstimation(agentId?: string): Estimation {
@@ -173,8 +186,13 @@ function EstimationEditor({ initial, onSave, onBack }: {
 
   const prixM2Calc = e.surfaceHabitable > 0 ? Math.round(e.valeurVenale / e.surfaceHabitable) : 0;
 
-  useEffect(() => { setSuggestion(calculerPrix(e)); },
-    [e.refsAnnonces, e.refsDVF, e.surfaceHabitable, e.etatGeneral, e.venduMeuble, e.surfaceTerrasse, e.cave, e.piscine]);
+  useEffect(() => {
+    const totalAdj = (e.criteres ?? []).reduce((sum, c) => {
+      const v = parseFloat((c.ajustement ?? "").replace(",", ".").replace("%", ""));
+      return sum + (isNaN(v) ? 0 : v / 100);
+    }, 0);
+    setSuggestion(calculerPrix(e, totalAdj));
+  }, [e.refsAnnonces, e.refsDVF, e.surfaceHabitable, e.etatGeneral, e.venduMeuble, e.surfaceTerrasse, e.cave, e.piscine, e.criteres]);
 
   // ─ Autosave ─
   const { lastSavedAt, saving } = useAutosave({ estimation: e, onSave, intervalMs: 30_000 });
@@ -230,7 +248,34 @@ function EstimationEditor({ initial, onSave, onBack }: {
 
   const applySuggestion = () => {
     if (!suggestion) return;
-    setE(p => ({ ...p, valeurVenale: suggestion.prixRetenu, prixM2Retenu: suggestion.prixM2Moyen, valeurCoupDeCœur: suggestion.coupDeCœur }));
+    setE(p => ({
+      ...p,
+      valeurVenale: suggestion.prixRetenu,
+      prixM2Retenu: suggestion.prixM2Moyen,
+      valeurCoupDeCœur: suggestion.coupDeCœur,
+      fourchetteBasse: suggestion.prixMin,
+      fourchetteHaute: suggestion.prixMax,
+    }));
+  };
+
+  const recalculerSynthese = () => {
+    const valCap = calculerCapitalisation(e);
+    setE(p => ({
+      ...p,
+      synthesePonderation: (p.synthesePonderation ?? []).map(sp => {
+        const pct = parseFloat(sp.ponderation.replace("%", "")) / 100 || 0;
+        if (sp.methode === "Comparaison directe" && suggestion) {
+          return { ...sp, valeurIndicative: suggestion.prixRetenu, contribution: Math.round(suggestion.prixRetenu * pct) };
+        }
+        if (sp.methode === "Capitalisation des revenus" && valCap > 0) {
+          return { ...sp, valeurIndicative: valCap, contribution: Math.round(valCap * pct) };
+        }
+        if (sp.valeurIndicative > 0) {
+          return { ...sp, contribution: Math.round(sp.valeurIndicative * pct) };
+        }
+        return sp;
+      }),
+    }));
   };
 
   const withAi = async (key: string, fn: () => Promise<string | Array<{ critere: string; analyse: string; impact: string }>>) => {
@@ -563,13 +608,33 @@ function EstimationEditor({ initial, onSave, onBack }: {
                     <Field label="Taux de vacance estimé"><Input value={e.tauxVacance ?? ""} onChange={ev => upd("tauxVacance", ev.target.value)} placeholder="5 %" /></Field>
                     <Field label="Délai de relocation"><Input value={e.delaiRelocation ?? ""} onChange={ev => upd("delaiRelocation", ev.target.value)} placeholder="2 semaines" /></Field>
                   </Grid2>
-                  {(e.loyerRetenu || e.loyerBrut) > 0 && (
-                    <div className="mt-3 grid grid-cols-3 gap-3 rounded bg-primary-soft p-3 text-[12.5px]">
-                      <div><span className="text-ink-muted">Revenu brut/an</span><div className="font-bold text-primary">{eur((e.loyerRetenu || e.loyerBrut) * 12)}</div></div>
-                      <div><span className="text-ink-muted">Rdmt brut</span><div className="font-bold text-primary">{e.valeurVenale > 0 ? (((e.loyerRetenu || e.loyerBrut) * 12 / e.valeurVenale) * 100).toFixed(2) + " %" : "—"}</div></div>
-                      <div><span className="text-ink-muted">Rdmt net</span><div className="font-bold text-primary">{e.valeurVenale > 0 && (e.loyerRetenu || e.loyerBrut) > 0 ? ((((e.loyerRetenu || e.loyerBrut) * 12 - (e.chargesLocatif || 0) - (e.taxeFonciere || 0) - (e.partNonRecuperable || 0)) / e.valeurVenale) * 100).toFixed(2) + " %" : "—"}</div></div>
-                    </div>
-                  )}
+                  {(e.loyerRetenu || e.loyerBrut) > 0 && (() => {
+                    const loyer = e.loyerRetenu || e.loyerBrut;
+                    const chargesAn = (e.chargesLocatif || 0) + (e.taxeFonciere || 0) + (e.partNonRecuperable || 0);
+                    const revNetAn = loyer * 12 - chargesAn;
+                    const valCap = calculerCapitalisation(e);
+                    return (
+                      <div className="mt-3 space-y-2">
+                        <div className="grid grid-cols-3 gap-3 rounded bg-primary-soft p-3 text-[12.5px]">
+                          <div><span className="text-ink-muted">Revenu brut/an</span><div className="font-bold text-primary">{eur(loyer * 12)}</div></div>
+                          <div><span className="text-ink-muted">Revenu net/an</span><div className="font-bold text-primary">{revNetAn > 0 ? eur(revNetAn) : "—"}</div></div>
+                          <div><span className="text-ink-muted">Rdmt brut</span><div className="font-bold text-primary">{e.valeurVenale > 0 ? ((loyer * 12 / e.valeurVenale) * 100).toFixed(2) + " %" : "—"}</div></div>
+                        </div>
+                        {valCap > 0 && (
+                          <div className="rounded border border-emerald/30 bg-emerald-soft p-3 text-[12.5px]">
+                            <div className="mb-1 flex items-center gap-1.5 font-semibold text-emerald">
+                              <Sparkles size={12} /> Valorisation par capitalisation (taux 6,5 %)
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-heading text-lg font-bold text-emerald">{eur(valCap)}</span>
+                              <span className="text-[11px] text-emerald/70">sur la base de {eur(revNetAn)}/an nets</span>
+                            </div>
+                            <div className="mt-1 text-[11px] text-ink-muted">Utilisez le bouton <b>Recalculer</b> à l'étape 7 pour intégrer cette valeur dans la synthèse pondérée.</div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Locatif saisonnier */}
@@ -669,7 +734,12 @@ function EstimationEditor({ initial, onSave, onBack }: {
             <Textarea rows={4} value={e.argumentaireValeur} onChange={ev => upd("argumentaireValeur", ev.target.value)} placeholder="" className="mb-5" />
 
             {/* Synthèse pondération */}
-            <div className="mb-2 text-[12px] font-bold uppercase tracking-wide text-ink-muted">Synthèse et pondération des méthodes</div>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[12px] font-bold uppercase tracking-wide text-ink-muted">Synthèse et pondération des méthodes</span>
+              <button className="btn-ghost text-[12px]" onClick={recalculerSynthese} title="Remplit automatiquement les valeurs depuis la comparaison et le locatif">
+                <Sparkles size={12} /> Recalculer
+              </button>
+            </div>
             <div className="card mb-5 overflow-hidden">
               <div className="grid border-b border-line bg-primary px-3 py-2 text-[10.5px] font-bold uppercase tracking-wide text-white" style={{ gridTemplateColumns: "2.5fr 1.5fr 1fr 1.5fr auto" }}>
                 <span>Méthode</span><span>Valeur indicative</span><span>Pondération</span><span>Contribution</span><span />
@@ -683,7 +753,18 @@ function EstimationEditor({ initial, onSave, onBack }: {
                   <button onClick={() => upd("synthesePonderation", (e.synthesePonderation ?? []).filter((_, j) => j !== i))} className="px-1 text-ink-muted hover:text-danger"><Trash2 size={12} /></button>
                 </div>
               ))}
-              <div className="px-3 py-2"><button className="btn-ghost text-[12px]" onClick={() => upd("synthesePonderation", [...(e.synthesePonderation ?? []), newSynth()])}><Plus size={13} /> Ajouter</button></div>
+              <div className="px-3 py-2 flex items-center justify-between">
+                <button className="btn-ghost text-[12px]" onClick={() => upd("synthesePonderation", [...(e.synthesePonderation ?? []), newSynth()])}><Plus size={13} /> Ajouter</button>
+                {(() => {
+                  const total = (e.synthesePonderation ?? []).reduce((s, sp) => s + sp.contribution, 0);
+                  return total > 0 ? (
+                    <div className="flex items-center gap-2 rounded bg-primary-soft px-3 py-1.5 text-[12.5px]">
+                      <span className="text-ink-muted">Valeur pondérée :</span>
+                      <span className="font-heading font-bold text-primary">{eur(total)}</span>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
             </div>
 
             {/* Valeur vénale + fourchette */}
