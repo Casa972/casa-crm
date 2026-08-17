@@ -115,6 +115,7 @@ export interface RdvRow {
   rappel_minutes: number | null;
   notes: string | null;
   statut: string;
+  confirme: boolean | null;
   created_at?: string;
 }
 

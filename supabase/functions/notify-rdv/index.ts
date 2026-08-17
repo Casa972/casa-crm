@@ -4,6 +4,7 @@ const RESEND_KEY = Deno.env.get("RESEND_API_KEY")!;
 const COMMERCIAL_EMAIL = Deno.env.get("COMMERCIAL_EMAIL") ?? "steeve@casacaraibes.com";
 const FROM_EMAIL = "Casa Caraïbes <noreply@casacaraibes.com>";
 const CRM_URL = "https://casa-crm.vercel.app";
+const SUPABASE_FUNCTIONS_URL = Deno.env.get("SUPABASE_URL")?.replace("https://", "https://") + "/functions/v1";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -86,6 +87,21 @@ serve(async (req) => {
             <td style="padding:6px 0;color:#3a3a3a;font-size:13px;">${rdv.notes}</td>
           </tr>` : ""}
         </table>
+      </div>
+
+      <!-- Confirmation -->
+      <div style="margin-bottom:24px;">
+        <p style="color:#6b6b67;font-size:13px;text-align:center;margin:0 0 14px;">Pouvez-vous confirmer votre présence ?</p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+          <a href="${SUPABASE_FUNCTIONS_URL}/confirm-rdv?id=${rdv.id}&response=oui"
+            style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:12px 32px;border-radius:6px;letter-spacing:0.5px;">
+            ✓ Confirmer
+          </a>
+          <a href="${SUPABASE_FUNCTIONS_URL}/confirm-rdv?id=${rdv.id}&response=non"
+            style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:12px 32px;border-radius:6px;letter-spacing:0.5px;">
+            ✗ Décliner
+          </a>
+        </div>
       </div>
 
       <!-- CTA -->

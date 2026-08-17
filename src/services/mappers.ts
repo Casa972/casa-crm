@@ -222,6 +222,7 @@ export const rdvFromRow = (r: RdvRow): Rdv => ({
   rappelMinutes: r.rappel_minutes ?? undefined,
   notes: r.notes ?? undefined,
   statut: r.statut as StatutRdv,
+  confirme: r.confirme ?? undefined,
 });
 
 export const rdvToRow = (rdv: Rdv, agentId?: string): Partial<RdvRow> => ({
@@ -238,6 +239,7 @@ export const rdvToRow = (rdv: Rdv, agentId?: string): Partial<RdvRow> => ({
   rappel_minutes: rdv.rappelMinutes ?? null,
   notes: rdv.notes ?? null,
   statut: rdv.statut,
+  confirme: rdv.confirme ?? null,
 });
 
 /* ── Tache ── */

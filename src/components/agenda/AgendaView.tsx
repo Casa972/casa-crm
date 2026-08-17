@@ -153,6 +153,26 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
         <Field label="Statut">
           <Select value={form.statut} onChange={(v) => set("statut", v)} options={STATUT_RDV_OPTIONS} />
         </Field>
+        <Field label="RDV confirmé">
+          <div className="flex gap-2 pt-1">
+            {([true, false] as const).map((val) => (
+              <button
+                key={String(val)}
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, confirme: val }))}
+                className={`flex-1 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors ${
+                  form.confirme === val
+                    ? val
+                      ? "border-emerald bg-emerald-soft text-emerald"
+                      : "border-danger bg-danger-soft text-danger"
+                    : "border-line text-ink-sub hover:bg-bg"
+                }`}
+              >
+                {val ? "✓ Oui" : "✗ Non"}
+              </button>
+            ))}
+          </div>
+        </Field>
         <Field label="Rappel navigateur">
           <Select
             value={form.rappelMinutes?.toString() ?? ""}
@@ -225,6 +245,8 @@ function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDe
           <span className="text-[13.5px] font-semibold text-ink truncate">{rdv.titre}</span>
           <StatusPill label={rdv.typeRdv} tone={tone} />
           {rdv.statut !== "Planifié" && <StatusPill label={rdv.statut} />}
+          {rdv.confirme === true && <StatusPill label="Confirmé" tone="emerald" />}
+          {rdv.confirme === false && <StatusPill label="Non confirmé" tone="danger" />}
         </div>
         <div className="text-xs text-ink-muted mt-0.5">
           {rdv.heureDebut} → {rdv.heureFin}

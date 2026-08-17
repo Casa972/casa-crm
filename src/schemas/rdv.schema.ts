@@ -21,6 +21,7 @@ export const RdvSchema = z.object({
   rappelMinutes: z.number().optional(),
   notes: z.string().optional(),
   statut: StatutRdv,
+  confirme: z.boolean().optional(),
 });
 
 export type Rdv = z.infer<typeof RdvSchema>;
