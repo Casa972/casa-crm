@@ -3,6 +3,7 @@ import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { FormActions } from "../ui/Modal";
 import { bienFormSchema } from "../../schemas/bien.schema";
 import { mandatFormSchema } from "../../schemas/mandat.schema";
+import { PhotosUpload } from "./PhotosUpload";
 import {
   TypeBien, CategorieBien, StatutVente, StatutLocation, TypeMandat, StatutMandat,
   COMMUNES_MARTINIQUE,
@@ -30,13 +31,14 @@ export function BienForm({ initial, onSave, onClose }: {
     prix: String(initial?.prix ?? ""), cat: initial?.cat ?? "vente",
     statut: initial?.statut ?? "Disponible", desc: initial?.desc ?? "",
   }));
+  const [photos, setPhotos] = useState<string[]>(initial?.photos ?? []);
   const [errors, setErrors] = useState<Errors>({});
   const s = (k: BienFields) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
   const submit = () => {
     const parsed = bienFormSchema.safeParse(f);
     if (!parsed.success) { setErrors(zodErrors(parsed.error.issues)); return; }
-    onSave({ ...parsed.data, id: initial?.id ?? "", mandatId: initial?.mandatId ?? "" });
+    onSave({ ...parsed.data, id: initial?.id ?? "", mandatId: initial?.mandatId ?? "", photos: photos.length > 0 ? photos : undefined });
   };
 
   const statuts = f.cat === "location" ? StatutLocation.options : StatutVente.options;
@@ -55,6 +57,13 @@ export function BienForm({ initial, onSave, onClose }: {
         <Field label="Prix (€)" error={errors.prix}><Input type="number" value={f.prix} onChange={(e) => s("prix")(e.target.value)} /></Field>
       </Grid2>
       <Field label="Description"><Textarea rows={3} value={f.desc} onChange={(e) => s("desc")(e.target.value)} placeholder="" /></Field>
+      <Field label="Photos">
+        <PhotosUpload
+          bienRef={f.ref || "nouveau"}
+          photos={photos}
+          onChange={setPhotos}
+        />
+      </Field>
       <FormActions onSave={submit} onClose={onClose} />
     </>
   );

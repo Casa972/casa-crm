@@ -10,6 +10,7 @@ import { useFinancials } from "../../hooks/useFinancials";
 import { useSessionStore } from "../../store/session.store";
 import { useUiStore } from "../../store/ui.store";
 import { useSaveActivite } from "../../hooks/queries/useActivites";
+import { useTaches } from "../../hooks/queries/useTaches";
 import type { Client } from "../../types/domain";
 
 const RELANCE_SEUIL: Record<string, number> = { Prospect: 14, Visite: 7, Offre: 3, Compromis: 2, Acte: 1 };
@@ -19,6 +20,75 @@ const inDays = (n: number) => {
   const d = new Date(); d.setDate(d.getDate() + n);
   return d.toISOString().slice(0, 10);
 };
+
+// ── Alertes du jour ──────────────────────────────────────────────────────────
+function AlertesSection({ agentId, isDir }: { agentId?: string; isDir: boolean }) {
+  const { data } = useAgencyData();
+  const { data: taches } = useTaches();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const alertes: string[] = [];
+
+  // Tâches en retard
+  const tachesRetard = taches.filter((t) => {
+    if (t.done || !t.dateEcheance) return false;
+    if (!isDir && t.agentId && t.agentId !== agentId) return false;
+    return t.dateEcheance < today;
+  });
+  for (const t of tachesRetard) {
+    alertes.push(`Tâche en retard : "${t.texte}" (échéance ${fdate(t.dateEcheance ?? "")})`);
+  }
+
+  // Mandats expirant dans <= 7 jours
+  const mandatsExp = data.mandats.filter((m) => {
+    if (m.statut !== "Actif" || !m.dateFin) return false;
+    if (!isDir && m.agentId && m.agentId !== agentId) return false;
+    const d = daysDiff(m.dateFin);
+    return d !== null && d >= 0 && d <= 7;
+  });
+  for (const m of mandatsExp) {
+    const d = daysDiff(m.dateFin)!;
+    alertes.push(`Mandat ${m.ref} expire dans ${d}j — ${m.mandant}`);
+  }
+
+  // Compromis : SRU expirant dans <= 3 jours
+  const compActifs = data.compromis.filter((c) => {
+    if (!isDir && c.agentId && c.agentId !== agentId) return false;
+    return !["Acte signé", "Annulé"].includes(c.statut);
+  });
+  for (const c of compActifs) {
+    if (c.sruExpire) {
+      const d = daysDiff(c.sruExpire);
+      if (d !== null && d >= 0 && d <= 3) {
+        alertes.push(`SRU compromis ${c.ref} expire dans ${d}j — ${c.acheteur}`);
+      }
+    }
+    if (c.condSuspExpire) {
+      const d = daysDiff(c.condSuspExpire);
+      if (d !== null && d >= 0 && d <= 7) {
+        alertes.push(`Conditions suspensives compromis ${c.ref} expirent dans ${d}j`);
+      }
+    }
+  }
+
+  if (alertes.length === 0) return null;
+
+  return (
+    <div className="mb-6 card border-l-4 border-l-danger p-4">
+      <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-danger flex items-center gap-1.5">
+        ⚡ Alertes du jour
+      </div>
+      <div>
+        {alertes.map((msg, i) => (
+          <div key={i} className="flex items-start gap-2 py-1.5 border-b border-line last:border-0">
+            <span className="text-danger font-bold text-[11px] mt-0.5 shrink-0">!</span>
+            <span className="text-[13px] text-ink">{msg}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Modal "Relancer maintenant" ──────────────────────────────────────────────
 function RelanceRapideModal({ client, onClose }: { client: Client; onClose: () => void }) {
@@ -103,6 +173,8 @@ function TodayDirecteur() {
         </h1>
         <p className="text-[13px] text-ink-muted">Vue directeur · Casa Caraïbes</p>
       </div>
+
+      <AlertesSection isDir={true} />
 
       {/* KPIs directeur */}
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -353,6 +425,8 @@ function TodayAgent() {
         </h1>
         <p className="text-[13px] text-ink-muted">Ce qui nécessite votre attention aujourd'hui.</p>
       </div>
+
+      <AlertesSection agentId={user?.id} isDir={false} />
 
       {/* KPIs */}
       <div className="mb-6 grid grid-cols-3 gap-3">

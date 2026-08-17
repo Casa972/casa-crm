@@ -1,7 +1,8 @@
 import {
   Sun, Users, Building2, FileText, Target, TrendingUp, ClipboardList,
-  BarChart2, Calendar, CheckCircle, Calculator, LogOut, Kanban, Shuffle, Library,
+  BarChart2, Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
   GraduationCap, ExternalLink, Landmark, FileSearch, Award, BookOpen, Briefcase,
+  Columns,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
@@ -21,8 +22,8 @@ const NAV_DIR: NavEntry[] = [
   { kind: "item", id: "today",       label: "Aujourd'hui",    Icon: Sun },
 
   { kind: "group", label: "Pipeline" },
-  { kind: "item", id: "clients",     label: "Clients",        Icon: Users },
-  { kind: "item", id: "kanban",      label: "Pipeline Kanban",Icon: Kanban },
+  { kind: "item", id: "clients",          label: "Clients",          Icon: Users },
+  { kind: "item", id: "pipeline_clients", label: "Pipeline clients",  Icon: Columns },
   { kind: "item", id: "matching",    label: "Matching",       Icon: Shuffle },
 
   { kind: "group", label: "Terrain" },
@@ -53,9 +54,9 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "item", id: "pilotage_agent", label: "Mon tableau de bord", Icon: Target },
 
   { kind: "group", label: "Pipeline" },
-  { kind: "item", id: "clients",     label: "Mes clients",    Icon: Users },
+  { kind: "item", id: "clients",          label: "Mes clients",      Icon: Users },
+  { kind: "item", id: "pipeline_clients", label: "Pipeline clients",  Icon: Columns },
   { kind: "item", id: "mes_dossiers",label: "Mes dossiers",   Icon: Briefcase },
-  { kind: "item", id: "kanban",      label: "Pipeline Kanban",Icon: Kanban },
   { kind: "item", id: "matching",    label: "Matching",       Icon: Shuffle },
 
   { kind: "group", label: "Terrain" },

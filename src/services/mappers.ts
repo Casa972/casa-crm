@@ -37,6 +37,7 @@ export const bienFromRow = (r: BienRow): Bien => ({
   statut: r.statut as StatutBien,
   desc: s(r.description),
   mandatId: s(r.mandat_id),
+  photos: r.photos ?? undefined,
 });
 
 export const bienToRow = (b: Bien, agentId?: string): Partial<BienRow> => ({
@@ -52,6 +53,7 @@ export const bienToRow = (b: Bien, agentId?: string): Partial<BienRow> => ({
   statut: b.statut,
   description: nn(b.desc),
   mandat_id: nn(b.mandatId),
+  photos: b.photos ?? null,
   ...(agentId ? { agent_id: agentId } : {}),
 });
 

@@ -81,6 +81,15 @@ export function FicheCommercialeModal({ bien, onClose }: { bien: Bien; onClose: 
           <button onClick={onClose} className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-line/60"><X size={16} /></button>
         </div>
 
+        {/* Photos du bien */}
+        {bien.photos && bien.photos.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 px-5 pt-3">
+            {bien.photos.map(url => (
+              <img key={url} src={url} className="h-32 w-auto rounded-lg object-cover shrink-0" />
+            ))}
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="flex border-b border-line px-5">
           {TABS.map(t => (

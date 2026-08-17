@@ -7,6 +7,7 @@ import { Login } from "./components/auth/Login";
 import { AppShell } from "./components/layout/AppShell";
 import { TodayView } from "./components/today/TodayView";
 import { ClientsView } from "./components/clients/ClientsView";
+import { PipelineView } from "./components/clients/PipelineView";
 import { BiensView } from "./components/biens/BiensView";
 import { PilotageView } from "./components/pilotage/PilotageView";
 import { PilotageAgentView } from "./components/pilotage/PilotageAgentView";
@@ -19,7 +20,6 @@ import { ValeurVenaleView } from "./components/estimation/ValeurVenaleView";
 import { CompteRenduView } from "./components/compteRendu/CompteRenduView";
 import { CalculatriceView } from "./components/tools/CalculatriceView";
 import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
-import { KanbanView } from "./components/kanban/KanbanView";
 import { MatchingView } from "./components/matching/MatchingView";
 import { DocumentsView } from "./components/documents/DocumentsView";
 import { RegistreView } from "./components/registre/RegistreView";
@@ -38,6 +38,7 @@ function CurrentView(): ReactElement {
   switch (safe) {
     case "today": return <TodayView />;
     case "clients": return <ClientsView />;
+    case "pipeline_clients": return <PipelineView />;
     case "biens": return <BiensView />;
     case "redacteur": return <RedacteurView />;
     case "pilotage": return <PilotageView />;
@@ -51,7 +52,6 @@ function CurrentView(): ReactElement {
     case "agenda": return <AgendaView />;
     case "taches": return <TachesView />;
     case "calculatrice": return <CalculatriceView />;
-    case "kanban": return <KanbanView />;
     case "matching": return <MatchingView />;
     case "documents": return <DocumentsView />;
     case "registre": return <RegistreView />;

@@ -16,6 +16,7 @@ export const bienFormSchema = z.object({
   statut: StatutBien,
   desc: z.string().default(""),
   mandatId: z.string().default(""),
+  photos: z.array(z.string()).optional(),
 });
 
 export type BienForm = z.infer<typeof bienFormSchema>;

@@ -18,6 +18,7 @@ export interface BienRow {
   statut: string;
   description: string | null; // ⚠ "desc" est réservé en SQL → "description"
   mandat_id: string | null;
+  photos: string[] | null;
   agent_id: string | null;
   created_at?: string;
 }

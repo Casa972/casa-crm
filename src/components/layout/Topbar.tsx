@@ -21,11 +21,11 @@ const PAGE_LABELS: Record<ViewId, string> = {
   estimation: "Expertises immobilières",
   valeur_venale: "Estimations de valeur vénale",
   compte_rendu: "Comptes rendus de visite",
-  kanban: "Pipeline Kanban",
   matching: "Matching clients ↔ biens",
   documents: "Bibliothèque de documents",
   registre: "Registre des mandats",
   mes_dossiers: "Mes dossiers",
+  pipeline_clients: "Pipeline clients",
   import: "Import CSV",
 };
 

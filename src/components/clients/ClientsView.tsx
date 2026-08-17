@@ -63,6 +63,14 @@ export function ClientsView() {
         );
       },
     }),
+    col.accessor("tel", {
+      header: "Téléphone",
+      cell: (i) => {
+        const tel = i.getValue<string>();
+        if (tel) return <a href={`tel:${tel}`} className="text-primary font-medium hover:underline">{tel}</a>;
+        return <span className="text-ink-muted text-sm">—</span>;
+      },
+    }),
     col.accessor("statut", {
       header: "Étape",
       cell: (i) => <StatusPill label={i.getValue<string>()} />,
@@ -98,6 +106,15 @@ export function ClientsView() {
         const label = jours === 0 ? "Aujourd'hui" : jours === 1 ? "Hier" : `il y a ${jours}j`;
         const stale = jours > 30;
         return <span className={`text-[12px] ${stale ? "text-danger font-medium" : "text-ink-sub"}`}>{label}</span>;
+      },
+    }),
+    col.accessor("notes", {
+      header: "Notes",
+      cell: (i) => {
+        const notes = i.getValue<string>();
+        if (!notes) return null;
+        const truncated = notes.length > 50 ? notes.slice(0, 50) + "…" : notes;
+        return <span className="text-[12px] text-ink-sub italic">{truncated}</span>;
       },
     }),
     col.display({

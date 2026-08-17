@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, ChevronDown, ChevronUp, Calendar } from "lucide-react";
 import { PageHeader } from "../shared/PageHeader";
 import { StatusPill } from "../shared/StatusPill";
-import { EmptyState } from "../ui/Modal";
+import { EmptyState, Modal, FormActions } from "../ui/Modal";
+import { Field, Grid2, Input } from "../ui/Field";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useSessionStore } from "../../store/session.store";
+import { useSaveRdv } from "../../hooks/queries/useRdv";
 import { eur } from "../../lib/format";
-import type { Client, Bien } from "../../types/domain";
+import type { Client, Bien, Rdv } from "../../types/domain";
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const today = () => new Date().toISOString().slice(0, 10);
 
 interface MatchResult {
   bien: Bien;
@@ -72,6 +77,59 @@ function computeMatches(client: Client, biens: Bien[]): MatchResult[] {
   return results.sort((a, b) => b.score - a.score);
 }
 
+interface RdvModalTarget { client: Client; bien: Bien }
+
+function RdvMatchModal({ target, onClose }: { target: RdvModalTarget; onClose: () => void }) {
+  const save = useSaveRdv();
+  const { client, bien } = target;
+  const [form, setForm] = useState<Rdv>({
+    id: "",
+    titre: `Visite ${bien.ref} — ${client.prenom} ${client.nom}`,
+    typeRdv: "Visite",
+    date: today(),
+    heureDebut: "09:00",
+    heureFin: "10:00",
+    statut: "Planifié",
+    participantNom: `${client.prenom} ${client.nom}`,
+    bienRef: bien.ref,
+    clientId: client.id,
+  });
+
+  const set = (k: keyof Rdv, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const handleSave = () => {
+    if (!form.titre.trim() || !form.date) return;
+    save.mutate({ ...form, id: uid() });
+    onClose();
+  };
+
+  return (
+    <>
+      <div className="mb-4 rounded-lg bg-primary-soft p-3 text-[13px] text-primary font-medium">
+        {bien.ref} — {bien.commune} · {eur(bien.prix)}
+      </div>
+      <Field label="Titre">
+        <Input value={form.titre} onChange={(e) => set("titre", e.target.value)} />
+      </Field>
+      <Grid2>
+        <Field label="Date">
+          <Input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} />
+        </Field>
+        <Field label="Heure début">
+          <Input type="time" value={form.heureDebut} onChange={(e) => set("heureDebut", e.target.value)} />
+        </Field>
+        <Field label="Heure fin">
+          <Input type="time" value={form.heureFin} onChange={(e) => set("heureFin", e.target.value)} />
+        </Field>
+      </Grid2>
+      <FormActions
+        onSave={handleSave} onClose={onClose} label="Sauvegarder le RDV"
+        disabled={save.isPending}
+      />
+    </>
+  );
+}
+
 function ScoreBadge({ score }: { score: number }) {
   const tone = score >= 80 ? "emerald" : score >= 50 ? "amber" : "neutral";
   return (
@@ -81,7 +139,7 @@ function ScoreBadge({ score }: { score: number }) {
   );
 }
 
-function ClientMatchRow({ client, biens }: { client: Client; biens: Bien[] }) {
+function ClientMatchRow({ client, biens, onRdv }: { client: Client; biens: Bien[]; onRdv: (target: RdvModalTarget) => void }) {
   const [open, setOpen] = useState(false);
   const matches = computeMatches(client, biens);
 
@@ -131,6 +189,12 @@ function ClientMatchRow({ client, biens }: { client: Client; biens: Bien[] }) {
                       ))}
                     </div>
                   </div>
+                  <button
+                    onClick={() => onRdv({ client, bien })}
+                    className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors shrink-0"
+                  >
+                    <Calendar size={11} /> RDV
+                  </button>
                 </div>
               ))}
             </div>
@@ -145,6 +209,7 @@ export function MatchingView() {
   const { data } = useAgencyData();
   const user = useSessionStore((s) => s.user);
   const isDir = useSessionStore((s) => s.isDirecteur());
+  const [rdvModal, setRdvModal] = useState<RdvModalTarget | null>(null);
 
   const acquéreurs = data.clients.filter((c) =>
     ["Acheteur", "Locataire", "Investisseur"].includes(c.type) &&
@@ -168,9 +233,15 @@ export function MatchingView() {
       ) : (
         <div>
           {acquéreurs.map((client) => (
-            <ClientMatchRow key={client.id} client={client} biens={data.biens} />
+            <ClientMatchRow key={client.id} client={client} biens={data.biens} onRdv={setRdvModal} />
           ))}
         </div>
+      )}
+
+      {rdvModal && (
+        <Modal title={`Créer un RDV — ${rdvModal.bien.ref}`} onClose={() => setRdvModal(null)}>
+          <RdvMatchModal target={rdvModal} onClose={() => setRdvModal(null)} />
+        </Modal>
       )}
     </div>
   );

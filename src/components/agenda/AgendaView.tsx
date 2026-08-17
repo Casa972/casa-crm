@@ -10,6 +10,7 @@ import { useRdv, useSaveRdv, useDeleteRdv } from "../../hooks/queries/useRdv";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import type { Rdv } from "../../types/domain";
 import { TypeRdv, StatutRdv } from "../../schemas/rdv.schema";
+import { AGENTS_NAMES } from "../../config/agents";
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -34,9 +35,6 @@ function emptyRdv(): Rdv {
     typeRdv: "Visite", statut: "Planifié",
   };
 }
-
-const AGENTS_LIST = ["Steeve", "Noham", "Luc"] as const;
-
 
 const RAPPEL_OPTIONS: readonly { value: string; label: string }[] = [
   { value: "", label: "— Aucun rappel —" },
@@ -81,7 +79,7 @@ function ParticipantsCheckboxes({ value, onChange }: { value: string | undefined
   };
   return (
     <div className="flex flex-wrap gap-2 pt-1">
-      {AGENTS_LIST.map((name) => {
+      {AGENTS_NAMES.map((name) => {
         const checked = selected.includes(name);
         return (
           <button
