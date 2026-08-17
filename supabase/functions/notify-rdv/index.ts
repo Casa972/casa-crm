@@ -27,8 +27,7 @@ serve(async (req) => {
   const gcalParams = "action=TEMPLATE&text=" + encodeURIComponent(rdv.titre) + "&dates=" + gcalStart + "/" + gcalEnd + "&details=" + encodeURIComponent(rdv.typeRdv) + "&ctz=America/Martinique";
   const gcalUrl = "https://calendar.google.com/calendar/render?" + gcalParams;
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const confirmBase = supabaseUrl + "/functions/v1/confirm-rdv?id=" + rdv.id;
+  const confirmBase = "https://casa-crm.vercel.app/api/confirm-rdv?id=" + rdv.id;
 
   const badge = isNew
     ? "<span style='background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px'>NOUVEAU</span>"
