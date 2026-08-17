@@ -231,8 +231,9 @@ function googleCalendarUrl(rdv: Rdv): string {
   return "https://calendar.google.com/calendar/render?" + params.toString();
 }
 
-function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDelete: () => void }) {
+function RdvCard({ rdv, onEdit, onDelete, onMarquerRealise }: { rdv: Rdv; onEdit: () => void; onDelete: () => void; onMarquerRealise?: () => void }) {
   const tone = (TYPE_TONE[rdv.typeRdv] ?? "neutral") as any;
+  const isPast = rdv.date < today() && rdv.statut === "Planifié";
   return (
     <div className="card flex items-start gap-3 p-3">
       <div className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded text-[11px] font-bold bg-${tone}-soft text-${tone}`}>
@@ -243,6 +244,7 @@ function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDe
           <span className="text-[13.5px] font-semibold text-ink truncate">{rdv.titre}</span>
           <StatusPill label={rdv.typeRdv} tone={tone} />
           {rdv.statut !== "Planifié" && <StatusPill label={rdv.statut} />}
+          {isPast && <StatusPill label="Non clôturé" tone="amber" />}
           {rdv.confirme === true && <StatusPill label="Confirmé" tone="emerald" />}
           {rdv.confirme === false && <StatusPill label="Non confirmé" tone="danger" />}
         </div>
@@ -254,6 +256,12 @@ function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDe
         {rdv.notes && <div className="text-[12px] text-ink-sub mt-1 line-clamp-1">{rdv.notes}</div>}
       </div>
       <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {isPast && onMarquerRealise && (
+          <button onClick={onMarquerRealise} title="Marquer comme réalisé"
+            className="flex items-center gap-1 rounded bg-emerald-soft px-2 py-1 text-[11px] font-medium text-emerald hover:bg-emerald/20">
+            ✓ Réalisé
+          </button>
+        )}
         <a href={googleCalendarUrl(rdv)} target="_blank" rel="noopener noreferrer" title="Ajouter à Google Agenda" className="flex size-7 items-center justify-center rounded text-ink-muted hover:bg-emerald-soft hover:text-emerald"><ExternalLink size={12} /></a>
         <button className="flex size-7 items-center justify-center rounded text-ink-muted hover:bg-line/60 hover:text-ink" onClick={onEdit}><Edit2 size={12} /></button>
         <button className="flex size-7 items-center justify-center rounded text-ink-muted hover:bg-danger-soft hover:text-danger" onClick={onDelete}><Trash2 size={12} /></button>
@@ -265,6 +273,7 @@ function RdvCard({ rdv, onEdit, onDelete }: { rdv: Rdv; onEdit: () => void; onDe
 export function AgendaView() {
   const { data: rdvList } = useRdv();
   const del = useDeleteRdv();
+  const save = useSaveRdv();
 
   const [modal, setModal] = useState<{ item?: Rdv } | null>(null);
   const [view, setView] = useState<"month" | "list">("month");
@@ -429,6 +438,7 @@ export function AgendaView() {
                   rdv={r}
                   onEdit={() => setModal({ item: r })}
                   onDelete={() => { if (confirm("Supprimer ce RDV ?")) del.mutate(r.id); }}
+                  onMarquerRealise={() => save.mutate({ ...r, statut: "Fait" })}
                 />
               ))
           )}

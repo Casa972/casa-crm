@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, Clock, Upload, User } from "lucide-react";
+import { Plus, Edit2, Trash2, Clock, Upload, User, Download, Filter } from "lucide-react";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
@@ -27,6 +27,7 @@ export function ClientsView() {
   const [historiqueClient, setHistoriqueClient] = useState<Client | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [monPortefeuille, setMonPortefeuille] = useState(false);
+  const [filtreEtape, setFiltreEtape] = useState<string>("");
   const user = useSessionStore((s) => s.user);
   const isDir = useSessionStore((s) => s.isDirecteur());
 
@@ -42,9 +43,24 @@ export function ClientsView() {
   }, [focusClientId, data.clients, setFocusClientId]);
 
   const filteredClients = useMemo(() => {
-    if (!monPortefeuille || !user) return data.clients;
-    return data.clients.filter((c) => c.agentId === user.id || !c.agentId);
-  }, [data.clients, monPortefeuille, user]);
+    let list = data.clients;
+    if (monPortefeuille && user) list = list.filter((c) => c.agentId === user.id || !c.agentId);
+    if (filtreEtape) list = list.filter((c) => c.statut === filtreEtape);
+    return list;
+  }, [data.clients, monPortefeuille, user, filtreEtape]);
+
+  const exportCSV = () => {
+    const headers = ["Prénom", "Nom", "Type", "Étape", "Téléphone", "Email", "Budget", "Commune", "Relance", "Dernier contact", "Notes"];
+    const rows = filteredClients.map((c) => [
+      c.prenom, c.nom, c.type, c.statut, c.tel, c.email,
+      c.budgetMax > 0 ? c.budgetMax : "", c.commune, c.relanceDate, c.dernierContact, c.notes,
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${(v ?? "").toString().replace(/"/g, '""')}"`).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+    a.download = `clients-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  };
 
   const columns = useMemo<ColumnDef<Client, any>[]>(() => [
     col.accessor((c) => `${c.prenom} ${c.nom}`, {
@@ -136,6 +152,7 @@ export function ClientsView() {
         subtitle={`${filteredClients.length} fiche(s)${monPortefeuille ? " dans mon portefeuille" : " au total"}`}
         actions={
           <div className="flex gap-2">
+            <button className="btn-ghost" onClick={exportCSV}><Download size={14} /> Exporter</button>
             <button className="btn-ghost" onClick={() => setImportOpen(true)}><Upload size={14} /> Importer CSV</button>
             <button className="btn-primary" onClick={() => setModal({})}><Plus size={14} /> Nouveau</button>
           </div>
@@ -144,6 +161,19 @@ export function ClientsView() {
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <div className="max-w-xs flex-1">
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un client..." />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Filter size={12} className="text-ink-muted" />
+          <select
+            value={filtreEtape}
+            onChange={(e) => setFiltreEtape(e.target.value)}
+            className="rounded-lg border border-line bg-surface px-2 py-1.5 text-[12px] text-ink-sub focus:outline-none"
+          >
+            <option value="">Toutes les étapes</option>
+            {["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"].map((e) => (
+              <option key={e} value={e}>{e}</option>
+            ))}
+          </select>
         </div>
         {!isDir && (
           <button

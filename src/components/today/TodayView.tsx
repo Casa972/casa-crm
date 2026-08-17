@@ -325,7 +325,7 @@ function TodayDirecteur() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-semibold text-ink">{c.prenom} {c.nom}</div>
-                      <div className="text-[11px] text-ink-muted">{c.tel || "—"} · {c.statut}</div>
+                      <div className="text-[11px] text-ink-muted">{c.tel ? <a href={`tel:${c.tel}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>{c.tel}</a> : "—"} · {c.statut}</div>
                     </div>
                     <div className="flex gap-1.5">
                       <button onClick={() => setRelanceModal(c)}
