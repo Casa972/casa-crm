@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { CheckCircle, AlertTriangle, Clock, TrendingUp, Bell, Users, Landmark, Target, Zap } from "lucide-react";
+import { CheckCircle, AlertTriangle, Clock, TrendingUp, Bell, Users, Landmark, Target, Zap, Sparkles } from "lucide-react";
+import { NouveauDossierWizard } from "../biens/NouveauDossierWizard";
 import { EmptyState } from "../ui/Modal";
 import { Modal, FormActions } from "../ui/Modal";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
@@ -148,6 +149,7 @@ function TodayDirecteur() {
   const setFocusClientId = useUiStore((s) => s.setFocusClientId);
 
   const [relanceModal, setRelanceModal] = useState<Client | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const relances = data.clients.filter((c) => c.relanceDate && (daysDiff(c.relanceDate) ?? 99) <= 0);
   const negliges = data.clients.filter((c) => {
@@ -168,11 +170,26 @@ function TodayDirecteur() {
   return (
     <div className="mx-auto max-w-[940px] px-6 py-6">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl font-semibold capitalize text-ink">
-          {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-        </h1>
-        <p className="text-[13px] text-ink-muted">Vue directeur · Casa Caraïbes</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-heading text-2xl font-semibold capitalize text-ink">
+              {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            </h1>
+            <p className="text-[13px] text-ink-muted">Vue directeur · Casa Caraïbes</p>
+          </div>
+          <button
+            onClick={() => setWizardOpen(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-white hover:bg-primary/90 transition-colors"
+          >
+            <Sparkles size={14} /> Nouveau dossier
+          </button>
+        </div>
       </div>
+      {wizardOpen && (
+        <Modal title="Nouveau dossier vendeur" wide onClose={() => setWizardOpen(false)}>
+          <NouveauDossierWizard onClose={() => setWizardOpen(false)} />
+        </Modal>
+      )}
 
       <AlertesSection isDir={true} />
 

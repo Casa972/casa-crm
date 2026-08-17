@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText, User } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText, User, Sparkles } from "lucide-react";
+import { NouveauDossierWizard } from "./NouveauDossierWizard";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
@@ -34,6 +35,7 @@ export function BiensView() {
   const [modal, setModal] = useState<Modal_>(null);
   const [ficheBien, setFicheBien] = useState<Bien | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [monPortefeuille, setMonPortefeuille] = useState(false);
   const user = useSessionStore((s) => s.user);
   const isDir = useSessionStore((s) => s.isDirecteur());
@@ -103,6 +105,12 @@ export function BiensView() {
           {tab === "biens" && (
             <button className="btn-ghost" onClick={() => setImportOpen(true)}><Upload size={14} /> Importer CSV</button>
           )}
+          <button
+            onClick={() => setWizardOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-primary bg-primary-soft px-3 py-1.5 text-[13px] font-semibold text-primary hover:bg-primary hover:text-white transition-colors"
+          >
+            <Sparkles size={14} /> Nouveau dossier
+          </button>
           <button className="btn-primary" onClick={() => setModal({ kind: tab })}>
             <Plus size={14} /> {tab === "biens" ? "Nouveau bien" : "Nouveau mandat"}
           </button>
@@ -162,6 +170,11 @@ export function BiensView() {
       )}
       {importOpen && (
         <ImportCSVModal type="biens" onClose={() => setImportOpen(false)} />
+      )}
+      {wizardOpen && (
+        <Modal title="Nouveau dossier vendeur" wide onClose={() => setWizardOpen(false)}>
+          <NouveauDossierWizard onClose={() => setWizardOpen(false)} />
+        </Modal>
       )}
     </div>
   );
