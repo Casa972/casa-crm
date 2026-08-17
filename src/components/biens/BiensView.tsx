@@ -59,6 +59,7 @@ export function BiensView() {
   };
 
   const bienCols = useBienColumns(
+    data.mandats,
     (b) => setModal({ kind: "biens", item: b }),
     (id) => confirm("Supprimer ce bien ?") && delBien.mutate(id),
     (b) => setFicheBien(b),
@@ -193,6 +194,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 
 const bh = createColumnHelper<Bien>();
 function useBienColumns(
+  mandats: Mandat[],
   onEdit: (b: Bien) => void,
   onDelete: (id: string) => void,
   onFiche: (b: Bien) => void,
@@ -204,6 +206,16 @@ function useBienColumns(
     bh.accessor("commune", {
       header: "Localisation",
       cell: (c) => <span className="text-ink-sub"><MapPin size={11} className="mr-1 inline" />{c.getValue()}</span>,
+    }),
+    bh.display({
+      id: "proprietaire", header: "Propriétaire",
+      cell: (c) => {
+        const b = c.row.original;
+        const m = mandats.find(x => x.bienId === b.id || x.bienId === b.ref);
+        return m?.mandant
+          ? <span className="text-[13px] font-medium text-ink">{m.mandant}</span>
+          : <span className="text-ink-muted text-sm">—</span>;
+      },
     }),
     bh.accessor("cat", { header: "Catégorie", cell: (c) => <StatusPill label={c.getValue() === "vente" ? "Vente" : "Location"} tone={c.getValue() === "vente" ? "primary" : "emerald"} /> }),
     bh.accessor("statut", { header: "Statut", cell: (c) => <StatusPill label={c.getValue()} /> }),
@@ -231,7 +243,7 @@ function useBienColumns(
         </div>
       ),
     }),
-  ] as ColumnDef<Bien, any>[], [onEdit, onDelete, onFiche, onMandat]);
+  ] as ColumnDef<Bien, any>[], [mandats, onEdit, onDelete, onFiche, onMandat]);
 }
 
 const mh = createColumnHelper<Mandat>();

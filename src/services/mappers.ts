@@ -92,8 +92,9 @@ export const mandatToRow = (m: Mandat, agentId?: string): Partial<MandatRow> => 
   honoraires: nz(m.honoraires),
   statut: m.statut,
   notes: nn(m.notes),
+  ...(m.numeroRegistre !== undefined ? { numero_registre: m.numeroRegistre } : {}),
   ...(m.regularisation !== undefined ? { regularisation: m.regularisation } : {}),
-  ...(agentId ? { agent_id: agentId } : {}),
+  ...(agentId ? { agent_id: agentId } : m.agentId ? { agent_id: m.agentId } : {}),
 });
 
 /* ── Compromis ── */

@@ -10,15 +10,19 @@ interface Props {
 
 export function PhotosUpload({ bienRef, photos = [], onChange }: Props) {
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const upload = async (files: FileList) => {
     setUploading(true);
+    setUploadError(null);
     const urls: string[] = [...photos];
     for (const file of Array.from(files)) {
-      const path = `${bienRef}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const path = `${bienRef || "sans-ref"}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
       const { error } = await supabase.storage.from("biens-photos").upload(path, file, { upsert: true });
-      if (!error) {
+      if (error) {
+        setUploadError(`Erreur : ${error.message}`);
+      } else {
         const { data } = supabase.storage.from("biens-photos").getPublicUrl(path);
         urls.push(data.publicUrl);
       }
@@ -54,6 +58,9 @@ export function PhotosUpload({ bienRef, photos = [], onChange }: Props) {
           <span className="text-[10px]">{uploading ? "Upload..." : "Photo"}</span>
         </button>
       </div>
+      {uploadError && (
+        <div className="mt-1 text-[11px] text-danger">{uploadError}</div>
+      )}
       <input
         ref={inputRef}
         type="file"

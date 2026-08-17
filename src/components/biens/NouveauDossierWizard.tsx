@@ -50,7 +50,7 @@ export function NouveauDossierWizard({ onClose }: Props) {
   // Step 3 — Mandat
   const [mandat, setMandat] = useState({
     ref: "", type: "Exclusif", dateDebut: today(), dateFin: inMonths(3),
-    honoraires: "5", notes: "",
+    honoraires: "5", notes: "", numeroRegistre: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -132,6 +132,7 @@ export function NouveauDossierWizard({ onClose }: Props) {
         dateDebut: mandat.dateDebut, dateFin: mandat.dateFin,
         honoraires: Number(mandat.honoraires), statut: "Actif",
         notes: mandat.notes,
+        numeroRegistre: mandat.numeroRegistre ? Number(mandat.numeroRegistre) : undefined,
       } as Mandat);
 
       setDone(true);
@@ -297,6 +298,9 @@ export function NouveauDossierWizard({ onClose }: Props) {
           <Grid2>
             <Field label="Référence mandat *" error={errors.ref}>
               <Input value={mandat.ref} onChange={(e) => setMandat((p) => ({ ...p, ref: e.target.value }))} placeholder="M-2026-001" />
+            </Field>
+            <Field label="N° au registre">
+              <Input type="number" value={mandat.numeroRegistre} onChange={(e) => setMandat((p) => ({ ...p, numeroRegistre: e.target.value }))} placeholder="001" />
             </Field>
             <Field label="Type de mandat">
               <Select value={mandat.type} onChange={(v) => setMandat((p) => ({ ...p, type: v }))} options={TypeMandat.options} />
