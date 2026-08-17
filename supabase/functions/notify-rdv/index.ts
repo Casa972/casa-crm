@@ -1,145 +1,100 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 
-const RESEND_KEY = Deno.env.get("RESEND_API_KEY")!;
-const COMMERCIAL_EMAIL = Deno.env.get("COMMERCIAL_EMAIL") ?? "steeve@casacaraibes.com";
-const FROM_EMAIL = "Casa Caraïbes <noreply@casacaraibes.com>";
-const CRM_URL = "https://casa-crm.vercel.app";
-const SUPABASE_FUNCTIONS_URL = Deno.env.get("SUPABASE_URL")?.replace("https://", "https://") + "/functions/v1";
-
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  return `${parseInt(d)} ${MOIS[parseInt(m) - 1]} ${y}`;
-}
-
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+  const h = new Headers();
+  h.set("Access-Control-Allow-Origin", "*");
+  h.set("Access-Control-Allow-Headers", "authorization, apikey, content-type, x-client-info");
+  h.set("Content-Type", "application/json");
 
-  console.log("[notify-rdv] Request received");
+  if (req.method === "OPTIONS") return new Response("ok", { headers: h });
 
-  if (!RESEND_KEY) {
-    console.error("[notify-rdv] RESEND_API_KEY manquante !");
-    return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
-  }
+  const key = Deno.env.get("RESEND_API_KEY") ?? "";
+  if (!key) return new Response(JSON.stringify({ error: "no key" }), { status: 500, headers: h });
 
   const rdv = await req.json();
-  console.log("[notify-rdv] participantNom:", rdv.participantNom, "| _to:", rdv._to);
+  if (!rdv._to) return new Response(JSON.stringify({ skipped: true }), { headers: h });
 
-  // N'envoie que si un participant est désigné
-  if (!rdv.participantNom || !rdv._to) {
-    console.log("[notify-rdv] Skipped — pas de participant/destinataire");
-    return new Response(JSON.stringify({ skipped: true }), { headers: { ...CORS, "Content-Type": "application/json" } });
-  }
+  const mois = ["janvier","fevrier","mars","avril","mai","juin","juillet","aout","septembre","octobre","novembre","decembre"];
+  const jours = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  const d = new Date(rdv.date + "T12:00");
+  const dateLabel = jours[d.getDay()] + " " + d.getDate() + " " + mois[d.getMonth()] + " " + d.getFullYear();
 
   const isNew = rdv._isNew === true;
-  const subject = isNew
-    ? `📅 Nouveau RDV — ${rdv.titre} — ${formatDate(rdv.date)}`
-    : `✏️ RDV modifié — ${rdv.titre} — ${formatDate(rdv.date)}`;
+  const subject = (isNew ? "Nouveau RDV - " : "RDV modifie - ") + rdv.titre + " - " + dateLabel;
 
-  const html = `
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f5f0e8;font-family:'Helvetica Neue',Arial,sans-serif;">
-  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  const gcalStart = rdv.date.replace(/-/g, "") + "T" + rdv.heureDebut.replace(/:/g, "") + "00";
+  const gcalEnd = rdv.date.replace(/-/g, "") + "T" + rdv.heureFin.replace(/:/g, "") + "00";
+  const gcalParams = "action=TEMPLATE&text=" + encodeURIComponent(rdv.titre) + "&dates=" + gcalStart + "/" + gcalEnd + "&details=" + encodeURIComponent(rdv.typeRdv) + "&ctz=America/Martinique";
+  const gcalUrl = "https://calendar.google.com/calendar/render?" + gcalParams;
 
-    <!-- Header -->
-    <div style="background:#0a0a0a;padding:28px 32px;text-align:center;">
-      <p style="color:#7a8b6f;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Casa Caraïbes</p>
-      <p style="color:#ffffff;font-size:18px;font-weight:600;margin:0;">${isNew ? "Nouveau rendez-vous" : "Rendez-vous modifié"}</p>
-    </div>
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const confirmBase = supabaseUrl + "/functions/v1/confirm-rdv?id=" + rdv.id;
 
-    <!-- Corps -->
-    <div style="padding:32px;">
-      <p style="color:#3a3a3a;font-size:14px;margin:0 0 24px;">Bonjour ${rdv.participantNom},</p>
-      <p style="color:#3a3a3a;font-size:14px;margin:0 0 24px;">
-        ${isNew ? "Un rendez-vous a été planifié pour vous :" : "Le rendez-vous suivant a été modifié :"}
-      </p>
+  const badge = isNew
+    ? "<span style='background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px'>NOUVEAU</span>"
+    : "<span style='background:#fef9c3;color:#854d0e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px'>MODIFIE</span>";
 
-      <!-- Détails RDV -->
-      <div style="background:#f5f0e8;border-radius:6px;padding:20px 24px;margin-bottom:24px;">
-        <table style="width:100%;border-collapse:collapse;">
-          <tr>
-            <td style="padding:6px 0;color:#6b6b67;font-size:12px;width:90px;vertical-align:top;">TITRE</td>
-            <td style="padding:6px 0;color:#0a0a0a;font-size:14px;font-weight:600;">${rdv.titre}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:#6b6b67;font-size:12px;vertical-align:top;">DATE</td>
-            <td style="padding:6px 0;color:#0a0a0a;font-size:14px;">${formatDate(rdv.date)}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:#6b6b67;font-size:12px;vertical-align:top;">HEURE</td>
-            <td style="padding:6px 0;color:#0a0a0a;font-size:14px;">${rdv.heureDebut} → ${rdv.heureFin}</td>
-          </tr>
-          <tr>
-            <td style="padding:6px 0;color:#6b6b67;font-size:12px;vertical-align:top;">TYPE</td>
-            <td style="padding:6px 0;color:#0a0a0a;font-size:14px;">${rdv.typeRdv}</td>
-          </tr>
-          ${rdv.notes ? `
-          <tr>
-            <td style="padding:6px 0;color:#6b6b67;font-size:12px;vertical-align:top;">NOTES</td>
-            <td style="padding:6px 0;color:#3a3a3a;font-size:13px;">${rdv.notes}</td>
-          </tr>` : ""}
-        </table>
-      </div>
+  const row = (label: string, value: string) =>
+    "<tr>"
+    + "<td style='padding:10px 16px;color:#6b7280;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;width:80px'>" + label + "</td>"
+    + "<td style='padding:10px 16px;color:#111827;font-size:14px'>" + value + "</td>"
+    + "</tr>";
 
-      <!-- Confirmation -->
-      <div style="margin-bottom:24px;">
-        <p style="color:#6b6b67;font-size:13px;text-align:center;margin:0 0 14px;">Pouvez-vous confirmer votre présence ?</p>
-        <div style="display:flex;gap:12px;justify-content:center;">
-          <a href="${SUPABASE_FUNCTIONS_URL}/confirm-rdv?id=${rdv.id}&response=oui"
-            style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:12px 32px;border-radius:6px;letter-spacing:0.5px;">
-            ✓ Confirmer
-          </a>
-          <a href="${SUPABASE_FUNCTIONS_URL}/confirm-rdv?id=${rdv.id}&response=non"
-            style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:12px 32px;border-radius:6px;letter-spacing:0.5px;">
-            ✗ Décliner
-          </a>
-        </div>
-      </div>
+  const html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head>"
+    + "<body style='margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif'>"
+    + "<div style='max-width:520px;margin:32px auto;padding:0 16px'>"
 
-      <!-- CTA -->
-      <div style="text-align:center;margin-bottom:24px;">
-        <a href="${CRM_URL}" style="display:inline-block;background:#7a8b6f;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:12px 28px;border-radius:6px;letter-spacing:0.5px;">
-          Voir dans le CRM
-        </a>
-      </div>
+    + "<div style='background:#0f172a;border-radius:12px 12px 0 0;padding:24px 32px;display:flex;align-items:center'>"
+    + "<div style='width:36px;height:36px;background:#1e3a5f;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;margin-right:12px'>"
+    + "<span style='color:#93c5fd;font-size:18px;font-weight:700'>C</span>"
+    + "</div>"
+    + "<div>"
+    + "<div style='color:#f8fafc;font-size:15px;font-weight:700;letter-spacing:0.3px'>Casa Caraibes</div>"
+    + "<div style='color:#64748b;font-size:11px;margin-top:1px'>Agence immobiliere - Martinique</div>"
+    + "</div>"
+    + "</div>"
 
-      <p style="color:#9b9b97;font-size:12px;text-align:center;margin:0;">
-        Casa Caraïbes · Agence immobilière Martinique
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+    + "<div style='background:#ffffff;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;padding:28px 32px'>"
+    + "<div style='margin-bottom:16px'>" + badge + "</div>"
+    + "<div style='font-size:22px;font-weight:700;color:#0f172a;margin-bottom:6px'>" + rdv.titre + "</div>"
+    + "<div style='color:#6b7280;font-size:14px;margin-bottom:24px'>Bonjour <strong style='color:#0f172a'>" + rdv.participantNom + "</strong>, voici les details de votre rendez-vous.</div>"
 
-  const to = rdv._to as string;
-  console.log("[notify-rdv] Envoi email à:", to, "| sujet:", subject);
+    + "<div style='background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;margin-bottom:24px'>"
+    + "<table style='width:100%;border-collapse:collapse'>"
+    + "<tr style='border-bottom:1px solid #e5e7eb'>" + row("Date", "<strong>" + dateLabel + "</strong>").slice(4, -5) + "</tr>"
+    + "<tr style='border-bottom:1px solid #e5e7eb'>" + row("Heure", rdv.heureDebut + " &rarr; " + rdv.heureFin).slice(4, -5) + "</tr>"
+    + "<tr" + (rdv.notes ? " style='border-bottom:1px solid #e5e7eb'" : "") + ">" + row("Type", rdv.typeRdv).slice(4, -5) + "</tr>"
+    + (rdv.notes ? "<tr>" + row("Notes", rdv.notes).slice(4, -5) + "</tr>" : "")
+    + "</table>"
+    + "</div>"
+
+    + "<div style='margin-bottom:16px;padding:16px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;text-align:center'>"
+    + "<div style='color:#166534;font-size:13px;font-weight:600;margin-bottom:12px'>Pouvez-vous confirmer votre presence ?</div>"
+    + "<div style='display:flex;gap:10px'>"
+    + "<a href='" + confirmBase + "&response=oui' style='flex:1;display:block;background:#16a34a;color:#ffffff;text-align:center;padding:11px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700'>✓ Confirmer</a>"
+    + "<a href='" + confirmBase + "&response=non' style='flex:1;display:block;background:#dc2626;color:#ffffff;text-align:center;padding:11px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700'>✗ Decliner</a>"
+    + "</div>"
+    + "</div>"
+
+    + "<div style='display:flex;gap:10px;margin-bottom:0'>"
+    + "<a href='https://casa-crm.vercel.app' style='flex:1;display:block;background:#0f172a;color:#ffffff;text-align:center;padding:13px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600'>Ouvrir le CRM</a>"
+    + "<a href='" + gcalUrl + "' style='flex:1;display:block;background:#ffffff;color:#0f172a;text-align:center;padding:13px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;border:2px solid #e5e7eb'>+ Google Agenda</a>"
+    + "</div>"
+    + "</div>"
+
+    + "<div style='background:#f8fafc;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:16px 32px;text-align:center'>"
+    + "<span style='color:#9ca3af;font-size:12px'>Casa Caraibes &middot; Agence immobiliere &middot; Martinique</span>"
+    + "</div>"
+
+    + "</div></body></html>";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${RESEND_KEY}`,
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+    body: JSON.stringify({ from: "Casa Caraibes <noreply@casacaraibes.com>", to: [rdv._to], subject, html }),
   });
 
   const data = await res.json();
-  if (!res.ok) {
-    console.error("[notify-rdv] Erreur Resend:", res.status, JSON.stringify(data));
-  } else {
-    console.log("[notify-rdv] Email envoyé avec succès. ID:", (data as any).id);
-  }
-
-  return new Response(JSON.stringify(data), {
-    status: res.ok ? 200 : 500,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+  console.log("status:", res.status, JSON.stringify(data));
+  return new Response(JSON.stringify(data), { status: res.ok ? 200 : 500, headers: h });
 });
