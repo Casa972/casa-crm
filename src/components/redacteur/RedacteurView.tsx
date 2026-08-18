@@ -187,7 +187,7 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
         <div>
           {data.mandats.length > 0 && (
             <div className="card mb-4 border-l-4 border-l-primary bg-primary-soft p-3.5">
-              <div className="mb-1.5 text-[12px] font-semibold text-primary">🔗 Pré-remplir depuis un mandat CRM</div>
+              <div className="mb-1.5 text-[12px] font-semibold text-primary">Pré-remplir depuis un mandat CRM</div>
               <select className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px]"
                 onChange={e => prefillFromMandat(e.target.value)} defaultValue="">
                 <option value="">— Sélectionner un mandat —</option>
@@ -575,7 +575,7 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
         <div>
           {data.compromis.length > 0 && (
             <div className="card mb-4 border-l-4 border-l-primary bg-primary-soft p-3.5">
-              <div className="mb-1.5 text-[12px] font-semibold text-primary">🔗 Pré-remplir depuis un dossier CRM</div>
+              <div className="mb-1.5 text-[12px] font-semibold text-primary">Pré-remplir depuis un dossier CRM</div>
               <select className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px]"
                 onChange={e => prefillFromCompromis(e.target.value)} defaultValue="">
                 <option value="">— Sélectionner un dossier —</option>
@@ -817,7 +817,7 @@ function OffreForm({ f, setF }: { f: OffreAchat; setF: (v: OffreAchat) => void }
         <div>
           {data.mandats.length > 0 && (
             <div className="card mb-4 border-l-4 border-l-primary bg-primary-soft p-3.5">
-              <div className="mb-1.5 text-[12px] font-semibold text-primary">🔗 Pré-remplir depuis un mandat CRM</div>
+              <div className="mb-1.5 text-[12px] font-semibold text-primary">Pré-remplir depuis un mandat CRM</div>
               <select className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px]"
                 onChange={e => prefillFromMandat(e.target.value)} defaultValue="">
                 <option value="">— Sélectionner un mandat —</option>
@@ -921,10 +921,10 @@ function OffreForm({ f, setF }: { f: OffreAchat; setF: (v: OffreAchat) => void }
 
 // ─── Vue principale ───────────────────────────────────────────────────────────
 const DOC_LIST: { id: DocType; label: string; icon: string; sub: string; navigateTo?: ViewId }[] = [
-  { id: "mandat",    label: "Mandat de vente",              icon: "📋", sub: "10 articles · Hoguet/ALUR" },
-  { id: "compromis", label: "Compromis de vente",           icon: "✍️", sub: "17 articles · Loi ALUR" },
-  { id: "offre",     label: "Offre d'achat",                icon: "🤝", sub: "Offre ferme · conditions suspensives" },
-  { id: "expertise", label: "Rapport d'expertise immob.",   icon: "🏠", sub: "Valeur vénale · INIGEP®", navigateTo: "estimation" },
+  { id: "mandat",    label: "Mandat de vente",              icon: "", sub: "10 articles · Hoguet/ALUR" },
+  { id: "compromis", label: "Compromis de vente",           icon: "", sub: "17 articles · Loi ALUR" },
+  { id: "offre",     label: "Offre d'achat",                icon: "", sub: "Offre ferme · conditions suspensives" },
+  { id: "expertise", label: "Rapport d'expertise immob.",   icon: "", sub: "Valeur vénale · INIGEP®", navigateTo: "estimation" },
 ];
 
 export function RedacteurView() {
@@ -998,10 +998,10 @@ export function RedacteurView() {
     else if (docType === "offre") setOffre({ ...defaultOffre(), redacteur: agentFormalName });
   };
 
-  const docTitle = docType === "mandat"    ? "📋 Mandat de vente"
-    : docType === "compromis" ? "✍️ Compromis de vente"
-    : docType === "offre"     ? "🤝 Offre d'achat"
-    : "🏠 Rapport d'expertise immobilière";
+  const docTitle = docType === "mandat"    ? "Mandat de vente"
+    : docType === "compromis" ? "Compromis de vente"
+    : docType === "offre"     ? "Offre d'achat"
+    : "Rapport d'expertise immobilière";
 
   return (
     <div className="flex h-full">
@@ -1023,14 +1023,14 @@ export function RedacteurView() {
             onClick={() => downloadFicheApportPromo()}
             className="flex w-full flex-col items-start gap-0.5 rounded px-3 py-2.5 text-left mb-1 hover:bg-line/50"
           >
-            <span className="text-[13px] font-medium text-ink-sub">🌴 Flyer apport</span>
+            <span className="text-[13px] font-medium text-ink-sub">Flyer apport</span>
             <span className="text-[10px] text-ink-muted">Fiche commerciale · PDF</span>
           </button>
           <button
             onClick={() => downloadFicheApportAffaires()}
             className="flex w-full flex-col items-start gap-0.5 rounded px-3 py-2.5 text-left mb-1 hover:bg-line/50"
           >
-            <span className="text-[13px] font-medium text-ink-sub">📄 Fiche déclaration</span>
+            <span className="text-[13px] font-medium text-ink-sub">Fiche déclaration</span>
             <span className="text-[10px] text-ink-muted">Contrat à signer · PDF</span>
           </button>
         </div>
