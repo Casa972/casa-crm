@@ -52,6 +52,8 @@ export type StatutRevenu = z.infer<typeof StatutRevenu>;
 export const TypeRevenu = z.enum([
   "Commission vente",
   "Commission location",
+  "Expertise",
+  "Estimation valeur vénale",
   "Gestion locative",
   "Honoraires conseil",
   "Frais divers",
