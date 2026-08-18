@@ -28,12 +28,14 @@ const ETAPE_STYLES: Record<Etape, { header: string; badge: string }> = {
 };
 
 const TYPE_BADGE: Record<string, string> = {
-  Acheteur: "bg-primary-soft text-primary",
-  Vendeur:  "bg-emerald-soft text-emerald",
+  Acheteur:    "bg-primary-soft text-primary",
+  Vendeur:     "bg-emerald-soft text-emerald",
+  Investisseur:"bg-violet-soft text-violet",
+  Locataire:   "bg-amber-soft text-amber",
 };
 
 function prochaineEtape(etape: Etape, type: string): Etape | null {
-  const seq = type === "Vendeur" ? ETAPES_VENDEUR : ETAPES_ACHETEUR;
+  const seq = type === "Vendeur" ? ETAPES_VENDEUR : ETAPES_ACHETEUR; // Locataire/Investisseur → pipeline acheteur
   const idx = (seq as readonly string[]).indexOf(etape);
   if (idx < 0 || idx >= seq.length - 2) return null;
   return (seq[idx + 1] ?? null) as Etape | null;

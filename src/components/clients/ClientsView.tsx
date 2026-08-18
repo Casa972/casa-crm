@@ -14,7 +14,15 @@ import { useAgencyData, useSaveClient, useDeleteClient } from "../../hooks/queri
 import { useFiltersStore } from "../../store/filters.store";
 import { useUiStore } from "../../store/ui.store";
 import { useSessionStore } from "../../store/session.store";
+import { EtapePipeline, TypeClient } from "../../schemas/enums";
 import type { Client } from "../../types/domain";
+
+const TYPE_COLORS: Record<string, string> = {
+  Acheteur:    "bg-primary-soft text-primary",
+  Vendeur:     "bg-emerald-soft text-emerald",
+  Investisseur:"bg-violet-soft text-violet",
+  Locataire:   "bg-amber-soft text-amber",
+};
 
 const col = createColumnHelper<Client>();
 
@@ -28,6 +36,7 @@ export function ClientsView() {
   const [importOpen, setImportOpen] = useState(false);
   const [monPortefeuille, setMonPortefeuille] = useState(false);
   const [filtreEtape, setFiltreEtape] = useState<string>("");
+  const [filtreType, setFiltreType] = useState<string>("");
   const user = useSessionStore((s) => s.user);
   const isDir = useSessionStore((s) => s.isDirecteur());
 
@@ -44,10 +53,11 @@ export function ClientsView() {
 
   const filteredClients = useMemo(() => {
     let list = data.clients;
-    if (monPortefeuille && user) list = list.filter((c) => c.agentId === user.id || !c.agentId);
+    if (monPortefeuille && user) list = list.filter((c) => c.agentId === user.id);
+    if (filtreType) list = list.filter((c) => c.type === filtreType);
     if (filtreEtape) list = list.filter((c) => c.statut === filtreEtape);
     return list;
-  }, [data.clients, monPortefeuille, user, filtreEtape]);
+  }, [data.clients, monPortefeuille, user, filtreType, filtreEtape]);
 
   const exportCSV = () => {
     const headers = ["Prénom", "Nom", "Type", "Étape", "Téléphone", "Email", "Budget", "Commune", "Relance", "Dernier contact", "Notes"];
@@ -65,15 +75,25 @@ export function ClientsView() {
   const columns = useMemo<ColumnDef<Client, any>[]>(() => [
     col.accessor((c) => `${c.prenom} ${c.nom}`, {
       id: "nom", header: "Client",
-      cell: (i) => <span className="font-semibold text-ink">{i.getValue<string>()}</span>,
+      cell: (i) => {
+        const client = i.row.original;
+        const relanceUrgente = client.relanceDate && (daysDiff(client.relanceDate) ?? 99) <= 0;
+        return (
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-ink">{i.getValue<string>()}</span>
+            {relanceUrgente && (
+              <span className="rounded-full bg-danger-soft px-1.5 py-0.5 text-[10px] font-bold text-danger">Relance !</span>
+            )}
+          </div>
+        );
+      },
     }),
     col.accessor("type", {
       header: "Profil",
       cell: (i) => {
         const type = i.getValue<string>();
-        const isAcheteur = type === "Acheteur";
         return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isAcheteur ? "bg-primary-soft text-primary" : "bg-emerald-soft text-emerald"}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[type] ?? "bg-slate-100 text-slate-600"}`}>
             {type}
           </span>
         );
@@ -165,12 +185,22 @@ export function ClientsView() {
         <div className="flex items-center gap-1.5">
           <Filter size={12} className="text-ink-muted" />
           <select
+            value={filtreType}
+            onChange={(e) => setFiltreType(e.target.value)}
+            className="rounded-lg border border-line bg-surface px-2 py-1.5 text-[12px] text-ink-sub focus:outline-none"
+          >
+            <option value="">Tous les profils</option>
+            {TypeClient.options.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+          <select
             value={filtreEtape}
             onChange={(e) => setFiltreEtape(e.target.value)}
             className="rounded-lg border border-line bg-surface px-2 py-1.5 text-[12px] text-ink-sub focus:outline-none"
           >
             <option value="">Toutes les étapes</option>
-            {["Prospect", "Visite", "Offre", "Estimation", "Mandat", "En diffusion", "Sous offre", "Compromis", "Acte", "Perdu"].map((e) => (
+            {EtapePipeline.options.map((e) => (
               <option key={e} value={e}>{e}</option>
             ))}
           </select>

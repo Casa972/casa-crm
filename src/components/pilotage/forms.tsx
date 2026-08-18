@@ -204,7 +204,7 @@ export function ClientForm({ initial, onSave, onClose }: {
     budgetMax: String(initial?.budgetMax ?? ""), commune: initial?.commune ?? "",
     typeBien: initial?.typeBien ?? "", chambresMin: String(initial?.chambresMin ?? ""),
     notes: initial?.notes ?? "", bienId: initial?.bienId ?? "",
-    dernierContact: initial?.dernierContact ?? today(), relanceDate: initial?.relanceDate ?? "",
+    dernierContact: initial?.dernierContact ?? "", relanceDate: initial?.relanceDate ?? "",
     financement: initial?.financement ?? "",
   }));
   const [errors, setErrors] = useState<Errors>({});
