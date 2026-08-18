@@ -219,11 +219,11 @@ export function useFinancials(data: AgencyData): Financials {
       perf[agentId] = { id: agentId, ...meta, clients: 0, compromis: 0, caVentes: 0 };
     }
     for (const c of data.clients) {
-      const a = c.agentId && perf[c.agentId];
+      const a = perf[c.agentId ?? "dir"];
       if (a && !["Acte", "Perdu"].includes(c.statut)) a.clients += 1;
     }
     for (const cp of compromis) {
-      const a = cp.agentId && perf[cp.agentId];
+      const a = perf[cp.agentId ?? "dir"];
       if (a && cp.statut !== "Annulé") {
         a.compromis += 1;
         a.caVentes += commissionMontant(cp);

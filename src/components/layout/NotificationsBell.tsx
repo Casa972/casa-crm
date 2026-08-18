@@ -4,12 +4,19 @@ import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useUiStore } from "../../store/ui.store";
 import { daysDiff } from "../../lib/format";
 
+const TONE_CLASS: Record<string, string> = {
+  danger: "text-danger",
+  amber: "text-amber",
+  primary: "text-primary",
+};
+
 interface Alerte {
   id: string;
   icon: React.ReactNode;
   text: string;
   viewId: "clients" | "biens" | "pilotage";
   tone: string;
+  count: number;
 }
 
 function useAlertes(): Alerte[] {
@@ -27,6 +34,7 @@ function useAlertes(): Alerte[] {
       text: `${relances.length} client(s) à relancer`,
       viewId: "clients",
       tone: "danger",
+      count: relances.length,
     });
   }
 
@@ -42,6 +50,7 @@ function useAlertes(): Alerte[] {
       text: `${mandatsExp.length} mandat(s) expirant sous 30j`,
       viewId: "biens",
       tone: "amber",
+      count: mandatsExp.length,
     });
   }
 
@@ -57,6 +66,7 @@ function useAlertes(): Alerte[] {
       text: `${sruUrgents.length} délai(s) SRU ≤ 3j`,
       viewId: "pilotage",
       tone: "danger",
+      count: sruUrgents.length,
     });
   }
 
@@ -72,6 +82,7 @@ function useAlertes(): Alerte[] {
       text: `${condSuspUrgents.length} cond. suspensive(s) ≤ 7j`,
       viewId: "pilotage",
       tone: "amber",
+      count: condSuspUrgents.length,
     });
   }
 
@@ -92,7 +103,7 @@ export function NotificationsBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const count = alertes.length;
+  const count = alertes.reduce((s, a) => s + a.count, 0);
 
   return (
     <div className="relative" ref={ref}>
@@ -126,8 +137,8 @@ export function NotificationsBell() {
                   className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left hover:bg-bg transition-colors border-b border-line/50 last:border-0"
                   onClick={() => { setView(a.viewId); setOpen(false); }}
                 >
-                  <span className={`text-${a.tone} shrink-0`}>{a.icon}</span>
-                  <span className={`text-[12.5px] font-medium text-${a.tone}`}>{a.text}</span>
+                  <span className={`${TONE_CLASS[a.tone] ?? "text-ink-muted"} shrink-0`}>{a.icon}</span>
+                  <span className={`text-[12.5px] font-medium ${TONE_CLASS[a.tone] ?? "text-ink-muted"}`}>{a.text}</span>
                 </button>
               ))}
             </div>

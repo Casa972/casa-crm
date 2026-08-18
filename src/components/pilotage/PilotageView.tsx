@@ -16,24 +16,24 @@ import { useUiStore } from "../../store/ui.store";
 import { commissionMontant } from "../../schemas/compromis.schema";
 import type { Compromis } from "../../types/domain";
 
-const STATUT_ORDER = ["Offre", "Compromis signé", "Conditions suspensives", "Acte signé"];
+const STATUT_ORDER = ["Offre acceptée", "Compromis", "Acte prévu", "Acte signé"];
 
 // Left-border color per statut (CSS color value)
 const STATUT_BORDER: Record<string, string> = {
-  "Offre":                  "#9A6D22",
-  "Compromis signé":        "#1A3A52",
-  "Conditions suspensives": "#5B4E8C",
-  "Acte signé":             "#2D7A5F",
-  "Annulé":                 "#A03A30",
+  "Offre acceptée": "#9A6D22",
+  "Compromis":      "#1A3A52",
+  "Acte prévu":     "#5B4E8C",
+  "Acte signé":     "#2D7A5F",
+  "Annulé":         "#A03A30",
 };
 
 // Badge style per statut
 const STATUT_BADGE: Record<string, string> = {
-  "Offre":                  "bg-amber-soft text-amber",
-  "Compromis signé":        "bg-primary-soft text-primary",
-  "Conditions suspensives": "bg-violet-soft text-violet",
-  "Acte signé":             "bg-emerald-soft text-emerald",
-  "Annulé":                 "bg-danger-soft text-danger",
+  "Offre acceptée": "bg-amber-soft text-amber",
+  "Compromis":      "bg-primary-soft text-primary",
+  "Acte prévu":     "bg-violet-soft text-violet",
+  "Acte signé":     "bg-emerald-soft text-emerald",
+  "Annulé":         "bg-danger-soft text-danger",
 };
 
 // ── Pipeline funnel ────────────────────────────────────────────────────────
@@ -435,6 +435,9 @@ export function PilotageView() {
         <Modal title={modal.item ? "Modifier le dossier" : "Nouveau dossier"} wide onClose={() => setModal(null)}>
           <CompromisForm
             initial={modal.item}
+            biens={data.biens}
+            mandats={data.mandats}
+            clients={data.clients}
             onClose={() => setModal(null)}
             onSave={c => { saveCompromis.mutate(c); setModal(null); }}
           />

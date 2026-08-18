@@ -77,6 +77,15 @@ export function MandatVentePreview({ f }: { f: Partial<MandatVenteDoc> }) {
         pour exercer son droit de rétractation (art. L.221-18 du Code de la consommation).
       </Article>
 
+      <Article titre="Article 5 — Modalités d'accès et de visites">
+        Le Mandant autorise expressément le Mandataire à organiser des visites du bien par tout acquéreur
+        potentiel, y compris en l'absence du Mandant, sous réserve d'un accord préalable de sa part.
+        {f.typeMandat === "Exclusif"
+          ? " Durant la période d'exclusivité, toute visite doit être organisée exclusivement par le Mandataire."
+          : " Le Mandant s'engage à faciliter l'accès au bien dans des délais raisonnables et à informer le Mandataire de toute contrainte particulière d'accès."}
+        {" "}Le Mandataire s'engage à respecter les lieux et à restituer les clés confiées à première demande.
+      </Article>
+
       <div className="mt-6 flex justify-between text-[12px]">
         <div>Le Mandant<br /><span className="text-ink-muted">Signature</span></div>
         <div className="text-right">Le Mandataire (Casa Caraïbes)<br /><span className="text-ink-muted">Signature</span></div>

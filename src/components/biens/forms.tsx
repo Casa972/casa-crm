@@ -8,6 +8,7 @@ import {
   TypeBien, CategorieBien, StatutVente, StatutLocation, TypeMandat, StatutMandat,
   COMMUNES_MARTINIQUE,
 } from "../../schemas/enums";
+import { baremeHonoraires } from "../../lib/format";
 import type { Bien, Mandat } from "../../types/domain";
 import type { Client } from "../../types/domain";
 
@@ -155,7 +156,24 @@ export function MandatForm({ initial, biens, clients, onSave, onClose }: {
         </Field>
         <Field label="Date début"><Input type="date" value={f.dateDebut} onChange={(e) => s("dateDebut")(e.target.value)} /></Field>
         <Field label="Date fin" error={errors.dateFin}><Input type="date" value={f.dateFin} onChange={(e) => s("dateFin")(e.target.value)} /></Field>
-        <Field label="Honoraires (%)" error={errors.honoraires}><Input type="number" value={f.honoraires} onChange={(e) => s("honoraires")(e.target.value)} /></Field>
+        <Field label="Honoraires (%)" error={errors.honoraires}>
+          <div className="flex gap-2">
+            <Input type="number" value={f.honoraires} onChange={(e) => s("honoraires")(e.target.value)} />
+            {biens.length > 0 && f.bienId && (() => {
+              const bien = biens.find(b => b.ref === f.bienId || b.id === f.bienId);
+              return bien?.prix ? (
+                <button
+                  type="button"
+                  onClick={() => s("honoraires")(String(baremeHonoraires(bien.prix)))}
+                  className="shrink-0 rounded border border-primary bg-primary-soft px-2 text-[11px] font-semibold text-primary hover:bg-primary hover:text-white transition-colors"
+                  title={`Barème : ${baremeHonoraires(bien.prix)}% pour ${Math.round(bien.prix / 1000)}k€`}
+                >
+                  Barème
+                </button>
+              ) : null;
+            })()}
+          </div>
+        </Field>
         <Field label="Statut"><Select value={f.statut} onChange={s("statut")} options={StatutMandat.options} /></Field>
       </Grid2>
       <Field label="Notes"><Textarea rows={2} value={f.notes} onChange={(e) => s("notes")(e.target.value)} /></Field>

@@ -7,7 +7,7 @@ import { PageHeader } from "../shared/PageHeader";
 import {
   useCompteRendus, useSaveCompteRendu, useDeleteCompteRendu, uid,
 } from "../../hooks/queries/useCompteRendus";
-import { useAgencyData } from "../../hooks/queries/useAgencyData";
+import { useAgencyData, useSaveClient } from "../../hooks/queries/useAgencyData";
 import { useSessionStore } from "../../store/session.store";
 import type { CompteRendu } from "../../schemas/compteRendu.schema";
 import { AvisClient, SuiteDonner, COMMUNES_MARTINIQUE } from "../../schemas/enums";
@@ -17,10 +17,10 @@ const CompteRenduPDFDownload = lazy(() => import("./CompteRenduPDFDownload"));
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-function newCR(agentId?: string): CompteRendu {
+function newCR(agentId?: string, agentName?: string): CompteRendu {
   return {
     id: uid(), agentId,
-    date: today(), heureDebut: "", heureFin: "", redacteur: "M. Luc CLEMENTE",
+    date: today(), heureDebut: "", heureFin: "", redacteur: agentName ?? "",
     bienRef: "", bienAdresse: "", bienCommune: "", bienType: "", bienSurface: 0, bienPrix: 0,
     proprietaireNom: "", proprietaireTel: "", clientId: "",
     visiteurNom: "", visiteurTel: "", visiteurEmail: "", nbPersonnes: 1,
@@ -213,14 +213,42 @@ export function CompteRenduView() {
   const { data: crs, isLoading } = useCompteRendus();
   const save = useSaveCompteRendu();
   const del = useDeleteCompteRendu();
+  const saveClient = useSaveClient();
   const user = useSessionStore(s => s.user);
   const [modal, setModal] = useState<{ item?: CompteRendu } | null>(null);
+  const [createClientFrom, setCreateClientFrom] = useState<CompteRendu | null>(null);
 
   const handleSave = (cr: CompteRendu) => {
     save.mutate(cr, {
-      onSuccess: (saved) => { if (saved.statut === "Finalisé") setModal(null); else setModal({ item: saved }); },
+      onSuccess: (saved) => {
+        if (saved.statut === "Finalisé") {
+          setModal(null);
+          // Proposer création fiche client si visiteur non lié
+          if (!saved.clientId && saved.visiteurNom?.trim()) {
+            setCreateClientFrom(saved);
+          }
+        } else {
+          setModal({ item: saved });
+        }
+      },
       onError: err => alert("Erreur : " + String(err)),
     });
+  };
+
+  const handleCreateClientFromCR = (cr: CompteRendu) => {
+    const [prenom, ...rest] = (cr.visiteurNom ?? "").trim().split(" ");
+    saveClient.mutate({
+      id: "", prenom: prenom ?? cr.visiteurNom ?? "", nom: rest.join(" "),
+      tel: cr.visiteurTel ?? "", email: cr.visiteurEmail ?? "",
+      type: "Acheteur", statut: "Visite",
+      budgetMax: cr.budgetClient ?? 0, commune: cr.bienCommune ?? "",
+      typeBien: cr.bienType ?? "", chambresMin: 0,
+      notes: `Visite du ${cr.date} — ${cr.bienRef ?? ""}${cr.financement ? ` · Financement : ${cr.financement}` : ""}`,
+      bienId: cr.bienRef ?? "", dernierContact: cr.date,
+      relanceDate: cr.dateRelance ?? "", financement: cr.financement ?? "",
+      agentId: cr.agentId,
+    } as any);
+    setCreateClientFrom(null);
   };
 
   // Grouper par date
@@ -238,7 +266,7 @@ export function CompteRenduView() {
         title="Comptes rendus de visite"
         subtitle={`${crs.length} compte(s) rendu(s)`}
         actions={
-          <button className="btn-primary" onClick={() => setModal({ item: newCR(user?.id) })}>
+          <button className="btn-primary" onClick={() => setModal({ item: newCR(user?.id, user?.name) })}>
             <Plus size={14} /> Nouveau compte rendu
           </button>
         }
@@ -331,9 +359,24 @@ export function CompteRenduView() {
           onClose={() => setModal(null)}
         >
           <CRForm
-            initial={modal.item ?? newCR(user?.id)}
+            initial={modal.item ?? newCR(user?.id, user?.name)}
             onSave={handleSave}
           />
+        </Modal>
+      )}
+
+      {createClientFrom && (
+        <Modal title="Créer une fiche client ?" onClose={() => setCreateClientFrom(null)}>
+          <div className="py-2 text-[13px] text-ink-sub">
+            Le visiteur <strong className="text-ink">{createClientFrom.visiteurNom}</strong> n'est pas encore dans votre CRM.
+            Voulez-vous créer une fiche client avec les informations du compte rendu ?
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button className="btn-ghost" onClick={() => setCreateClientFrom(null)}>Non, ignorer</button>
+            <button className="btn-primary" onClick={() => handleCreateClientFromCR(createClientFrom)}>
+              Créer la fiche client
+            </button>
+          </div>
         </Modal>
       )}
     </div>

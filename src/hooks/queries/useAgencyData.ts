@@ -194,7 +194,7 @@ export function useDeleteRevenu() {
  * Sauvegarde compromis + sync transactionnelle du revenu lié.
  * Si le compromis passe en "Acte signé" → revenu créé/mis à jour.
  * Si le compromis sort de "Acte signé" → revenu fantôme supprimé.
- * Les montants du revenu sont toujours recalculés depuis le compromis.
+ * Sync automatique du statut du bien lié (Sous compromis / Vendu / Disponible).
  */
 export function useSaveCompromis() {
   const patch = useCachePatch();
@@ -205,8 +205,24 @@ export function useSaveCompromis() {
       const data = qc.getQueryData<AgencyData>([...KEY, user?.id]) ?? EMPTY;
       return saveCompromisWithRevenu(c, data.revenus, user?.id);
     },
-    onSuccess: ({ compromis, revenu }) =>
-      patch((d) => mergeCompromisRevenu(d, compromis, revenu)),
+    onSuccess: ({ compromis, revenu }) => {
+      if (compromis.bienRef) {
+        const cached = qc.getQueryData<AgencyData>([...KEY, user?.id]) ?? EMPTY;
+        const bien = cached.biens.find((b) => b.ref === compromis.bienRef || b.id === compromis.bienRef);
+        if (bien) {
+          const newStatut =
+            compromis.statut === "Acte signé" ? "Vendu" as const
+            : compromis.statut === "Annulé" ? "Disponible" as const
+            : "Sous compromis" as const;
+          api.update(TABLES.biens, bien.id, { statut: newStatut }).catch(() => {});
+          return patch((d) => ({
+            ...mergeCompromisRevenu(d, compromis, revenu),
+            biens: d.biens.map((b) => b.id === bien.id ? { ...b, statut: newStatut } : b),
+          }));
+        }
+      }
+      patch((d) => mergeCompromisRevenu(d, compromis, revenu));
+    },
   });
 }
 
@@ -231,18 +247,46 @@ export function useDeleteCompromis() {
   return useMutation({
     mutationFn: async (id: string) => {
       const data = qc.getQueryData<AgencyData>([...KEY, user?.id]) ?? EMPTY;
+      const compromis = data.compromis.find((c) => c.id === id);
       // Supprimer le revenu lié en base
       const linked = data.revenus.find((r) => r.sourceId === id && r.source === "pilotage");
       if (linked) await api.remove(TABLES.revenus, linked.id);
       await api.remove(TABLES.compromis, id);
+      // Reset bien statut si plus aucun compromis actif sur ce bien
+      if (compromis?.bienRef) {
+        const otherActive = data.compromis.some(
+          (c) => c.id !== id && c.statut !== "Annulé" && (c.bienRef === compromis.bienRef),
+        );
+        if (!otherActive) {
+          const bien = data.biens.find((b) => b.ref === compromis.bienRef || b.id === compromis.bienRef);
+          if (bien) api.update(TABLES.biens, bien.id, { statut: "Disponible" }).catch(() => {});
+        }
+      }
       return id;
     },
-    onSuccess: (_v, id) =>
-      patch((d) => ({
-        ...d,
-        compromis: removeById(d.compromis, id),
-        revenus: d.revenus.filter((r) => r.sourceId !== id),
-      })),
+    onSuccess: (_v, id) => {
+      const cached = qc.getQueryData<AgencyData>([...KEY, user?.id]) ?? EMPTY;
+      const deleted = cached.compromis.find((c) => c.id === id);
+      patch((d) => {
+        const withoutCompromis = removeById(d.compromis, id);
+        const otherActive = deleted?.bienRef
+          ? withoutCompromis.some((c) => c.statut !== "Annulé" && c.bienRef === deleted.bienRef)
+          : false;
+        const biens = deleted?.bienRef && !otherActive
+          ? d.biens.map((b) =>
+              b.ref === deleted.bienRef || b.id === deleted.bienRef
+                ? { ...b, statut: "Disponible" as const }
+                : b,
+            )
+          : d.biens;
+        return {
+          ...d,
+          compromis: withoutCompromis,
+          revenus: d.revenus.filter((r) => r.sourceId !== id),
+          biens,
+        };
+      });
+    },
   });
 }
 

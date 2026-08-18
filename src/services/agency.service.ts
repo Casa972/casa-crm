@@ -20,7 +20,7 @@ export async function loadAgencyData(user: SessionUser): Promise<AgencyData> {
     : supabase
         .from(TABLES.clients)
         .select("*")
-        .or("agent_id.eq." + user.id + ",agent_id.is.null")
+        .or(`agent_id.eq.${user.id},agent_id.is.null`)
         .then(({ data, error }) => {
           if (error) throw new ApiError("Lecture clients impossible", TABLES.clients, "list", error);
           return (data ?? []) as ClientRow[];

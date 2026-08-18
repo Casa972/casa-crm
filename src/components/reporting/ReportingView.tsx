@@ -353,8 +353,9 @@ export function ReportingView() {
               <tbody>
                 {fin.agentPerformance.map((a) => {
                   const ticket = a.compromis > 0 ? Math.round(a.caVentes / a.compromis) : 0;
-                  const agentClients = data.clients.filter((c) => c.agentId === a.id);
-                  const agentActes = data.compromis.filter((c) => c.agentId === a.id && c.statut === "Acte signé").length;
+                  const isDir = a.id === "dir";
+                  const agentClients = data.clients.filter((c) => c.agentId === a.id || (isDir && !c.agentId));
+                  const agentActes = data.compromis.filter((c) => (c.agentId === a.id || (isDir && !c.agentId)) && c.statut === "Acte signé").length;
                   const txConv = a.compromis > 0 ? Math.round((agentActes / a.compromis) * 100) : 0;
                   return (
                     <tr key={a.id} className="border-b border-line/50 hover:bg-bg/50 transition-colors">

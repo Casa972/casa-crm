@@ -15,7 +15,7 @@ const TONE: Record<Tone, string> = {
 const STATUS_TONE: Record<string, Tone> = {
   Disponible: "emerald", Actif: "emerald", Encaissé: "emerald", "Encaissée": "emerald",
   Loué: "primary", Visite: "primary", "Acte signé": "emerald",
-  "Sous compromis": "amber", Compromis: "amber", Offre: "amber", "En attente": "amber",
+  "Sous compromis": "amber", Compromis: "amber", Offre: "amber", "Offre acceptée": "amber", "En attente": "amber",
   "À encaisser": "amber", "Acte prévu": "violet", Acte: "violet",
   Prospect: "neutral", Vendu: "neutral", Retiré: "neutral", Suspendu: "neutral",
   Perdu: "danger", Expiré: "danger", Résilié: "danger", Annulé: "danger", Annulée: "danger",

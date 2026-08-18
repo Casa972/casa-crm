@@ -17,18 +17,22 @@ function normalize(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+/** Recherche multi-mots : tous les mots de la requête doivent apparaître dans au moins un champ. */
 function match(query: string, ...fields: string[]): boolean {
-  const q = normalize(query);
-  return fields.some((f) => normalize(f).includes(q));
+  const words = normalize(query).split(/\s+/).filter(Boolean);
+  const text = fields.map(normalize).join(" ");
+  return words.every((w) => text.includes(w));
 }
 
-function buildResults(query: string, data: { clients: Client[]; biens: Bien[]; mandats: Mandat[]; compromis: Compromis[] }): SearchResult[] {
-  if (!query.trim()) return [];
-  const results: SearchResult[] = [];
+const MAX_RESULTS = 30;
+
+function buildResults(query: string, data: { clients: Client[]; biens: Bien[]; mandats: Mandat[]; compromis: Compromis[] }): { results: SearchResult[]; total: number } {
+  if (!query.trim()) return { results: [], total: 0 };
+  const all: SearchResult[] = [];
 
   for (const c of data.clients) {
-    if (match(query, c.prenom, c.nom, c.tel ?? "", c.email ?? "")) {
-      results.push({
+    if (match(query, c.prenom, c.nom, c.tel ?? "", c.email ?? "", c.commune ?? "")) {
+      all.push({
         type: "client", id: c.id,
         title: `${c.prenom} ${c.nom}`,
         subtitle: `${c.type} · ${c.statut} · ${c.tel || "—"}`,
@@ -38,8 +42,8 @@ function buildResults(query: string, data: { clients: Client[]; biens: Bien[]; m
   }
 
   for (const b of data.biens) {
-    if (match(query, b.ref, b.commune, b.adresse ?? "", b.type)) {
-      results.push({
+    if (match(query, b.ref, b.commune, b.adresse ?? "", b.type, String(b.prix))) {
+      all.push({
         type: "bien", id: b.id,
         title: `${b.ref} — ${b.type}`,
         subtitle: `${b.commune} · ${eur(b.prix)} · ${b.statut}`,
@@ -49,8 +53,8 @@ function buildResults(query: string, data: { clients: Client[]; biens: Bien[]; m
   }
 
   for (const m of data.mandats) {
-    if (match(query, m.ref, m.mandant, m.tel ?? "")) {
-      results.push({
+    if (match(query, m.ref, m.mandant, m.tel ?? "", m.bienId ?? "")) {
+      all.push({
         type: "mandat", id: m.id,
         title: `Mandat ${m.ref} — ${m.mandant}`,
         subtitle: `${m.type} · ${m.statut}`,
@@ -60,8 +64,8 @@ function buildResults(query: string, data: { clients: Client[]; biens: Bien[]; m
   }
 
   for (const c of data.compromis) {
-    if (match(query, c.ref, c.acheteur, c.bienRef ?? "")) {
-      results.push({
+    if (match(query, c.ref, c.acheteur, c.vendeur ?? "", c.bienRef ?? "", c.notaire ?? "")) {
+      all.push({
         type: "compromis", id: c.id,
         title: `Compromis ${c.ref}`,
         subtitle: `${c.acheteur} · ${c.statut}`,
@@ -70,7 +74,7 @@ function buildResults(query: string, data: { clients: Client[]; biens: Bien[]; m
     }
   }
 
-  return results.slice(0, 20);
+  return { results: all.slice(0, MAX_RESULTS), total: all.length };
 }
 
 const TYPE_LABELS: Record<SearchResult["type"], string> = {
@@ -105,7 +109,7 @@ export function SearchModal({ onClose }: { onClose: () => void }) {
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  const results = buildResults(query, data);
+  const { results, total } = buildResults(query, data);
 
   // Group by type
   const grouped: Record<string, SearchResult[]> = {};
@@ -113,6 +117,7 @@ export function SearchModal({ onClose }: { onClose: () => void }) {
     if (!grouped[r.type]) grouped[r.type] = [] as SearchResult[];
     grouped[r.type]!.push(r);
   }
+  const truncated = total > MAX_RESULTS;
 
   const handleSelect = (r: SearchResult) => {
     setView(r.viewId);
@@ -157,28 +162,35 @@ export function SearchModal({ onClose }: { onClose: () => void }) {
               Aucun résultat pour « {query} »
             </div>
           ) : (
-            Object.entries(grouped).map(([type, items]) => (
-              <div key={type}>
-                <div className="flex items-center gap-1.5 border-b border-line bg-bg px-4 py-1.5">
-                  <span className="text-ink-muted">{TYPE_ICON[type as SearchResult["type"]]}</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">
-                    {TYPE_LABELS[type as SearchResult["type"]]} ({items.length})
-                  </span>
+            <>
+              {Object.entries(grouped).map(([type, items]) => (
+                <div key={type}>
+                  <div className="flex items-center gap-1.5 border-b border-line bg-bg px-4 py-1.5">
+                    <span className="text-ink-muted">{TYPE_ICON[type as SearchResult["type"]]}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">
+                      {TYPE_LABELS[type as SearchResult["type"]]} ({items.length})
+                    </span>
+                  </div>
+                  {items.map((r) => (
+                    <button
+                      key={r.id}
+                      className="flex w-full items-start gap-3 px-4 py-2.5 text-left hover:bg-bg/70 transition-colors"
+                      onClick={() => handleSelect(r)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13.5px] font-semibold text-ink truncate">{r.title}</div>
+                        <div className="text-[12px] text-ink-muted truncate">{r.subtitle}</div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                {items.map((r) => (
-                  <button
-                    key={r.id}
-                    className="flex w-full items-start gap-3 px-4 py-2.5 text-left hover:bg-bg/70 transition-colors"
-                    onClick={() => handleSelect(r)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13.5px] font-semibold text-ink truncate">{r.title}</div>
-                      <div className="text-[12px] text-ink-muted truncate">{r.subtitle}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ))
+              ))}
+              {truncated && (
+                <div className="border-t border-line px-4 py-2.5 text-center text-[12px] text-ink-muted">
+                  +{total - MAX_RESULTS} résultats — affinez votre recherche
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

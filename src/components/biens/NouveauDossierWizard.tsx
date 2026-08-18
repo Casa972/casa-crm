@@ -8,6 +8,7 @@ import { useUiStore } from "../../store/ui.store";
 import {
   TypeBien, CategorieBien, TypeMandat, COMMUNES_MARTINIQUE,
 } from "../../schemas/enums";
+import { baremeHonoraires } from "../../lib/format";
 import type { Client, Bien, Mandat } from "../../types/domain";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -312,7 +313,19 @@ export function NouveauDossierWizard({ onClose }: Props) {
               <Input type="date" value={mandat.dateFin} onChange={(e) => setMandat((p) => ({ ...p, dateFin: e.target.value }))} />
             </Field>
             <Field label="Honoraires (%)" error={errors.honoraires}>
-              <Input type="number" value={mandat.honoraires} onChange={(e) => setMandat((p) => ({ ...p, honoraires: e.target.value }))} />
+              <div className="flex gap-2">
+                <Input type="number" value={mandat.honoraires} onChange={(e) => setMandat((p) => ({ ...p, honoraires: e.target.value }))} />
+                {bien.prix && (
+                  <button
+                    type="button"
+                    onClick={() => setMandat((p) => ({ ...p, honoraires: String(baremeHonoraires(Number(bien.prix))) }))}
+                    className="shrink-0 rounded border border-primary bg-primary-soft px-2 text-[11px] font-semibold text-primary hover:bg-primary hover:text-white transition-colors"
+                    title={`Barème Casa : ${baremeHonoraires(Number(bien.prix))}% pour ${Math.round(Number(bien.prix) / 1000)}k€`}
+                  >
+                    Barème
+                  </button>
+                )}
+              </div>
             </Field>
           </Grid2>
           <Field label="Notes">

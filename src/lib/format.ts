@@ -18,3 +18,16 @@ export const fdateShort = (d: string): string =>
 /** Jours entre aujourd'hui et une date ISO (négatif = passé). */
 export const daysDiff = (d: string): number | null =>
   d ? Math.round((new Date(d + "T12:00").getTime() - Date.now()) / 86_400_000) : null;
+
+/**
+ * Barème honoraires dégressif Casa Caraïbes.
+ * Taux : 8%→4% par tranche de 100k€, fixe 4% au-delà de 500k€.
+ */
+export const baremeHonoraires = (prix: number): number => {
+  if (prix <= 0) return 8;
+  if (prix <= 100_000) return 8;
+  if (prix <= 200_000) return 7;
+  if (prix <= 300_000) return 6;
+  if (prix <= 400_000) return 5;
+  return 4;
+};

@@ -97,7 +97,7 @@ function RelanceRapideModal({ client, onClose }: { client: Client; onClose: () =
   const saveClient = useSaveClient();
   const user = useSessionStore((s) => s.user);
   const [note, setNote] = useState("");
-  const [type, setType] = useState("Relance");
+  const [type, setType] = useState("Appel");
   const [prochaine, setProchaine] = useState(inDays(7));
 
   const handleSave = () => {

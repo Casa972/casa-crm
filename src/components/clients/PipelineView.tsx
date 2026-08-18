@@ -94,13 +94,21 @@ function ClientCard({ client, onEdit, onAdvance }: {
         >
           <Edit2 size={13} />
         </button>
-        {next && (
+        {next ? (
           <button
             title={`Passer à ${next}`}
             onClick={() => onAdvance(client, next)}
             className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-ink-muted hover:bg-primary-soft hover:text-primary transition-colors"
           >
             <ChevronRight size={13} /> {next}
+          </button>
+        ) : (etape === "Acte" || etape === "Perdu") && (
+          <button
+            title="Réouvrir comme prospect"
+            onClick={() => onAdvance(client, "Prospect")}
+            className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-ink-muted hover:bg-amber-soft hover:text-amber transition-colors"
+          >
+            ↩ Réouvrir
           </button>
         )}
       </div>
@@ -141,6 +149,20 @@ export function PipelineView() {
     for (const c of filteredClients) {
       const etape = c.statut as Etape;
       if (etape in map) map[etape].push(c);
+    }
+    // Trier chaque colonne : relance urgente d'abord, pas de date à la fin
+    const today = new Date().toISOString().slice(0, 10);
+    for (const etape of Object.keys(map) as Etape[]) {
+      map[etape].sort((a, b) => {
+        const aLate = a.relanceDate && a.relanceDate <= today;
+        const bLate = b.relanceDate && b.relanceDate <= today;
+        if (aLate && !bLate) return -1;
+        if (!aLate && bLate) return 1;
+        if (a.relanceDate && b.relanceDate) return a.relanceDate.localeCompare(b.relanceDate);
+        if (a.relanceDate) return -1;
+        if (b.relanceDate) return 1;
+        return `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`);
+      });
     }
     return map;
   }, [filteredClients]);

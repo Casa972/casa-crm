@@ -26,6 +26,7 @@ import { RegistreView } from "./components/registre/RegistreView";
 import { MesDossiersView } from "./components/pilotage/MesDossiersView";
 import { daysDiff } from "./lib/format";
 import { Toaster } from "./components/ui/Toaster";
+import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
 /** Vues réservées au directeur — un agent est redirigé vers son tableau de bord. */
 const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance"];
@@ -103,6 +104,7 @@ export function App() {
   }, [user, isDir, setView]);
 
   useKeyboardShortcuts();
+  useRealtimeSync();
 
   if (!user) return <Login />;
   if (isLoading) return <div className="flex h-screen items-center justify-center text-ink-sub">Chargement…</div>;

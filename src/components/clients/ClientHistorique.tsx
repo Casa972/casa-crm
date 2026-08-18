@@ -23,11 +23,17 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   Autre: <MoreHorizontal size={13} />,
 };
 
-const TYPE_TONE: Record<string, string> = {
-  Appel: "emerald", Email: "primary", Visite: "violet",
-  Note: "neutral", RDV: "amber", Offre: "emerald",
-  Relance: "danger", Autre: "neutral",
+const TYPE_STYLES: Record<string, { dot: string; label: string }> = {
+  Appel:   { dot: "bg-emerald-soft text-emerald", label: "text-emerald" },
+  Email:   { dot: "bg-primary-soft text-primary", label: "text-primary" },
+  Visite:  { dot: "bg-violet-soft text-violet",   label: "text-violet"  },
+  Note:    { dot: "bg-line/60 text-ink-sub",       label: "text-ink-sub" },
+  RDV:     { dot: "bg-amber-soft text-amber",      label: "text-amber"   },
+  Offre:   { dot: "bg-emerald-soft text-emerald",  label: "text-emerald" },
+  Relance: { dot: "bg-danger-soft text-danger",    label: "text-danger"  },
+  Autre:   { dot: "bg-line/60 text-ink-sub",       label: "text-ink-sub" },
 };
+const FALLBACK_STYLE = { dot: "bg-line/60 text-ink-sub", label: "text-ink-sub" };
 
 function emptyActivite(clientId: string): Activite {
   return {
@@ -89,16 +95,16 @@ export function ClientHistorique({ client, onClose }: { client: Client; onClose:
           <div className="absolute left-4 top-0 bottom-0 w-px bg-line" />
           <div className="flex flex-col gap-3">
             {activites.map((a) => {
-              const tone = TYPE_TONE[a.typeActivite] ?? "neutral";
+              const styles = TYPE_STYLES[a.typeActivite] ?? FALLBACK_STYLE;
               return (
                 <div key={a.id} className="flex items-start gap-3 pl-10 relative">
                   {/* Dot */}
-                  <div className={`absolute left-2 mt-1.5 flex size-5 items-center justify-center rounded-full bg-${tone}-soft text-${tone} border-2 border-surface`}>
+                  <div className={`absolute left-2 mt-1.5 flex size-5 items-center justify-center rounded-full border-2 border-surface ${styles.dot}`}>
                     {TYPE_ICON[a.typeActivite]}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <span className={`text-[11.5px] font-bold text-${tone}`}>{a.typeActivite}</span>
+                      <span className={`text-[11.5px] font-bold ${styles.label}`}>{a.typeActivite}</span>
                       <span className="text-[11px] text-ink-muted">
                         {new Date(a.date + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
                       </span>

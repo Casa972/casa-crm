@@ -10,13 +10,13 @@ import type { EtapePipeline } from "../../schemas/enums";
 
 const ETAPES: EtapePipeline[] = ["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"];
 
-const ETAPE_TONE: Record<string, any> = {
-  Prospect: "neutral",
-  Visite: "primary",
-  Offre: "amber",
-  Compromis: "amber",
-  Acte: "violet",
-  Perdu: "danger",
+const ETAPE_STYLES: Record<EtapePipeline, { header: string; badge: string; count: string }> = {
+  Prospect:  { header: "bg-line/60",         badge: "text-ink-sub",    count: "bg-line text-ink-sub" },
+  Visite:    { header: "bg-primary-soft",     badge: "text-primary",    count: "bg-primary text-white" },
+  Offre:     { header: "bg-amber-soft",       badge: "text-amber",      count: "bg-amber text-white" },
+  Compromis: { header: "bg-amber-soft",       badge: "text-amber",      count: "bg-amber text-white" },
+  Acte:      { header: "bg-violet-soft",      badge: "text-violet",     count: "bg-violet text-white" },
+  Perdu:     { header: "bg-danger-soft",      badge: "text-danger",     count: "bg-danger text-white" },
 };
 
 function ClientCard({ client, onMove }: { client: Client; onMove: (etape: EtapePipeline) => void }) {
@@ -107,11 +107,11 @@ export function KanbanView() {
           const items = byEtape(etape);
           return (
             <div key={etape} className="flex-shrink-0 w-[220px]">
-              <div className={`mb-2 flex items-center justify-between rounded-t px-3 py-2 bg-${ETAPE_TONE[etape] === "neutral" ? "line/60" : `${ETAPE_TONE[etape]}-soft`}`}>
-                <span className={`text-[12px] font-bold uppercase tracking-wide text-${ETAPE_TONE[etape] === "neutral" ? "ink-sub" : ETAPE_TONE[etape]}`}>
+              <div className={`mb-2 flex items-center justify-between rounded-t px-3 py-2 ${ETAPE_STYLES[etape].header}`}>
+                <span className={`text-[12px] font-bold uppercase tracking-wide ${ETAPE_STYLES[etape].badge}`}>
                   {etape}
                 </span>
-                <span className={`flex size-5 items-center justify-center rounded-full text-[11px] font-bold bg-${ETAPE_TONE[etape] === "neutral" ? "line text-ink-sub" : `${ETAPE_TONE[etape]} text-white`}`}>
+                <span className={`flex size-5 items-center justify-center rounded-full text-[11px] font-bold ${ETAPE_STYLES[etape].count}`}>
                   {items.length}
                 </span>
               </div>

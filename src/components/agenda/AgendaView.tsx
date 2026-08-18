@@ -24,10 +24,17 @@ const MONTH_FR = [
 ];
 const DAY_FR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-const TYPE_TONE: Record<string, string> = {
-  Visite: "primary", Appel: "emerald", "RDV Signature": "violet",
-  Estimation: "amber", "Suivi Agent": "sky", Autre: "neutral",
+type Tone = "emerald" | "amber" | "danger" | "primary" | "violet" | "neutral";
+
+const TYPE_STYLES: Record<string, { badge: string; pill: Tone; cell: string }> = {
+  Visite:          { badge: "bg-primary-soft text-primary",  pill: "primary", cell: "bg-primary-soft text-primary"  },
+  Appel:           { badge: "bg-emerald-soft text-emerald",  pill: "emerald", cell: "bg-emerald-soft text-emerald"  },
+  "RDV Signature": { badge: "bg-violet-soft text-violet",    pill: "violet",  cell: "bg-violet-soft text-violet"    },
+  Estimation:      { badge: "bg-amber-soft text-amber",      pill: "amber",   cell: "bg-amber-soft text-amber"      },
+  "Suivi Agent":   { badge: "bg-primary-soft text-primary",  pill: "primary", cell: "bg-primary-soft text-primary"  },
+  Autre:           { badge: "bg-line/60 text-ink-sub",        pill: "neutral", cell: "bg-line/60 text-ink-sub"       },
 };
+const FALLBACK_STYLE = { badge: "bg-line/60 text-ink-sub", pill: "neutral" as Tone, cell: "bg-line/60 text-ink-sub" };
 
 function emptyRdv(): Rdv {
   return {
@@ -58,7 +65,7 @@ function addDays(dateStr: string, days: number): string {
 }
 
 function scheduleNotification(rdv: Rdv) {
-  if (!rdv.rappelMinutes || Notification.permission !== "granted") return;
+  if (!rdv.rappelMinutes || !("Notification" in window) || Notification.permission !== "granted") return;
   const rdvDate = new Date(`${rdv.date}T${rdv.heureDebut}`);
   const fireAt = rdvDate.getTime() - rdv.rappelMinutes * 60 * 1000;
   const delay = fireAt - Date.now();
@@ -112,7 +119,7 @@ function RdvFormModal({ initial, onClose }: { initial?: Rdv; onClose: () => void
   const handleSave = async () => {
     if (!form.titre.trim() || !form.date) return;
 
-    if (Notification.permission === "default") {
+    if ("Notification" in window && Notification.permission === "default") {
       await Notification.requestPermission();
     }
 
@@ -232,17 +239,17 @@ function googleCalendarUrl(rdv: Rdv): string {
 }
 
 function RdvCard({ rdv, onEdit, onDelete, onMarquerRealise }: { rdv: Rdv; onEdit: () => void; onDelete: () => void; onMarquerRealise?: () => void }) {
-  const tone = (TYPE_TONE[rdv.typeRdv] ?? "neutral") as any;
+  const styles = TYPE_STYLES[rdv.typeRdv] ?? FALLBACK_STYLE;
   const isPast = rdv.date < today() && rdv.statut === "Planifié";
   return (
     <div className="card flex items-start gap-3 p-3">
-      <div className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded text-[11px] font-bold bg-${tone}-soft text-${tone}`}>
+      <div className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded text-[11px] font-bold ${styles.badge}`}>
         {rdv.heureDebut}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[13.5px] font-semibold text-ink truncate">{rdv.titre}</span>
-          <StatusPill label={rdv.typeRdv} tone={tone} />
+          <StatusPill label={rdv.typeRdv} tone={styles.pill} />
           {rdv.statut !== "Planifié" && <StatusPill label={rdv.statut} />}
           {isPast && <StatusPill label="Non clôturé" tone="amber" />}
           {rdv.confirme === true && <StatusPill label="Confirmé" tone="emerald" />}
@@ -362,7 +369,7 @@ export function AgendaView() {
               <div key={r.id} className="flex items-center gap-2 text-[13px]">
                 <span className="text-ink-muted w-[90px] shrink-0">{r.heureDebut}–{r.heureFin}</span>
                 <span className="font-semibold text-ink">{r.titre}</span>
-                <StatusPill label={r.typeRdv} tone={(TYPE_TONE[r.typeRdv] ?? "neutral") as any} />
+                <StatusPill label={r.typeRdv} tone={(TYPE_STYLES[r.typeRdv] ?? FALLBACK_STYLE).pill} />
               </div>
             ))}
           </div>
@@ -408,7 +415,7 @@ export function AgendaView() {
                           <button
                             key={r.id}
                             onClick={() => setModal({ item: r })}
-                            className={`w-full truncate rounded px-1 py-0.5 text-left text-[10.5px] font-medium bg-${(TYPE_TONE[r.typeRdv] ?? "neutral") === "neutral" ? "line/60 text-ink-sub" : `${TYPE_TONE[r.typeRdv]}-soft text-${TYPE_TONE[r.typeRdv]}`}`}
+                            className={`w-full truncate rounded px-1 py-0.5 text-left text-[10.5px] font-medium ${(TYPE_STYLES[r.typeRdv] ?? FALLBACK_STYLE).cell}`}
                           >
                             {r.heureDebut} {r.titre}
                           </button>

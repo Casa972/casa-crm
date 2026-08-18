@@ -9,7 +9,7 @@ import {
   TypeClient, EtapePipeline, TypeRevenu, StatutRevenu, COMMUNES_MARTINIQUE,
 } from "../../schemas/enums";
 import { eur } from "../../lib/format";
-import type { Compromis, Client, Revenu } from "../../types/domain";
+import type { Compromis, Client, Revenu, Bien, Mandat } from "../../types/domain";
 
 type Errors = Record<string, string>;
 function zodErrors(issues: readonly { path: readonly (string | number)[]; message: string }[]): Errors {
@@ -30,8 +30,9 @@ type CF =
   | "notaire" | "financement" | "dateOffre" | "dateCompromis" | "dateActePrev"
   | "dateActeReel" | "sruExpire" | "condSuspExpire" | "notes";
 
-export function CompromisForm({ initial, onSave, onClose }: {
+export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = [], clients = [] }: {
   initial?: Compromis; onSave: (c: Compromis) => void; onClose: () => void;
+  biens?: Bien[]; mandats?: Mandat[]; clients?: Client[];
 }) {
   const [f, setF] = useState<Record<CF, string>>(() => ({
     ref: initial?.ref ?? "", acheteur: initial?.acheteur ?? "", vendeur: initial?.vendeur ?? "",
@@ -47,6 +48,21 @@ export function CompromisForm({ initial, onSave, onClose }: {
   const [errors, setErrors] = useState<Errors>({});
   const s = (k: CF) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
+  const handleBienChange = (ref: string) => {
+    const bien = biens.find((b) => b.ref === ref);
+    if (!bien) { s("bienRef")(ref); return; }
+    const mandat = mandats.find((m) => m.bienId === bien.ref || m.bienId === bien.id);
+    const desc = [bien.type, bien.commune, bien.surface ? `${bien.surface}m²` : ""].filter(Boolean).join(" · ");
+    setF((p) => ({
+      ...p,
+      bienRef: bien.ref,
+      bienDesc: desc,
+      prixVente: p.prixVente || String(bien.prix || ""),
+      vendeur: p.vendeur || (mandat?.mandant ?? ""),
+      honoraires: p.honoraires || String(mandat?.honoraires ?? ""),
+    }));
+  };
+
   const preview = commissionMontant({
     typeHonoraires: f.typeHonoraires as Compromis["typeHonoraires"],
     prixVente: Number(f.prixVente) || 0,
@@ -59,14 +75,53 @@ export function CompromisForm({ initial, onSave, onClose }: {
     onSave({ ...parsed.data, id: initial?.id ?? "", agentId: initial?.agentId });
   };
 
+  const acheteurClients = clients.filter((c) => ["Acheteur", "Investisseur", "Locataire"].includes(c.type));
+
   return (
     <>
       <Grid2>
         <Field label="Référence dossier" error={errors.ref}><Input value={f.ref} onChange={(e) => s("ref")(e.target.value)} placeholder="COMP-2026-XXX" /></Field>
         <Field label="Statut dossier"><Select value={f.statut} onChange={s("statut")} options={StatutCompromis.options} /></Field>
-        <Field label="Acheteur" error={errors.acheteur}><Input value={f.acheteur} onChange={(e) => s("acheteur")(e.target.value)} /></Field>
+        <Field label="Acheteur" error={errors.acheteur}>
+          {acheteurClients.length > 0 ? (
+            <select
+              className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+              value={acheteurClients.some((c) => `${c.prenom} ${c.nom}`.trim() === f.acheteur) ? f.acheteur : ""}
+              onChange={(e) => {
+                const sel = acheteurClients.find((c) => `${c.prenom} ${c.nom}`.trim() === e.target.value);
+                s("acheteur")(sel ? `${sel.prenom} ${sel.nom}`.trim() : e.target.value);
+              }}
+            >
+              <option value="">— Saisie libre ou sélectionner —</option>
+              {acheteurClients.map((c) => (
+                <option key={c.id} value={`${c.prenom} ${c.nom}`.trim()}>
+                  {c.prenom} {c.nom}{c.tel ? ` · ${c.tel}` : ""}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Input value={f.acheteur} onChange={(e) => s("acheteur")(e.target.value)} />
+          )}
+        </Field>
         <Field label="Vendeur"><Input value={f.vendeur} onChange={(e) => s("vendeur")(e.target.value)} /></Field>
-        <Field label="Réf. bien"><Input value={f.bienRef} onChange={(e) => s("bienRef")(e.target.value)} placeholder="CC-0XX" /></Field>
+        <Field label="Bien (catalogue)">
+          {biens.length > 0 ? (
+            <select
+              className="w-full rounded border border-line2 bg-white px-3 py-2 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+              value={f.bienRef}
+              onChange={(e) => handleBienChange(e.target.value)}
+            >
+              <option value="">— Sélectionner un bien —</option>
+              {biens.map((b) => (
+                <option key={b.id} value={b.ref}>
+                  {b.ref} · {b.type} · {b.commune}{b.statut !== "Disponible" ? ` (${b.statut})` : ""}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Input value={f.bienRef} onChange={(e) => s("bienRef")(e.target.value)} placeholder="CC-0XX" />
+          )}
+        </Field>
         <Field label="Désignation bien"><Input value={f.bienDesc} onChange={(e) => s("bienDesc")(e.target.value)} /></Field>
         <Field label="Prix de vente (€)" error={errors.prixVente}><Input type="number" value={f.prixVente} onChange={(e) => s("prixVente")(e.target.value)} /></Field>
         <Field label="Type honoraires"><Select value={f.typeHonoraires} onChange={s("typeHonoraires")} options={TypeHonoraires.options} /></Field>
