@@ -190,7 +190,7 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
         {f.typeFinancement === "Prêt bancaire" && f.montantPret > 0 && (
           <>
             <Text style={s.subArt}>5.1 – Obtention du ou des prêts immobiliers</Text>
-            <Text style={s.body}>La vente est subordonnée à l'obtention par l'ACQUÉREUR d'un ou plusieurs prêts immobiliers d'un montant minimum de <Text style={s.bf}>{E(f.montantPret)}</Text>, à un taux d'intérêt nominal annuel n'excédant pas <Text style={s.bf}>{f.tauxMaxPret}%</Text>, remboursable sur une durée maximale de <Text style={s.bf}>{f.dureePretMois} mois</Text>. L'ACQUÉREUR devra justifier de l'obtention ou du refus de prêt dans un délai de <Text style={s.bf}>{f.delaiPretJours} jours calendaires</Text> à compter de la signature du présent compromis.</Text>
+            <Text style={s.body}>La vente est subordonnée à l'obtention par l'ACQUÉREUR d'un ou plusieurs prêts immobiliers d'un montant minimum de <Text style={s.bf}>{E(f.montantPret)}</Text>, à un taux d'intérêt nominal annuel n'excédant pas <Text style={s.bf}>{f.tauxMaxPret}%</Text>, remboursable sur une durée maximale de <Text style={s.bf}>{f.dureePretMois} mois</Text>. L'ACQUÉREUR s'engage à déposer son dossier de demande de prêt auprès de l'établissement bancaire dans un délai de <Text style={s.bf}>{f.delaiDepotDossierJours} jours calendaires</Text> à compter de la signature du présent compromis. L'ACQUÉREUR devra justifier de l'obtention ou du refus de prêt dans un délai de <Text style={s.bf}>{f.delaiPretJours} jours calendaires</Text> à compter de la même date.</Text>
           </>
         )}
         <Text style={s.subArt}>{f.typeFinancement === "Prêt bancaire" ? "5.2" : "5.1"} – Absence de droit de préemption</Text>

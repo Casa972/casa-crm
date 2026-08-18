@@ -47,7 +47,6 @@ export const compromisVenteSchema = z.object({
   adresseSyndic: z.string().default(""),
   nbLotsCopro: z.coerce.number().default(0),
   anneeConstruction: z.string().default(""),
-  assureurCopro: z.string().default(""),
 
   // DDT
   diagnostiqueur: z.string().default(""),

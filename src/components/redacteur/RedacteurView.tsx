@@ -54,7 +54,7 @@ function defaultCompromis(): CompromisVente {
     commune: "", codePostal: "", numLot: "", surfaceCarrez: 0, surfaceTotale: 0,
     descriptionSurfaces: "", tantiemes: "", occupation: "résidence principale",
     nomCopro: "", numImmatCopro: "", nomSyndic: "", adresseSyndic: "",
-    nbLotsCopro: 0, anneeConstruction: "", assureurCopro: "",
+    nbLotsCopro: 0, anneeConstruction: "",
     diagnostiqueur: "", dateDDT: "", surfaceCarrezDDT: 0,
     classeDPE: "", anomaliesElec: "", etatTermites: "Absence", infoTermites: "",
     prixFAI: 0, honorairesTTC: 0, chargeHonoraires: "vendeur", sequestrePct: 5,
@@ -620,6 +620,7 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
             <Field label="Nom copropriété"><Input value={f.nomCopro} onChange={e => upd("nomCopro", e.target.value)} /></Field>
             <Field label="N° immatriculation"><Input value={f.numImmatCopro} onChange={e => upd("numImmatCopro", e.target.value)} /></Field>
             <Field label="Syndic"><Input value={f.nomSyndic} onChange={e => upd("nomSyndic", e.target.value)} /></Field>
+            <Field label="Adresse syndic"><Input value={f.adresseSyndic} onChange={e => upd("adresseSyndic", e.target.value)} /></Field>
             <Field label="Nb lots"><Input type="number" value={String(f.nbLotsCopro || "")} onChange={e => upd("nbLotsCopro", +e.target.value)} /></Field>
             <Field label="Année construction"><Input value={f.anneeConstruction} onChange={e => upd("anneeConstruction", e.target.value)} /></Field>
           </Grid2>
