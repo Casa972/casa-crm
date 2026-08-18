@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import logoSrc from "../assets/logo.png";
 import type { OffreAchat, PartieOffre } from "../schemas/redacteur/offreAchat.schema";
+import { nombreEnLettres } from "../schemas/estimation.schema";
 
 const P    = "#1A3A52";
 const LINE = "#E4E4E0";
@@ -51,42 +52,6 @@ const dash = "……………………………………";
 
 const FOOTER_TXT =
   "Casa Cara\u00EFbes SARL \u2014 RCS Fort-de-France 928\u00A0647\u00A0981 \u2014 Carte pro T n\u00B0CPI97212024000000007";
-
-// ── nombreEnLettres (copié depuis estimation.schema.ts) ──────────────────────
-const UNITES = [
-  "", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf",
-  "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf",
-];
-const DIZAINES = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante", "quatre-vingt", "quatre-vingt"];
-
-function centainesEnLettres(n: number): string {
-  if (n === 0) return "";
-  if (n < 20) return UNITES[n] ?? "";
-  const d = Math.floor(n / 10), u = n % 10;
-  const diz = DIZAINES[d] ?? "";
-  if (d === 7 || d === 9) {
-    const sub = UNITES[10 + u] ?? "";
-    return d === 9 && u === 0 ? "quatre-vingt-dix" : `${diz}-${sub}`;
-  }
-  if (d === 8) return u === 0 ? "quatre-vingts" : `quatre-vingt-${UNITES[u] ?? ""}`;
-  return u === 0 ? diz : u === 1 ? `${diz}-et-un` : `${diz}-${UNITES[u] ?? ""}`;
-}
-
-function nombreEnLettres(n: number): string {
-  if (!n || n <= 0) return "zéro euro";
-  const milliers = Math.floor(n / 1000);
-  const reste = n % 1000;
-  let resultat = "";
-  if (milliers > 0) {
-    resultat += milliers === 1 ? "mille" : `${centainesEnLettres(milliers)} mille`;
-  }
-  if (reste > 0) {
-    if (milliers > 0) resultat += " ";
-    resultat += centainesEnLettres(reste);
-  }
-  return resultat.trim() + " euros";
-}
-// ────────────────────────────────────────────────────────────────────────────
 
 function AcquereurBlock({ a }: { a: PartieOffre }) {
   const name = [a.civilite, a.prenom, a.nom].filter(Boolean).join(" ");

@@ -1,4 +1,5 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import logoSrc from "../assets/logo.png";
 import type { CompromisVente, PartieCompromis } from "../schemas/redacteur/compromisVente.schema";
 import { calcCompromis } from "../schemas/redacteur/compromisVente.schema";
 
@@ -56,10 +57,15 @@ function Partie({ p }: { p: PartieCompromis }) {
   );
 }
 
-function Footer({ page, total }: { page: number; total: number }) {
+function Footer() {
   return (
     <View style={s.footer} fixed>
-      <Text style={s.footerTxt}>CASA CARAÏBES – Compromis de vente | Page {page}/{total}</Text>
+      <Text
+        style={s.footerTxt}
+        render={({ pageNumber, totalPages }) =>
+          `CASA CARAÏBES – Compromis de vente | Page ${pageNumber}/${totalPages}`
+        }
+      />
     </View>
   );
 }
@@ -76,7 +82,7 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
       {/* ═══ PAGE DE GARDE ═══ */}
       <Page size="A4" style={s.page}>
         <View style={s.logoBox}>
-          <Text style={s.logoTxt}>CASA CARAÏBES</Text>
+          <Image src={logoSrc} style={{ width: 160, height: 60, objectFit: "contain" }} />
           <Text style={s.logoSub}>Agence Immobilière — Martinique</Text>
         </View>
         <Text style={s.docTitre}>COMPROMIS DE VENTE</Text>
@@ -94,7 +100,7 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
         <Text style={s.body}>Il a été convenu et arrêté ce qui suit entre les parties ci-après désignées, lesquelles reconnaissent avoir été informées de leurs droits et obligations respectifs dans le cadre de la présente promesse synallagmatique de vente, conformément aux dispositions des articles 1589 et suivants du Code civil ainsi que des lois n° 70-9 du 2 janvier 1970 (dite loi Hoguet), n° 89-462 du 6 juillet 1989 et de la loi ALUR n° 2014-366 du 24 mars 2014.</Text>
         <Text style={s.body}>La présente convention vaut vente dès l'accord des parties sur la chose et le prix. Elle emporte transfert de propriété sous réserve de la réalisation des conditions suspensives stipulées ci-après et du paiement intégral du prix à la date de réitération en acte authentique.</Text>
 
-        <Footer page={1} total={5} />
+        <Footer />
       </Page>
 
       {/* ═══ PAGE 2 — PARTIES & BIEN ═══ */}
@@ -131,7 +137,7 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
           </>
         )}
 
-        <Footer page={2} total={5} />
+        <Footer />
       </Page>
 
       {/* ═══ PAGE 3 — DDT, PRIX, FINANCEMENT ═══ */}
@@ -190,7 +196,7 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
         <Text style={s.subArt}>{f.typeFinancement === "Prêt bancaire" ? "5.2" : "5.1"} – Absence de droit de préemption</Text>
         <Text style={s.body}>La présente vente est soumise à la purge du droit de préemption urbain de la commune de {f.commune || "la commune concernée"}, ainsi qu'à toute préemption susceptible d'être exercée par tout organisme public ou parapublic. Si un droit de préemption est exercé, le présent compromis sera résolu de plein droit, sans indemnité de part ni d'autre.</Text>
 
-        <Footer page={3} total={5} />
+        <Footer />
       </Page>
 
       {/* ═══ PAGE 4 — Articles 6 à 14 ═══ */}
@@ -228,7 +234,7 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
           </>
         )}
 
-        <Footer page={4} total={5} />
+        <Footer />
       </Page>
 
       {/* ═══ PAGE 5 — Articles 12-17 + Signatures ═══ */}
@@ -291,7 +297,7 @@ export function CompromisVentePDF({ f }: { f: CompromisVente }) {
           </View>
         </View>
 
-        <Footer page={5} total={5} />
+        <Footer />
       </Page>
     </Document>
   );

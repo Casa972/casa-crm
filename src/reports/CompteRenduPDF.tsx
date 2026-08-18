@@ -1,4 +1,5 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import logoSrc from "../assets/logo.png";
 import type { CompteRendu } from "../schemas/compteRendu.schema";
 import { eur } from "../lib/format";
 
@@ -52,7 +53,6 @@ const s = StyleSheet.create({
 });
 
 const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—";
-const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
 function Row({ label, value, alt }: { label: string; value: string; alt?: boolean }) {
   return (
@@ -64,6 +64,7 @@ function Row({ label, value, alt }: { label: string; value: string; alt?: boolea
 }
 
 export function CompteRenduPDF({ cr }: { cr: CompteRendu }) {
+  const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   const avisColor = AVIS_COLOR[cr.avisClient] ?? P;
   const avisBg = AVIS_BG[cr.avisClient] ?? "#EBF1F6";
 
@@ -73,7 +74,7 @@ export function CompteRenduPDF({ cr }: { cr: CompteRendu }) {
         {/* En-tête */}
         <View style={s.header}>
           <View>
-            <Text style={s.logo}>CASA CARAÏBES</Text>
+            <Image src={logoSrc} style={{ width: 140, height: 52, objectFit: "contain" }} />
             <Text style={s.logoSub}>Compte rendu de visite — Confidentiel</Text>
           </View>
           <View>
