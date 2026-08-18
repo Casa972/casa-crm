@@ -127,7 +127,7 @@ export function RevenusView() {
           <div className="text-[13px] font-semibold text-ink">Encaissements sur 12 mois</div>
           <div className="flex items-center gap-3 text-[11px] text-ink-muted">
             <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-[#2D7A5F]" /> Encaissé</span>
-            <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-amber-300" /> En attente</span>
+            <span className="flex items-center gap-1"><span className="inline-block size-2.5 rounded-sm bg-amber" /> En attente</span>
           </div>
         </div>
         <MonthlyChart data={fin.monthly} />
@@ -175,8 +175,8 @@ export function RevenusView() {
                     className="card flex items-center gap-3.5 p-3.5"
                     style={{ borderLeftWidth: 3, borderLeftColor: r.statut === "Encaissé" ? "#2D7A5F" : "#F59E0B" }}
                   >
-                    <div className={`flex size-9 shrink-0 items-center justify-center rounded ${r.statut === "Encaissé" ? "bg-emerald-100" : "bg-amber-100"}`}>
-                      <TrendingUp size={14} className={r.statut === "Encaissé" ? "text-emerald-700" : "text-amber-600"} />
+                    <div className={`flex size-9 shrink-0 items-center justify-center rounded ${r.statut === "Encaissé" ? "bg-emerald-soft" : "bg-amber-soft"}`}>
+                      <TrendingUp size={14} className={r.statut === "Encaissé" ? "text-emerald" : "text-amber"} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">

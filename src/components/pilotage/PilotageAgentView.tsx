@@ -10,7 +10,7 @@ import { useRdv } from "../../hooks/queries/useRdv";
 import { useTaches } from "../../hooks/queries/useTaches";
 import { useActivites } from "../../hooks/queries/useActivites";
 
-const ETAPES = ["Prospect", "Visite", "Offre", "Compromis", "Acte"] as const;
+const ETAPES = ["Prospect", "Visite", "Offre", "Compromis", "Acte signé"] as const;
 
 // ─── Objectifs débutant ───────────────────────────────────────────────────────
 const MOIS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -31,7 +31,7 @@ function BarreObjectif({ obj }: { obj: Objectif }) {
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`flex size-7 items-center justify-center rounded-full ${atteint ? "bg-emerald-100 text-emerald-600" : "bg-bg text-ink-muted"}`}>
+          <span className={`flex size-7 items-center justify-center rounded-full ${atteint ? "bg-emerald-soft text-emerald" : "bg-bg text-ink-muted"}`}>
             {obj.icon}
           </span>
           <div>
@@ -40,18 +40,18 @@ function BarreObjectif({ obj }: { obj: Objectif }) {
           </div>
         </div>
         <div className="text-right shrink-0 ml-4">
-          <span className={`text-[14px] font-bold ${atteint ? "text-emerald-600" : "text-ink"}`}>{obj.valeur}</span>
+          <span className={`text-[14px] font-bold ${atteint ? "text-emerald" : "text-ink"}`}>{obj.valeur}</span>
           <span className="text-[12px] text-ink-muted"> / {obj.cible}</span>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1 h-2 rounded-full bg-line overflow-hidden">
           <div
-            className={`h-full rounded-full transition-[width] duration-700 ${atteint ? "bg-emerald-500" : obj.couleur}`}
+            className={`h-full rounded-full transition-[width] duration-700 ${atteint ? "bg-emerald" : obj.couleur}`}
             style={{ width: `${pct}%` }}
           />
         </div>
-        <span className={`text-[11px] font-semibold w-8 text-right ${atteint ? "text-emerald-600" : "text-ink-muted"}`}>{pct}%</span>
+        <span className={`text-[11px] font-semibold w-8 text-right ${atteint ? "text-emerald" : "text-ink-muted"}`}>{pct}%</span>
       </div>
     </div>
   );
@@ -101,15 +101,15 @@ function ObjectifsPanel({ userId, data, activites, rdvList }: {
 
   const objectifsMois: Objectif[] = [
     { icon: <Phone size={14} />,    label: "Appels / prospection", detail: "Contacts sortants ce mois",    valeur: appels,      cible: 20, couleur: "bg-sky-500" },
-    { icon: <Users size={14} />,    label: "RDV clients",          detail: "Rendez-vous enregistrés",       valeur: rdvMois,     cible: 6,  couleur: "bg-violet-500" },
-    { icon: <Home size={14} />,     label: "Visites réalisées",    detail: "Visites de biens effectuées",   valeur: visites,     cible: 6,  couleur: "bg-amber-500" },
+    { icon: <Users size={14} />,    label: "RDV clients",          detail: "Rendez-vous enregistrés",       valeur: rdvMois,     cible: 6,  couleur: "bg-violet" },
+    { icon: <Home size={14} />,     label: "Visites réalisées",    detail: "Visites de biens effectuées",   valeur: visites,     cible: 6,  couleur: "bg-amber" },
     { icon: <FileText size={14} />, label: "Offres présentées",    detail: "Offres remises à un vendeur",   valeur: offres,      cible: 2,  couleur: "bg-orange-500" },
     { icon: <Key size={14} />,      label: "Mandats pris",         detail: "Nouveaux mandats en agence",    valeur: mandatsMois, cible: 2,  couleur: "bg-primary" },
   ];
 
   const objectifsPipeline: Objectif[] = [
     { icon: <Handshake size={14} />, label: "Compromis actifs",     detail: "Dossiers en cours de l'agent", valeur: enCompromis, cible: 1, couleur: "bg-teal-500" },
-    { icon: <CheckCircle size={14}/>, label: "Actes réalisés",      detail: `Objectif trimestriel · ${trimLabel}`, valeur: actesTrim, cible: 1, couleur: "bg-emerald-500" },
+    { icon: <CheckCircle size={14}/>, label: "Actes réalisés",      detail: `Objectif trimestriel · ${trimLabel}`, valeur: actesTrim, cible: 1, couleur: "bg-emerald" },
   ];
 
   // Score global
@@ -189,7 +189,7 @@ export function PilotageAgentView() {
   const mesBiens = data.biens.filter((b) => b.statut === "Disponible");
 
   const today = new Date().toISOString().slice(0, 10);
-  const rdvAujourdhui = rdvList.filter((r) => r.date === today).sort((a, b) => a.heureDebut.localeCompare(b.heureDebut));
+  const rdvAujourdhui = rdvList.filter((r) => r.date === today && (r.agentId === user.id || !r.agentId)).sort((a, b) => a.heureDebut.localeCompare(b.heureDebut));
   const tachesActives = taches.filter((t) => !t.done).slice(0, 5);
 
   // Activités récentes de l'agent (toutes)

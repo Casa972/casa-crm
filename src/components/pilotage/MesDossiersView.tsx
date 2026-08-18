@@ -11,18 +11,18 @@ function SruBadge({ date }: { date: string }) {
   if (!date) return null;
   const d = daysDiff(date);
   if (d === null) return null;
-  if (d < 0) return <span className="rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-bold text-success">SRU levé</span>;
+  if (d < 0) return <span className="rounded-full bg-emerald-soft px-2 py-0.5 text-[10px] font-bold text-emerald">SRU levé</span>;
   if (d <= 3) return <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-bold text-danger">SRU : {d}j</span>;
-  return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">SRU : {d}j</span>;
+  return <span className="rounded-full bg-amber-soft px-2 py-0.5 text-[10px] font-bold text-amber">SRU : {d}j</span>;
 }
 
 function CondBadge({ date }: { date: string }) {
   if (!date) return null;
   const d = daysDiff(date);
   if (d === null) return null;
-  if (d < 0) return <span className="rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-bold text-success">Cond. levées</span>;
+  if (d < 0) return <span className="rounded-full bg-emerald-soft px-2 py-0.5 text-[10px] font-bold text-emerald">Cond. levées</span>;
   if (d <= 7) return <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-bold text-danger">Cond. : {d}j</span>;
-  return <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">Cond. : {d}j</span>;
+  return <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-bold text-primary">Cond. : {d}j</span>;
 }
 
 export function MesDossiersView() {
@@ -149,7 +149,7 @@ export function MesDossiersView() {
               const expireUrgent = d !== null && d >= 0 && d <= 30;
               const expire14 = d !== null && d >= 0 && d <= 14;
               return (
-                <div key={m.id} className={`card flex items-center gap-4 p-3.5 ${expire14 ? "border-l-4 border-l-danger" : expireUrgent ? "border-l-4 border-l-amber-400" : ""}`}>
+                <div key={m.id} className={`card flex items-center gap-4 p-3.5 ${expire14 ? "border-l-4 border-l-danger" : expireUrgent ? "border-l-4 border-l-amber" : ""}`}>
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                     <Key size={15} className="text-primary" />
                   </div>
@@ -164,7 +164,7 @@ export function MesDossiersView() {
                     {d === null ? (
                       <span className="text-[12px] text-ink-muted">—</span>
                     ) : d < 0 ? (
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-success">
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-emerald">
                         <CheckCircle size={11} /> Expiré
                       </div>
                     ) : expire14 ? (
@@ -176,7 +176,7 @@ export function MesDossiersView() {
                       </div>
                     ) : expireUrgent ? (
                       <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-amber-600">
+                        <div className="flex items-center gap-1 text-[11px] font-bold text-amber">
                           <Clock size={11} /> {d}j restants
                         </div>
                         <div className="text-[10px] text-ink-muted">{fdate(m.dateFin)}</div>

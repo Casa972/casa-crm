@@ -10,17 +10,17 @@ type StatutFilter = "tous" | "Actif" | "Expiré" | "Résilié" | "Suspendu";
 type TypeFilter = "tous" | "Exclusif" | "Simple" | "Gestion" | "Co-exclusif";
 
 const STATUT_COLORS: Record<string, string> = {
-  Actif:    "bg-emerald-100 text-emerald-800",
-  Expiré:   "bg-amber-100 text-amber-800",
-  Résilié:  "bg-red-100 text-red-800",
-  Suspendu: "bg-gray-100 text-gray-600",
+  Actif:    "bg-emerald-soft text-emerald",
+  Expiré:   "bg-amber-soft text-amber",
+  Résilié:  "bg-danger-soft text-danger",
+  Suspendu: "bg-line/60 text-ink-sub",
 };
 
 const TYPE_COLORS: Record<string, string> = {
   Exclusif:     "bg-primary-soft text-primary",
-  Simple:       "bg-blue-50 text-blue-700",
-  Gestion:      "bg-purple-50 text-purple-700",
-  "Co-exclusif":"bg-orange-50 text-orange-700",
+  Simple:       "bg-line/60 text-ink-sub",
+  Gestion:      "bg-violet-soft text-violet",
+  "Co-exclusif":"bg-amber-soft text-amber",
 };
 
 function getBienForMandat(mandat: Mandat, biens: Bien[]): Bien | undefined {
@@ -28,8 +28,8 @@ function getBienForMandat(mandat: Mandat, biens: Bien[]): Bien | undefined {
 }
 
 function StatutIcon({ statut }: { statut: string }) {
-  if (statut === "Actif")    return <CheckCircle2 size={13} className="text-emerald-600" />;
-  if (statut === "Expiré")   return <Clock size={13} className="text-amber-500" />;
+  if (statut === "Actif")    return <CheckCircle2 size={13} className="text-emerald" />;
+  if (statut === "Expiré")   return <Clock size={13} className="text-amber" />;
   if (statut === "Résilié")  return <XCircle size={13} className="text-red-500" />;
   return <AlertTriangle size={13} className="text-gray-400" />;
 }
@@ -64,10 +64,10 @@ L'équipe Casa Caraïbes`;
   };
 
   return (
-    <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+    <div className="mb-5 rounded-xl border border-amber bg-amber-soft p-4">
       <div className="mb-3 flex items-center gap-2">
-        <RefreshCw size={15} className="text-amber-600" />
-        <h3 className="text-[13px] font-bold text-amber-800">
+        <RefreshCw size={15} className="text-amber" />
+        <h3 className="text-[13px] font-bold text-amber">
           {expiring.length} mandat{expiring.length > 1 ? "s" : ""} à renouveler sous 30 jours
         </h3>
       </div>
@@ -76,11 +76,11 @@ L'équipe Casa Caraïbes`;
           const d = daysDiff(m.dateFin);
           const urgent = d !== null && d <= 10;
           return (
-            <div key={m.id} className="flex items-center justify-between gap-3 rounded-lg bg-white border border-amber-100 px-3 py-2.5">
+            <div key={m.id} className="flex items-center justify-between gap-3 rounded-lg bg-surface border border-line px-3 py-2.5">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-ink text-[13px]">{m.ref || m.mandant}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${urgent ? "bg-danger-soft text-danger" : "bg-amber-100 text-amber-700"}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${urgent ? "bg-danger-soft text-danger" : "bg-amber-soft text-amber"}`}>
                     {d !== null ? `${d}j restants` : ""} · {fdate(m.dateFin)}
                   </span>
                 </div>
@@ -94,7 +94,7 @@ L'équipe Casa Caraïbes`;
                 )}
                 <button
                   onClick={() => copyEmail(m)}
-                  className="flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-100 px-2.5 py-1.5 text-[11px] font-medium text-amber-800 hover:bg-amber-200 transition-colors"
+                  className="flex items-center gap-1 rounded-lg border border-amber bg-amber-soft px-2.5 py-1.5 text-[11px] font-medium text-amber hover:bg-amber/20 transition-colors"
                 >
                   {copiedId === m.id ? <><Check size={11} /> Copié !</> : <><Copy size={11} /> Email renouvellement</>}
                 </button>
@@ -217,8 +217,8 @@ export function RegistreView() {
       <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {[
           { label: "Total mandats", val: kpis.total, color: "text-ink" },
-          { label: "Actifs",        val: kpis.actifs, color: "text-emerald-600" },
-          { label: "Régularisés",   val: kpis.regularises, color: "text-amber-600" },
+          { label: "Actifs",        val: kpis.actifs, color: "text-emerald" },
+          { label: "Régularisés",   val: kpis.regularises, color: "text-amber" },
           { label: "Expirés",       val: kpis.expires, color: "text-red-500" },
         ].map((k) => (
           <div key={k.label} className="card p-3.5">
@@ -230,9 +230,9 @@ export function RegistreView() {
 
       {/* Bannière régularisation */}
       {kpis.regularises > 0 && (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
-          <div className="text-[12.5px] text-amber-800">
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber bg-amber-soft px-4 py-3">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber" />
+          <div className="text-[12.5px] text-amber">
             <span className="font-semibold">{kpis.regularises} mandat{kpis.regularises > 1 ? "s" : ""} régularisé{kpis.regularises > 1 ? "s" : ""}</span>
             {" "}— saisis rétroactivement avec leur date réelle de signature. Ces mandats sont conformes à la pratique de régularisation légale.
           </div>
@@ -318,7 +318,7 @@ export function RegistreView() {
                             : "—"}
                         </span>
                         {m.regularisation && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
+                          <span className="rounded bg-amber-soft px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber">
                             Régul.
                           </span>
                         )}

@@ -327,8 +327,8 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
 
           {/* Section Occupation — si Occupé */}
           {f.occupation === "Occupé" && (
-            <div className="mt-4 card border-l-4 border-l-amber-400 bg-amber-50 p-4">
-              <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-amber-700">Occupation — Détails du bail</div>
+            <div className="mt-4 card border-l-4 border-l-amber bg-amber-soft p-4">
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-amber">Occupation — Détails du bail</div>
               <Grid2>
                 <Field label="Type de bail">
                   <Select value={f.bailType} onChange={v => upd("bailType", v as MandatVenteFull["bailType"])} options={BAIL_OPTIONS} />

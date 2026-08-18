@@ -229,7 +229,7 @@ function useBienColumns(
             <FileText size={13} />
           </button>
           <button onClick={() => onMandat(c.row.original)} title="Créer un mandat"
-            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-emerald-50 hover:text-emerald-600">
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-emerald-soft hover:text-emerald">
             <ScrollText size={13} />
           </button>
           <button onClick={() => onEdit(c.row.original)}

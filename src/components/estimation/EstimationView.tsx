@@ -106,11 +106,11 @@ function calculerCapitalisation(e: Estimation): number {
   return Math.round(revenuNetAnnuel / 0.065 / 1000) * 1000;
 }
 
-function newEstimation(agentId?: string): Estimation {
+function newEstimation(agentId?: string, agentName?: string): Estimation {
   return {
     id: uid(), clientId: "", agentId, statut: "Brouillon", typeDoc: "expertise",
     typeBien: "Appartement en copropriété", residence: "", adresse: "", commune: "Les Trois-Îlets", codePostal: "97229",
-    sectionCadastrale: "", parcelles: "", demandeur: "", redacteur: "M. Luc CLEMENTE",
+    sectionCadastrale: "", parcelles: "", demandeur: "", redacteur: agentName ?? "M. Luc CLEMENTE",
     dateEstimation: today(), photoBase64: "",
     lieu: "Le Lamentin (Martinique)", certificationExpert: "Expert Immobilier Certifié INIGEP®",
     etage: "", regimeJuridique: "Copropriété – appartement privatif", chargesCopro: 0,
@@ -881,7 +881,7 @@ export function EstimationView() {
           <h1 className="font-heading text-2xl font-semibold text-ink">Estimations de valeur vénale</h1>
           <p className="text-[13px] text-ink-muted">{estimations.length} estimation(s)</p>
         </div>
-        <button className="btn-primary" onClick={() => setEditing(newEstimation(user?.id ?? undefined))}>
+        <button className="btn-primary" onClick={() => setEditing(newEstimation(user?.id, user?.name))}>
           <Plus size={14} /> Nouvelle estimation
         </button>
       </div>

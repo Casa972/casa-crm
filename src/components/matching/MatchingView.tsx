@@ -130,10 +130,16 @@ function RdvMatchModal({ target, onClose }: { target: RdvModalTarget; onClose: (
   );
 }
 
+const SCORE_CLASS = {
+  high:    "bg-emerald-soft text-emerald",
+  medium:  "bg-amber-soft text-amber",
+  low:     "bg-line/60 text-ink-sub",
+};
+
 function ScoreBadge({ score }: { score: number }) {
-  const tone = score >= 80 ? "emerald" : score >= 50 ? "amber" : "neutral";
+  const cls = score >= 80 ? SCORE_CLASS.high : score >= 50 ? SCORE_CLASS.medium : SCORE_CLASS.low;
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11.5px] font-bold bg-${tone}-soft text-${tone}`}>
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11.5px] font-bold ${cls}`}>
       {score}%
     </span>
   );
@@ -213,7 +219,7 @@ export function MatchingView() {
 
   const acquéreurs = data.clients.filter((c) =>
     ["Acheteur", "Locataire", "Investisseur"].includes(c.type) &&
-    !["Acte", "Perdu"].includes(c.statut) &&
+    !["Acte signé", "Perdu"].includes(c.statut) &&
     (!isDir ? c.agentId === user?.id : true)
   );
 

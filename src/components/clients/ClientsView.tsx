@@ -73,7 +73,7 @@ export function ClientsView() {
         const type = i.getValue<string>();
         const isAcheteur = type === "Acheteur";
         return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isAcheteur ? "bg-blue-50 text-blue-700" : "bg-emerald-50 text-emerald-700"}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isAcheteur ? "bg-primary-soft text-primary" : "bg-emerald-soft text-emerald"}`}>
             {type}
           </span>
         );

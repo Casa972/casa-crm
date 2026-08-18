@@ -12,9 +12,9 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  mandat:    "bg-blue-100 text-blue-700",
-  compromis: "bg-emerald-100 text-emerald-700",
-  offre:     "bg-amber-100 text-amber-700",
+  mandat:    "bg-primary-soft text-primary",
+  compromis: "bg-emerald-soft text-emerald",
+  offre:     "bg-amber-soft text-amber",
 };
 
 function fmtDate(iso?: string) {

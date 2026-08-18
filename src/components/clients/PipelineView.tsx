@@ -13,17 +13,17 @@ const ETAPES = ["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"] as 
 type Etape = typeof ETAPES[number];
 
 const ETAPE_STYLES: Record<Etape, { header: string; badge: string }> = {
-  Prospect:  { header: "bg-slate-100 text-slate-700",   badge: "bg-slate-100 text-slate-700" },
-  Visite:    { header: "bg-blue-100 text-blue-700",     badge: "bg-blue-100 text-blue-700" },
-  Offre:     { header: "bg-amber-100 text-amber-700",   badge: "bg-amber-100 text-amber-700" },
-  Compromis: { header: "bg-violet-100 text-violet-700", badge: "bg-violet-100 text-violet-700" },
-  Acte:      { header: "bg-emerald-100 text-emerald-700", badge: "bg-emerald-100 text-emerald-700" },
-  Perdu:     { header: "bg-red-100 text-red-700",       badge: "bg-red-100 text-red-700" },
+  Prospect:  { header: "bg-line/60 text-ink-sub",       badge: "bg-line/60 text-ink-sub"       },
+  Visite:    { header: "bg-primary-soft text-primary",  badge: "bg-primary-soft text-primary"  },
+  Offre:     { header: "bg-amber-soft text-amber",      badge: "bg-amber-soft text-amber"      },
+  Compromis: { header: "bg-violet-soft text-violet",    badge: "bg-violet-soft text-violet"    },
+  Acte:      { header: "bg-emerald-soft text-emerald",  badge: "bg-emerald-soft text-emerald"  },
+  Perdu:     { header: "bg-danger-soft text-danger",    badge: "bg-danger-soft text-danger"    },
 };
 
 const TYPE_BADGE: Record<string, string> = {
-  Acheteur: "bg-blue-50 text-blue-700",
-  Vendeur:  "bg-emerald-50 text-emerald-700",
+  Acheteur: "bg-primary-soft text-primary",
+  Vendeur:  "bg-emerald-soft text-emerald",
 };
 
 function prochaineEtape(etape: Etape): Etape | null {
