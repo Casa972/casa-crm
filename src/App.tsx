@@ -24,6 +24,7 @@ import { MatchingView } from "./components/matching/MatchingView";
 import { DocumentsView } from "./components/documents/DocumentsView";
 import { RegistreView } from "./components/registre/RegistreView";
 import { MesDossiersView } from "./components/pilotage/MesDossiersView";
+import { NotesView } from "./components/notes/NotesView";
 import { daysDiff } from "./lib/format";
 import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
@@ -57,6 +58,7 @@ function CurrentView(): ReactElement {
     case "documents": return <DocumentsView />;
     case "registre": return <RegistreView />;
     case "mes_dossiers": return <MesDossiersView />;
+    case "notes": return <NotesView />;
     case "import": return <TodayView />;
     default: return <TodayView />;
   }

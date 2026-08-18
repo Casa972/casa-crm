@@ -2,7 +2,7 @@ import {
   Sun, Users, Building2, FileText, Target, TrendingUp, ClipboardList,
   BarChart2, Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
   GraduationCap, ExternalLink, Landmark, FileSearch, Award, BookOpen, Briefcase,
-  Columns,
+  Columns, StickyNote,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
@@ -45,6 +45,9 @@ const NAV_DIR: NavEntry[] = [
   { kind: "item", id: "revenus",     label: "Revenus",        Icon: TrendingUp },
   { kind: "item", id: "reporting",   label: "Reporting",      Icon: BarChart2 },
 
+  { kind: "group", label: "Outils" },
+  { kind: "item", id: "notes", label: "Notes", Icon: StickyNote },
+
   { kind: "group", label: "Ressources" },
   { kind: "item", id: "import", label: "Formation", Icon: GraduationCap, href: FORMATION_URL },
 ];
@@ -72,6 +75,7 @@ const NAV_AGENT: NavEntry[] = [
 
   { kind: "group", label: "Outils" },
   { kind: "item", id: "calculatrice",label: "Calculatrice",   Icon: Calculator },
+  { kind: "item", id: "notes",       label: "Notes",          Icon: StickyNote },
 
   { kind: "group", label: "Ressources" },
   { kind: "item", id: "import", label: "Formation", Icon: GraduationCap, href: FORMATION_URL },

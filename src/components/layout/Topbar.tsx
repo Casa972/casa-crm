@@ -26,6 +26,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   registre: "Registre des mandats",
   mes_dossiers: "Mes dossiers",
   pipeline_clients: "Pipeline clients",
+  notes: "Notes",
   import: "Import CSV",
 };
 

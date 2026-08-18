@@ -5,7 +5,7 @@ export type ViewId =
   | "pilotage" | "revenus" | "reporting" | "finance" | "estimation"
   | "valeur_venale"
   | "pilotage_agent" | "agenda" | "taches" | "calculatrice" | "compte_rendu"
-  | "matching" | "import" | "registre" | "mes_dossiers" | "pipeline_clients";
+  | "matching" | "import" | "registre" | "mes_dossiers" | "pipeline_clients" | "notes";
 
 export type PrefillRedacteur = {
   docType: "mandat" | "compromis" | "offre";
