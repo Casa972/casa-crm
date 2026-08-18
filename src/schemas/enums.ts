@@ -64,9 +64,17 @@ export const TypeClient = z.enum(["Acheteur", "Locataire", "Investisseur", "Vend
 export type TypeClient = z.infer<typeof TypeClient>;
 
 export const EtapePipeline = z.enum([
+  // Commun
   "Prospect",
+  // Acheteur / Locataire / Investisseur
   "Visite",
   "Offre",
+  // Propriétaire / Vendeur
+  "Estimation",
+  "Mandat",
+  "En diffusion",
+  "Sous offre",
+  // Commun
   "Compromis",
   "Acte",
   "Perdu",

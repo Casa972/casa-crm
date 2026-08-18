@@ -170,7 +170,7 @@ export function ClientsView() {
             className="rounded-lg border border-line bg-surface px-2 py-1.5 text-[12px] text-ink-sub focus:outline-none"
           >
             <option value="">Toutes les étapes</option>
-            {["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"].map((e) => (
+            {["Prospect", "Visite", "Offre", "Estimation", "Mandat", "En diffusion", "Sous offre", "Compromis", "Acte", "Perdu"].map((e) => (
               <option key={e} value={e}>{e}</option>
             ))}
           </select>

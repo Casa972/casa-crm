@@ -6,7 +6,7 @@ import { clientFormSchema } from "../../schemas/client.schema";
 import { revenuFormSchema } from "../../schemas/client.schema";
 import {
   StatutCompromis, StatutCommission, TypeHonoraires,
-  TypeClient, EtapePipeline, TypeRevenu, StatutRevenu, COMMUNES_MARTINIQUE,
+  TypeClient, TypeRevenu, StatutRevenu, COMMUNES_MARTINIQUE,
 } from "../../schemas/enums";
 import { AGENTS_NAMES } from "../../config/agents";
 import { eur } from "../../lib/format";
@@ -223,8 +223,12 @@ export function ClientForm({ initial, onSave, onClose }: {
         <Field label="Nom"><Input value={f.nom} onChange={(e) => s("nom")(e.target.value)} /></Field>
         <Field label="Téléphone"><Input value={f.tel} onChange={(e) => s("tel")(e.target.value)} /></Field>
         <Field label="Email" error={errors.email}><Input type="email" value={f.email} onChange={(e) => s("email")(e.target.value)} /></Field>
-        <Field label="Profil"><Select value={f.type} onChange={s("type")} options={TypeClient.options} /></Field>
-        <Field label="Étape"><Select value={f.statut} onChange={s("statut")} options={EtapePipeline.options} /></Field>
+        <Field label="Profil"><Select value={f.type} onChange={(v) => { s("type")(v); s("statut")("Prospect"); }} options={TypeClient.options} /></Field>
+        <Field label="Étape"><Select value={f.statut} onChange={s("statut")} options={
+          f.type === "Vendeur"
+            ? ["Prospect", "Estimation", "Mandat", "En diffusion", "Sous offre", "Compromis", "Acte", "Perdu"]
+            : ["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"]
+        } /></Field>
         <Field label="Budget max (€)"><Input type="number" value={f.budgetMax} onChange={(e) => s("budgetMax")(e.target.value)} /></Field>
         <Field label="Commune"><Select value={f.commune} onChange={s("commune")} options={COMMUNES_MARTINIQUE} placeholder="— Indifférent —" /></Field>
         <Field label="Dernier contact"><Input type="date" value={f.dernierContact} onChange={(e) => s("dernierContact")(e.target.value)} /></Field>

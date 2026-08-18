@@ -8,15 +8,19 @@ import { eur } from "../../lib/format";
 import type { Client } from "../../types/domain";
 import type { EtapePipeline } from "../../schemas/enums";
 
-const ETAPES: EtapePipeline[] = ["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"];
+const ETAPES: EtapePipeline[] = ["Prospect", "Estimation", "Mandat", "En diffusion", "Sous offre", "Visite", "Offre", "Compromis", "Acte", "Perdu"];
 
 const ETAPE_STYLES: Record<EtapePipeline, { header: string; badge: string; count: string }> = {
-  Prospect:  { header: "bg-line/60",         badge: "text-ink-sub",    count: "bg-line text-ink-sub" },
-  Visite:    { header: "bg-primary-soft",     badge: "text-primary",    count: "bg-primary text-white" },
-  Offre:     { header: "bg-amber-soft",       badge: "text-amber",      count: "bg-amber text-white" },
-  Compromis: { header: "bg-amber-soft",       badge: "text-amber",      count: "bg-amber text-white" },
-  Acte:      { header: "bg-violet-soft",      badge: "text-violet",     count: "bg-violet text-white" },
-  Perdu:     { header: "bg-danger-soft",      badge: "text-danger",     count: "bg-danger text-white" },
+  Prospect:       { header: "bg-line/60",          badge: "text-ink-sub",     count: "bg-line text-ink-sub" },
+  Estimation:     { header: "bg-sky-100",           badge: "text-sky-700",     count: "bg-sky-500 text-white" },
+  Mandat:         { header: "bg-teal-100",          badge: "text-teal-700",    count: "bg-teal-500 text-white" },
+  "En diffusion": { header: "bg-indigo-100",        badge: "text-indigo-700",  count: "bg-indigo-500 text-white" },
+  "Sous offre":   { header: "bg-orange-100",        badge: "text-orange-700",  count: "bg-orange-500 text-white" },
+  Visite:         { header: "bg-primary-soft",      badge: "text-primary",     count: "bg-primary text-white" },
+  Offre:          { header: "bg-amber-soft",        badge: "text-amber",       count: "bg-amber text-white" },
+  Compromis:      { header: "bg-amber-soft",        badge: "text-amber",       count: "bg-amber text-white" },
+  Acte:           { header: "bg-violet-soft",       badge: "text-violet",      count: "bg-violet text-white" },
+  Perdu:          { header: "bg-danger-soft",       badge: "text-danger",      count: "bg-danger text-white" },
 };
 
 function ClientCard({ client, onMove }: { client: Client; onMove: (etape: EtapePipeline) => void }) {

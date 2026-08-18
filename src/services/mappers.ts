@@ -94,7 +94,7 @@ export const mandatToRow = (m: Mandat, agentId?: string): Partial<MandatRow> => 
   notes: nn(m.notes),
   ...(m.numeroRegistre !== undefined ? { numero_registre: m.numeroRegistre } : {}),
   ...(m.regularisation !== undefined ? { regularisation: m.regularisation } : {}),
-  ...(agentId ? { agent_id: agentId } : m.agentId ? { agent_id: m.agentId } : {}),
+  ...(m.agentId ? { agent_id: m.agentId } : agentId ? { agent_id: agentId } : {}),
 });
 
 /* ── Compromis ── */
@@ -151,7 +151,7 @@ export const compromisToRow = (c: Compromis, agentId?: string): Partial<Compromi
   agent_sortie: c.agentSortie ?? null,
   pct_entree: c.pctEntree ?? null,
   pct_sortie: c.pctSortie ?? null,
-  ...(agentId ? { agent_id: agentId } : c.agentId ? { agent_id: c.agentId } : {}),
+  ...(c.agentId ? { agent_id: c.agentId } : agentId ? { agent_id: agentId } : {}),
 });
 
 /* ── Client ── */
@@ -192,7 +192,7 @@ export const clientToRow = (c: Client, agentId?: string): Partial<ClientRow> => 
   dernier_contact: nn(c.dernierContact),
   relance_date: nn(c.relanceDate),
   financement: nn(c.financement),
-  ...(agentId ? { agent_id: agentId } : c.agentId ? { agent_id: c.agentId } : {}),
+  ...(c.agentId ? { agent_id: c.agentId } : agentId ? { agent_id: agentId } : {}),
 });
 
 /* ── Revenu ── */

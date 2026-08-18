@@ -1,5 +1,4 @@
-import { api, ApiError } from "./api";
-import { supabase } from "./supabase.client";
+import { api } from "./api";
 import { TABLES, type BienRow, type MandatRow, type CompromisRow, type ClientRow, type RevenuRow } from "../types/database";
 import {
   bienFromRow, mandatFromRow, compromisFromRow, clientFromRow, revenuFromRow,
@@ -11,20 +10,8 @@ import type { AgencyData, SessionUser } from "../types/domain";
  * Le filtrage par agent est appliqué côté requête (et garanti par RLS en base).
  * Pour les non-directeurs, les clients sans agent_id (données legacy) sont inclus.
  */
-export async function loadAgencyData(user: SessionUser): Promise<AgencyData> {
-  const isDir = user.role === "directeur";
-
-  // For non-directors: include both clients assigned to them AND legacy clients (agent_id = null)
-  const clientsPromise = isDir
-    ? api.list<ClientRow>(TABLES.clients)
-    : supabase
-        .from(TABLES.clients)
-        .select("*")
-        .or(`agent_id.eq.${user.id},agent_id.is.null`)
-        .then(({ data, error }) => {
-          if (error) throw new ApiError("Lecture clients impossible", TABLES.clients, "list", error);
-          return (data ?? []) as ClientRow[];
-        });
+export async function loadAgencyData(_user: SessionUser): Promise<AgencyData> {
+  const clientsPromise = api.list<ClientRow>(TABLES.clients);
 
   const [biens, mandats, compromis, clients, revenus] = await Promise.all([
     api.list<BienRow>(TABLES.biens),

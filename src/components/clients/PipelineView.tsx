@@ -9,16 +9,22 @@ import { useSessionStore } from "../../store/session.store";
 import { useFiltersStore } from "../../store/filters.store";
 import type { Client } from "../../types/domain";
 
-const ETAPES = ["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"] as const;
+const ETAPES_ACHETEUR = ["Prospect", "Visite", "Offre", "Compromis", "Acte", "Perdu"] as const;
+const ETAPES_VENDEUR  = ["Prospect", "Estimation", "Mandat", "En diffusion", "Sous offre", "Compromis", "Acte", "Perdu"] as const;
+const ETAPES = ["Prospect", "Estimation", "Mandat", "En diffusion", "Sous offre", "Visite", "Offre", "Compromis", "Acte", "Perdu"] as const;
 type Etape = typeof ETAPES[number];
 
 const ETAPE_STYLES: Record<Etape, { header: string; badge: string }> = {
-  Prospect:  { header: "bg-line/60 text-ink-sub",       badge: "bg-line/60 text-ink-sub"       },
-  Visite:    { header: "bg-primary-soft text-primary",  badge: "bg-primary-soft text-primary"  },
-  Offre:     { header: "bg-amber-soft text-amber",      badge: "bg-amber-soft text-amber"      },
-  Compromis: { header: "bg-violet-soft text-violet",    badge: "bg-violet-soft text-violet"    },
-  Acte:      { header: "bg-emerald-soft text-emerald",  badge: "bg-emerald-soft text-emerald"  },
-  Perdu:     { header: "bg-danger-soft text-danger",    badge: "bg-danger-soft text-danger"    },
+  Prospect:     { header: "bg-line/60 text-ink-sub",       badge: "bg-line/60 text-ink-sub"       },
+  Visite:       { header: "bg-primary-soft text-primary",  badge: "bg-primary-soft text-primary"  },
+  Offre:        { header: "bg-amber-soft text-amber",      badge: "bg-amber-soft text-amber"      },
+  Estimation:   { header: "bg-sky-100 text-sky-700",       badge: "bg-sky-100 text-sky-700"       },
+  Mandat:       { header: "bg-teal-100 text-teal-700",     badge: "bg-teal-100 text-teal-700"     },
+  "En diffusion": { header: "bg-indigo-100 text-indigo-700", badge: "bg-indigo-100 text-indigo-700" },
+  "Sous offre": { header: "bg-orange-100 text-orange-700", badge: "bg-orange-100 text-orange-700" },
+  Compromis:    { header: "bg-violet-soft text-violet",    badge: "bg-violet-soft text-violet"    },
+  Acte:         { header: "bg-emerald-soft text-emerald",  badge: "bg-emerald-soft text-emerald"  },
+  Perdu:        { header: "bg-danger-soft text-danger",    badge: "bg-danger-soft text-danger"    },
 };
 
 const TYPE_BADGE: Record<string, string> = {
@@ -26,10 +32,11 @@ const TYPE_BADGE: Record<string, string> = {
   Vendeur:  "bg-emerald-soft text-emerald",
 };
 
-function prochaineEtape(etape: Etape): Etape | null {
-  const idx = ETAPES.indexOf(etape);
-  if (idx < 0 || idx >= ETAPES.length - 2) return null; // pas d'avancement depuis Acte ou Perdu
-  return ETAPES[idx + 1] ?? null;
+function prochaineEtape(etape: Etape, type: string): Etape | null {
+  const seq = type === "Vendeur" ? ETAPES_VENDEUR : ETAPES_ACHETEUR;
+  const idx = (seq as readonly string[]).indexOf(etape);
+  if (idx < 0 || idx >= seq.length - 2) return null;
+  return (seq[idx + 1] ?? null) as Etape | null;
 }
 
 function ClientCard({ client, onEdit, onAdvance }: {
@@ -38,7 +45,7 @@ function ClientCard({ client, onEdit, onAdvance }: {
   onAdvance: (c: Client, next: Etape) => void;
 }) {
   const etape = client.statut as Etape;
-  const next = prochaineEtape(etape);
+  const next = prochaineEtape(etape, client.type);
   const needsRelance = client.relanceDate
     ? (daysDiff(client.relanceDate) ?? 99) <= 0
     : false;
@@ -144,7 +151,8 @@ export function PipelineView() {
 
   const byEtape = useMemo(() => {
     const map: Record<Etape, Client[]> = {
-      Prospect: [], Visite: [], Offre: [], Compromis: [], Acte: [], Perdu: [],
+      Prospect: [], Estimation: [], Mandat: [], "En diffusion": [], "Sous offre": [],
+      Visite: [], Offre: [], Compromis: [], Acte: [], Perdu: [],
     };
     for (const c of filteredClients) {
       const etape = c.statut as Etape;
