@@ -3,6 +3,8 @@ import { useUiStore, type ViewId } from "../../store/ui.store";
 import { Plus, Trash2, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
+import { useSessionStore } from "../../store/session.store";
+import { agentFormal } from "../../config/agents";
 import { mandatVenteFullSchema, calcMandatVente, isTerrain, isFonds, needsDPE, type MandatVenteFull, type Mandant, type LotCopro } from "../../schemas/redacteur/mandatVenteFull.schema";
 import { compromisVenteSchema, calcCompromis, type CompromisVente, type PartieCompromis } from "../../schemas/redacteur/compromisVente.schema";
 import { offreAchatSchema, type OffreAchat, type PartieOffre } from "../../schemas/redacteur/offreAchat.schema";
@@ -24,7 +26,7 @@ const newPartie = (): PartieCompromis => ({ civilite: "M.", prenom: "", nom: "",
 function defaultMandat(): MandatVenteFull {
   return {
     numero: `MV-${new Date().getFullYear()}-`,
-    date: today(), lieu: "Fort-de-France",
+    date: today(), lieu: "",
     mandants: [newMandant()],
     residence: "", adresseBien: "", commune: "", codePostal: "", typeBien: "Appartement",
     surfaceTotale: 0, surfaceCarrez: 0, surfaceHabitable: 0, surfaceTerrain: 0,
@@ -46,7 +48,7 @@ function defaultMandat(): MandatVenteFull {
 
 function defaultCompromis(): CompromisVente {
   return {
-    date: today(), lieu: "Fort-de-France",
+    date: today(), lieu: "",
     vendeurs: [newPartie()], acquereurs: [newPartie()],
     typeBien: "Appartement", residence: "", adresseBien: "", quartier: "",
     commune: "", codePostal: "", numLot: "", surfaceCarrez: 0, surfaceTotale: 0,
@@ -63,7 +65,7 @@ function defaultCompromis(): CompromisVente {
     sommesDuesVendeur: 0, detailSommesDues: "", remboursementFondsTravaux: 0,
     travauxVotesRestants: 0, detailTravauxVotes: "",
     taxeFonciere: 0, anneeRef: String(new Date().getFullYear() - 1),
-    redacteur: "M. Luc CLEMENTE", mandatRef: "",
+    redacteur: "", mandatRef: "",
     observations: "",
   };
 }
@@ -73,9 +75,9 @@ const newAcquereur = (): PartieOffre => ({ civilite: "M.", prenom: "", nom: "", 
 function defaultOffre(): OffreAchat {
   return {
     numero: `OA-${new Date().getFullYear()}-`,
-    date: today(), lieu: "Fort-de-France", redacteur: "",
+    date: today(), lieu: "", redacteur: "",
     acquereurs: [newAcquereur()],
-    typeBien: "Appartement", adresseBien: "", commune: "", codePostal: "97200",
+    typeBien: "Appartement", adresseBien: "", commune: "", codePostal: "",
     descriptionBien: "", mandatRef: "", nomVendeur: "",
     prixOffert: 0,
     typeFinancement: "Prêt bancaire", montantPret: 0, apportPersonnel: 0,
@@ -153,12 +155,16 @@ function MandatForm({ f, setF }: { f: MandatVenteFull; setF: (v: MandatVenteFull
         ...f,
         mandants: [{ ...newMandant(), nom: mandat.mandant.toUpperCase(), tel: mandat.tel || "", email: mandat.email || "" }],
         honorairesPct: mandat.honoraires || 6,
+        typeMandat: mandat.type === "Exclusif" ? "Exclusif" : mandat.type === "Simple" ? "Simple" : "Semi-exclusif",
         dateDebut: mandat.dateDebut || today(),
+        numero: mandat.ref ? `MV-${mandat.ref}` : f.numero,
         prixFAI: bien?.prix || 0,
         adresseBien: bien?.adresse || "",
         commune: bien?.commune || "",
+        lieu: bien?.commune || "",
         typeBien: bien?.type || "Appartement",
         surfaceTotale: bien?.surface || 0,
+        surfaceCarrez: bien?.surface || 0,
         descriptionBien: bien?.desc || "",
       });
     }
@@ -531,14 +537,25 @@ function CompromisForm({ f, setF }: { f: CompromisVente; setF: (v: CompromisVent
   const prefillFromCompromis = (compId: string) => {
     const comp = data.compromis.find(c => c.id === compId);
     if (!comp) return;
+    const bien = data.biens.find(b => b.ref === comp.bienRef || b.id === comp.bienRef);
     setF({
       ...f,
       prixFAI: comp.prixVente || 0,
-      honorairesTTC: comp.honoraires && comp.prixVente ? Math.round(comp.prixVente * comp.honoraires / 100) : 0,
+      honorairesTTC: commissionMontant(comp),
       mandatRef: comp.ref || "",
       notaire: comp.notaire || "",
+      lieu: bien?.commune || "",
       vendeurs: [{ ...newPartie(), nom: comp.vendeur?.toUpperCase() || "" }],
       acquereurs: [{ ...newPartie(), nom: comp.acheteur?.toUpperCase() || "" }],
+      adresseBien: bien?.adresse || "",
+      commune: bien?.commune || "",
+      typeBien: bien?.type || f.typeBien,
+      surfaceCarrez: bien?.surface || 0,
+      surfaceTotale: bien?.surface || 0,
+      descriptionSurfaces: bien?.desc || "",
+      typeFinancement: (["Prêt bancaire", "Fonds propres", "Mixte"] as const).includes(comp.financement as CompromisVente["typeFinancement"])
+        ? comp.financement as CompromisVente["typeFinancement"]
+        : "Prêt bancaire",
     });
   };
 
@@ -731,9 +748,11 @@ function OffreForm({ f, setF }: { f: OffreAchat; setF: (v: OffreAchat) => void }
         nomVendeur: mandat.mandant,
         adresseBien: bien?.adresse || "",
         commune: bien?.commune || "",
+        lieu: bien?.commune || "",
         typeBien: bien?.type || "Appartement",
         prixOffert: bien?.prix || 0,
         descriptionBien: bien?.desc || "",
+        notaire: "",
       });
     }
   };
@@ -908,10 +927,13 @@ const DOC_LIST: { id: DocType; label: string; icon: string; sub: string; navigat
 ];
 
 export function RedacteurView() {
+  const user = useSessionStore((s) => s.user);
+  const agentFormalName = agentFormal(user?.id ?? "dir");
+
   const [docType, setDocType] = useState<DocType>("mandat");
-  const [mandat, setMandat] = useState<MandatVenteFull>(defaultMandat);
-  const [compromis, setCompromis] = useState<CompromisVente>(defaultCompromis);
-  const [offre, setOffre] = useState<OffreAchat>(defaultOffre);
+  const [mandat, setMandat] = useState<MandatVenteFull>(() => ({ ...defaultMandat(), redacteur: agentFormal(user?.id ?? "dir") }));
+  const [compromis, setCompromis] = useState<CompromisVente>(() => ({ ...defaultCompromis(), redacteur: agentFormal(user?.id ?? "dir") }));
+  const [offre, setOffre] = useState<OffreAchat>(() => ({ ...defaultOffre(), redacteur: agentFormal(user?.id ?? "dir") }));
 
   const { prefillRedacteur, setPrefillRedacteur, setView } = useUiStore();
   const { data } = useAgencyData();
@@ -943,17 +965,25 @@ export function RedacteurView() {
     } else if (dt === "compromis") {
       const comp = data.compromis.find(x => x.id === sourceId);
       if (comp) {
+        const bien = data.biens.find(b => b.ref === comp.bienRef || b.id === comp.bienRef);
         setCompromis(prev => ({
           ...prev,
           prixFAI: comp.prixVente || 0,
           honorairesTTC: commissionMontant(comp),
           mandatRef: comp.ref || "",
           notaire: comp.notaire || "",
+          lieu: bien?.commune || "",
           typeFinancement: (["Prêt bancaire", "Fonds propres", "Mixte"] as const).includes(comp.financement as CompromisVente["typeFinancement"])
             ? comp.financement as CompromisVente["typeFinancement"]
             : "Prêt bancaire",
           vendeurs: [{ ...newPartie(), nom: comp.vendeur?.toUpperCase() || "" }],
           acquereurs: [{ ...newPartie(), nom: comp.acheteur?.toUpperCase() || "" }],
+          adresseBien: bien?.adresse || "",
+          commune: bien?.commune || "",
+          typeBien: bien?.type || prev.typeBien,
+          surfaceCarrez: bien?.surface || 0,
+          surfaceTotale: bien?.surface || 0,
+          descriptionSurfaces: bien?.desc || "",
         }));
       }
     }
@@ -962,9 +992,9 @@ export function RedacteurView() {
   }, [prefillRedacteur]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetDoc = () => {
-    if (docType === "mandat") setMandat(defaultMandat());
-    else if (docType === "compromis") setCompromis(defaultCompromis());
-    else if (docType === "offre") setOffre(defaultOffre());
+    if (docType === "mandat") setMandat({ ...defaultMandat(), redacteur: agentFormalName });
+    else if (docType === "compromis") setCompromis({ ...defaultCompromis(), redacteur: agentFormalName });
+    else if (docType === "offre") setOffre({ ...defaultOffre(), redacteur: agentFormalName });
   };
 
   const docTitle = docType === "mandat"    ? "📋 Mandat de vente"
