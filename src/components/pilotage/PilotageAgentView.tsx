@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { KpiCard, StatusPill } from "../shared/StatusPill";
 import { EmptyState } from "../ui/Modal";
-import { CheckCircle, Calendar, CheckCircle2, Circle, Target, Phone, Users, Home, FileText, Handshake, Key, TrendingUp } from "lucide-react";
+import { CheckCircle, Calendar, CheckCircle2, Circle, Target, Phone, Users, Home, FileText, Handshake, Key, TrendingUp, Building2 } from "lucide-react";
 import { daysDiff, fdate } from "../../lib/format";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useSessionStore } from "../../store/session.store";
@@ -173,6 +173,123 @@ function ObjectifsPanel({ userId, data, activites, rdvList }: {
   );
 }
 
+// ─── Panel Agence (sans montants) ────────────────────────────────────────────
+const ETAPES_PIPELINE = ["Prospect", "Visite", "Offre", "Compromis", "Acte signé"] as const;
+const AGENTS_COMMERCIAUX = [
+  { id: "steeve", name: "Steeve" },
+  { id: "noham",  name: "Noham"  },
+];
+
+function AgencePanel({ data }: { data: ReturnType<typeof useAgencyData>["data"] }) {
+  const now = new Date();
+  const moisKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const yearKey  = String(now.getFullYear());
+
+  // Compteurs agence (aucun montant)
+  const mandatsActifs   = data.mandats.filter((m) => m.statut === "Actif").length;
+  const compromisEnCours = data.compromis.filter((c) => !c.dateActeReel).length;
+  const actesMois       = data.compromis.filter((c) => c.dateActeReel?.startsWith(moisKey)).length;
+  const actesAnnee      = data.compromis.filter((c) => c.dateActeReel?.startsWith(yearKey)).length;
+
+  // Pipeline agence par étape
+  const byEtape = ETAPES_PIPELINE.map((e) => ({
+    etape: e,
+    count: data.clients.filter((c) => c.statut === e).length,
+  }));
+  const maxPipeline = Math.max(...byEtape.map((x) => x.count), 1);
+
+  // Taux de conversion (%)
+  const totalClients   = data.clients.length;
+  const enCompromisOuPlus = data.clients.filter((c) => ["Compromis", "Acte signé", "Acte"].includes(c.statut)).length;
+  const enActe         = data.clients.filter((c) => ["Acte signé", "Acte"].includes(c.statut)).length;
+  const txMC = totalClients   > 0 ? Math.round((enCompromisOuPlus / totalClients)   * 100) : 0;
+  const txCA = enCompromisOuPlus > 0 ? Math.round((enActe / enCompromisOuPlus) * 100) : 0;
+
+  // Stats par commercial (compteurs uniquement)
+  const agentStats = AGENTS_COMMERCIAUX.map((a) => ({
+    ...a,
+    clients:   data.clients.filter((c)   => c.agentId === a.id).length,
+    mandats:   data.mandats.filter((m)   => m.agentId === a.id).length,
+    compromis: data.compromis.filter((c) => c.agentId === a.id && !c.dateActeReel).length,
+    actes:     data.compromis.filter((c) => c.agentId === a.id && !!c.dateActeReel).length,
+  }));
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* KPIs agence */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiCard label="Mandats actifs"    value={String(mandatsActifs)}    tone="primary" />
+        <KpiCard label="Compromis en cours" value={String(compromisEnCours)} tone="amber"   />
+        <KpiCard label="Actes ce mois"     value={String(actesMois)}        tone="emerald" />
+        <KpiCard label={`Actes ${yearKey}`} value={String(actesAnnee)}      tone="neutral" />
+      </div>
+
+      {/* Pipeline agence */}
+      <div className="card p-4">
+        <h2 className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5">
+          <TrendingUp size={13} /> Pipeline agence
+        </h2>
+        <div className="flex flex-col gap-2.5">
+          {byEtape.map(({ etape, count }) => (
+            <div key={etape} className="flex items-center gap-2">
+              <span className="w-[90px] shrink-0 text-[12px] text-ink-sub">{etape}</span>
+              <div className="flex-1 h-2 rounded-full bg-line overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-500"
+                  style={{ width: `${(count / maxPipeline) * 100}%` }}
+                />
+              </div>
+              <span className="w-6 text-right text-[12px] font-semibold text-ink">{count}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex gap-4 border-t border-line pt-3">
+          <div className="text-center">
+            <div className="text-[18px] font-bold text-primary">{txMC}%</div>
+            <div className="text-[11px] text-ink-muted">Contact → Compromis</div>
+          </div>
+          <div className="w-px bg-line" />
+          <div className="text-center">
+            <div className="text-[18px] font-bold text-emerald">{txCA}%</div>
+            <div className="text-[11px] text-ink-muted">Compromis → Acte</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats par commercial */}
+      <div className="card p-4">
+        <h2 className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5">
+          <Users size={13} /> Performance commerciale
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {agentStats.map((a) => (
+            <div key={a.id} className="rounded-lg border border-line bg-bg p-3 flex flex-col gap-2">
+              <div className="text-[13px] font-bold text-ink">{a.name}</div>
+              <div className="grid grid-cols-2 gap-y-1.5 gap-x-3">
+                {[
+                  { label: "Clients actifs",  val: a.clients   },
+                  { label: "Mandats",         val: a.mandats   },
+                  { label: "Compromis",       val: a.compromis },
+                  { label: "Actes signés",    val: a.actes     },
+                ].map(({ label, val }) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <span className="text-[11px] text-ink-muted">{label}</span>
+                    <span className="text-[13px] font-bold text-ink">{val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-xl bg-bg border border-line px-4 py-3 text-[12px] text-ink-muted">
+        Les montants et commissions sont réservés à la direction.
+      </div>
+    </div>
+  );
+}
+
 export function PilotageAgentView() {
   const { data } = useAgencyData();
   const user = useSessionStore((s) => s.user);
@@ -180,7 +297,7 @@ export function PilotageAgentView() {
   const { data: rdvList } = useRdv();
   const { data: taches } = useTaches();
   const { data: activites } = useActivites(undefined);
-  const [tab, setTab] = useState<"dashboard" | "objectifs">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "objectifs" | "agence">("dashboard");
   if (!user) return null;
 
   const mesClients = data.clients.filter((c) => c.agentId === user.id);
@@ -217,6 +334,12 @@ export function PilotageAgentView() {
           >
             <Target size={13} /> Objectifs
           </button>
+          <button
+            onClick={() => setTab("agence")}
+            className={`px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 ${tab === "agence" ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"}`}
+          >
+            <Building2 size={13} /> Agence
+          </button>
         </div>
       </div>
 
@@ -224,6 +347,9 @@ export function PilotageAgentView() {
       {tab === "objectifs" && (
         <ObjectifsPanel userId={user.id} data={data} activites={activites} rdvList={rdvList} />
       )}
+
+      {/* ── Onglet Agence ── */}
+      {tab === "agence" && <AgencePanel data={data} />}
 
       {/* ── Onglet Dashboard ── */}
       {tab === "dashboard" && <>

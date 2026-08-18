@@ -62,7 +62,6 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "group", label: "Terrain" },
   { kind: "item", id: "biens",        label: "Biens & Mandats", Icon: Building2 },
   { kind: "item", id: "valeur_venale",label: "Estimations",     Icon: FileSearch },
-  { kind: "item", id: "estimation",   label: "Expertises",      Icon: Award },
   { kind: "item", id: "compte_rendu", label: "Comptes rendus",  Icon: ClipboardList },
   { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
   { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },

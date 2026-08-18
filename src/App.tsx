@@ -29,7 +29,7 @@ import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
 /** Vues réservées au directeur — un agent est redirigé vers son tableau de bord. */
-const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance"];
+const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance", "estimation"];
 
 function CurrentView(): ReactElement {
   const view = useUiStore((s) => s.activeView);
