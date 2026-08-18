@@ -28,7 +28,7 @@ export type Mandant = z.infer<typeof mandantSchema>;
 
 export const mandatVenteFullSchema = z.object({
   // Numéro et date
-  numero: z.string().min(1, "Numéro requis"),
+  numero: z.string().default(""),
   date: isoDate.refine(d => d !== "", "Date requise"),
   lieu: z.string().default("Fort-de-France"),
 
