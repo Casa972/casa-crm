@@ -74,8 +74,8 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
 
   { kind: "group", label: "Outils" },
-  { kind: "item", id: "calculatrice",label: "Calculatrice",   Icon: Calculator },
   { kind: "item", id: "notes",       label: "Notes",          Icon: StickyNote },
+  { kind: "item", id: "calculatrice",label: "Calculatrice",   Icon: Calculator },
 
   { kind: "group", label: "Ressources" },
   { kind: "item", id: "import", label: "Formation", Icon: GraduationCap, href: FORMATION_URL },
