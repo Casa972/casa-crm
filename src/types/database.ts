@@ -66,6 +66,10 @@ export interface CompromisRow {
   cond_susp_expire: string | null;
   notes: string | null;
   agent_id: string | null;
+  agent_entree: string | null;
+  agent_sortie: string | null;
+  pct_entree: number | null;
+  pct_sortie: number | null;
   created_at?: string;
 }
 

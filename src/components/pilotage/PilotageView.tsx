@@ -379,6 +379,30 @@ export function PilotageView() {
                       )}
                     </div>
 
+                    {(c.agentEntree || c.agentSortie) && (
+                      <div className="mb-3 rounded border border-line bg-surface px-3 py-2">
+                        <div className="mb-1 text-[10.5px] font-bold uppercase tracking-wide text-ink-muted">Répartition commission</div>
+                        <div className="flex flex-wrap gap-x-6 gap-y-0.5 text-[12px]">
+                          {c.agentEntree && (
+                            <div>
+                              <span className="text-ink-muted">Entrée : </span>
+                              <span className="font-semibold text-ink">{c.agentEntree}</span>
+                              <span className="text-ink-muted"> · {c.pctEntree ?? 50}% → </span>
+                              <span className="font-semibold text-primary">{eur(Math.round(montant * (c.pctEntree ?? 50) / 100))}</span>
+                            </div>
+                          )}
+                          {c.agentSortie && (
+                            <div>
+                              <span className="text-ink-muted">Sortie : </span>
+                              <span className="font-semibold text-ink">{c.agentSortie}</span>
+                              <span className="text-ink-muted"> · {c.pctSortie ?? 50}% → </span>
+                              <span className="font-semibold text-primary">{eur(Math.round(montant * (c.pctSortie ?? 50) / 100))}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {c.notes && (
                       <p className="mb-3 rounded border border-line bg-surface px-3 py-2 text-[12.5px] italic text-ink-sub">
                         "{c.notes}"

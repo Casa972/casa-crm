@@ -29,6 +29,10 @@ export const compromisFormSchema = z
     sruExpire: isoDate.default(""),
     condSuspExpire: isoDate.default(""),
     notes: z.string().default(""),
+    agentEntree: z.string().default(""),
+    agentSortie: z.string().default(""),
+    pctEntree: z.coerce.number().int().min(0).max(100).default(50),
+    pctSortie: z.coerce.number().int().min(0).max(100).default(50),
   })
   .refine(
     (c) => c.typeHonoraires !== "pct" || c.honoraires > 0,
@@ -64,6 +68,10 @@ export const compromisSchema = z.object({
   condSuspExpire: z.string(),
   notes: z.string(),
   agentId: z.string().optional(),
+  agentEntree: z.string().optional(),
+  agentSortie: z.string().optional(),
+  pctEntree: z.number().optional(),
+  pctSortie: z.number().optional(),
 });
 export type Compromis = z.infer<typeof compromisSchema>;
 

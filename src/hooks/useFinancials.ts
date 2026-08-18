@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { commissionMontant } from "../schemas/compromis.schema";
 import { daysDiff } from "../lib/format";
+import { AGENTS_CONFIG } from "../config/agents";
 import type { AgencyData, Compromis, Mandat } from "../types/domain";
 
 export interface AgentPerf {
@@ -223,10 +224,19 @@ export function useFinancials(data: AgencyData): Financials {
       if (a && !["Acte", "Perdu"].includes(c.statut)) a.clients += 1;
     }
     for (const cp of compromis) {
-      const a = perf[cp.agentId ?? "dir"];
-      if (a && cp.statut !== "Annulé") {
-        a.compromis += 1;
-        a.caVentes += commissionMontant(cp);
+      if (cp.statut === "Annulé") continue;
+      const montant = commissionMontant(cp);
+
+      if (cp.agentEntree || cp.agentSortie) {
+        const pctE = cp.pctEntree ?? 50;
+        const pctS = cp.pctSortie ?? 50;
+        const idE = AGENTS_CONFIG.find(a => a.name === cp.agentEntree)?.id;
+        const idS = AGENTS_CONFIG.find(a => a.name === cp.agentSortie)?.id;
+        if (idE && perf[idE]) { perf[idE].compromis += 1; perf[idE].caVentes += Math.round(montant * pctE / 100); }
+        if (idS && perf[idS] && idS !== idE) { perf[idS].compromis += 1; perf[idS].caVentes += Math.round(montant * pctS / 100); }
+      } else {
+        const a = perf[cp.agentId ?? "dir"];
+        if (a) { a.compromis += 1; a.caVentes += montant; }
       }
     }
 

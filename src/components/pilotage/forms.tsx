@@ -8,6 +8,7 @@ import {
   StatutCompromis, StatutCommission, TypeHonoraires,
   TypeClient, EtapePipeline, TypeRevenu, StatutRevenu, COMMUNES_MARTINIQUE,
 } from "../../schemas/enums";
+import { AGENTS_NAMES } from "../../config/agents";
 import { eur } from "../../lib/format";
 import type { Compromis, Client, Revenu, Bien, Mandat } from "../../types/domain";
 
@@ -28,7 +29,8 @@ type CF =
   | "ref" | "acheteur" | "vendeur" | "bienRef" | "bienDesc" | "prixVente"
   | "typeHonoraires" | "honoraires" | "statut" | "commissionStatut"
   | "notaire" | "financement" | "dateOffre" | "dateCompromis" | "dateActePrev"
-  | "dateActeReel" | "sruExpire" | "condSuspExpire" | "notes";
+  | "dateActeReel" | "sruExpire" | "condSuspExpire" | "notes"
+  | "agentEntree" | "agentSortie" | "pctEntree" | "pctSortie";
 
 export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = [], clients = [] }: {
   initial?: Compromis; onSave: (c: Compromis) => void; onClose: () => void;
@@ -44,6 +46,8 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
     dateCompromis: initial?.dateCompromis ?? "", dateActePrev: initial?.dateActePrev ?? "",
     dateActeReel: initial?.dateActeReel ?? "", sruExpire: initial?.sruExpire ?? "",
     condSuspExpire: initial?.condSuspExpire ?? "", notes: initial?.notes ?? "",
+    agentEntree: initial?.agentEntree ?? "", agentSortie: initial?.agentSortie ?? "",
+    pctEntree: String(initial?.pctEntree ?? 50), pctSortie: String(initial?.pctSortie ?? 50),
   }));
   const [errors, setErrors] = useState<Errors>({});
   const s = (k: CF) => (v: string) => setF((p) => ({ ...p, [k]: v }));
@@ -140,10 +144,49 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
         <Field label="Fin cond. suspensives"><Input type="date" value={f.condSuspExpire} onChange={(e) => s("condSuspExpire")(e.target.value)} /></Field>
       </Grid2>
       <Field label="Notes"><Textarea rows={2} value={f.notes} onChange={(e) => s("notes")(e.target.value)} /></Field>
+
+      <div className="mb-2 mt-3 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Répartition commission</div>
+      <Grid2>
+        <Field label="Agent Entrée">
+          <Select value={f.agentEntree} onChange={s("agentEntree")} options={AGENTS_NAMES} placeholder="— Non défini —" />
+        </Field>
+        <Field label="% Entrée">
+          <Input type="number" min="0" max="100" value={f.pctEntree} onChange={(e) => {
+            const v = Math.min(100, Math.max(0, Number(e.target.value)));
+            setF((p) => ({ ...p, pctEntree: String(v), pctSortie: String(100 - v) }));
+          }} />
+        </Field>
+        <Field label="Agent Sortie">
+          <Select value={f.agentSortie} onChange={s("agentSortie")} options={AGENTS_NAMES} placeholder="— Non défini —" />
+        </Field>
+        <Field label="% Sortie">
+          <Input type="number" min="0" max="100" value={f.pctSortie} onChange={(e) => {
+            const v = Math.min(100, Math.max(0, Number(e.target.value)));
+            setF((p) => ({ ...p, pctSortie: String(v), pctEntree: String(100 - v) }));
+          }} />
+        </Field>
+      </Grid2>
+
       <div className="mb-1 flex items-center justify-between rounded bg-primary-soft px-3.5 py-2.5">
         <span className="text-[12.5px] font-semibold text-primary">Commission estimée</span>
         <span className="font-heading text-base font-bold text-primary">{eur(preview)}</span>
       </div>
+      {(f.agentEntree || f.agentSortie) && preview > 0 && (
+        <div className="mb-1 rounded border border-line bg-bg px-3 py-2 text-[12px]">
+          {f.agentEntree && (
+            <div className="flex justify-between py-0.5">
+              <span className="text-ink-sub">{f.agentEntree} <span className="text-ink-muted">(Entrée · {f.pctEntree}%)</span></span>
+              <span className="font-semibold text-ink">{eur(Math.round(preview * Number(f.pctEntree) / 100))}</span>
+            </div>
+          )}
+          {f.agentSortie && (
+            <div className="flex justify-between py-0.5">
+              <span className="text-ink-sub">{f.agentSortie} <span className="text-ink-muted">(Sortie · {f.pctSortie}%)</span></span>
+              <span className="font-semibold text-ink">{eur(Math.round(preview * Number(f.pctSortie) / 100))}</span>
+            </div>
+          )}
+        </div>
+      )}
       <FormActions onSave={submit} onClose={onClose} />
     </>
   );

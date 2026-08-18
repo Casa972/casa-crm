@@ -120,6 +120,10 @@ export const compromisFromRow = (r: CompromisRow): Compromis => ({
   condSuspExpire: s(r.cond_susp_expire),
   notes: s(r.notes),
   agentId: r.agent_id ?? undefined,
+  agentEntree: r.agent_entree ?? undefined,
+  agentSortie: r.agent_sortie ?? undefined,
+  pctEntree: r.pct_entree ?? undefined,
+  pctSortie: r.pct_sortie ?? undefined,
 });
 
 export const compromisToRow = (c: Compromis, agentId?: string): Partial<CompromisRow> => ({
@@ -143,6 +147,10 @@ export const compromisToRow = (c: Compromis, agentId?: string): Partial<Compromi
   sru_expire: nn(c.sruExpire),
   cond_susp_expire: nn(c.condSuspExpire),
   notes: nn(c.notes),
+  agent_entree: c.agentEntree ?? null,
+  agent_sortie: c.agentSortie ?? null,
+  pct_entree: c.pctEntree ?? null,
+  pct_sortie: c.pctSortie ?? null,
   ...(agentId ? { agent_id: agentId } : c.agentId ? { agent_id: c.agentId } : {}),
 });
 
