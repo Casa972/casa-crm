@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText, User, Sparkles } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText, User, Sparkles, TrendingDown } from "lucide-react";
 import { NouveauDossierWizard } from "./NouveauDossierWizard";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
@@ -43,6 +43,11 @@ export function BiensView() {
   const mandatsExpSoon = data.mandats.filter((m) => {
     const d = daysDiff(m.dateFin);
     return d !== null && d >= 0 && d <= 30 && m.statut === "Actif";
+  });
+
+  const mandatsBaissePrix = data.mandats.filter((m) => {
+    const d = daysDiff(m.dateDebut);
+    return m.statut === "Actif" && d !== null && d <= -90;
   });
 
   const kpis = [
@@ -94,6 +99,28 @@ export function BiensView() {
           <span className="text-[13px] font-medium text-amber">
             {mandatsExpSoon.length} mandat(s) expirent sous 30 jours — pensez au renouvellement.
           </span>
+        </div>
+      )}
+
+      {mandatsBaissePrix.length > 0 && (
+        <div className="card mb-4 border-l-4 border-l-orange-500 bg-orange-50 p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingDown size={15} className="shrink-0 text-orange-600" />
+            <span className="text-[13px] font-semibold text-orange-700">
+              {mandatsBaissePrix.length} bien(s) en diffusion depuis plus de 3 mois — baisse de prix recommandée
+            </span>
+          </div>
+          <ul className="flex flex-col gap-1 pl-5">
+            {mandatsBaissePrix.map((m) => {
+              const jours = Math.abs(daysDiff(m.dateDebut)!);
+              return (
+                <li key={m.id} className="text-[12px] text-orange-700 list-disc">
+                  <span className="font-semibold">{m.mandant}</span> — {jours} jours de diffusion
+                  {m.ref ? ` · ${m.ref}` : ""}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 

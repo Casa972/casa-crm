@@ -72,6 +72,18 @@ function AlertesSection({ agentId, isDir }: { agentId?: string; isDir: boolean }
     }
   }
 
+  // Mandats actifs depuis 90+ jours sans vente → baisse de prix
+  const mandatsBaissePrix = data.mandats.filter((m) => {
+    if (m.statut !== "Actif" || !m.dateDebut) return false;
+    if (!isDir && m.agentId && m.agentId !== agentId) return false;
+    const d = daysDiff(m.dateDebut);
+    return d !== null && d <= -90;
+  });
+  for (const m of mandatsBaissePrix) {
+    const jours = Math.abs(daysDiff(m.dateDebut)!);
+    alertes.push(`Baisse de prix recommandée — ${m.mandant} (en diffusion depuis ${jours} jours)`);
+  }
+
   if (alertes.length === 0) return null;
 
   return (
