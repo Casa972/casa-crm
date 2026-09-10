@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import type { ValeurLocative } from "../schemas/valeurLocative.schema";
-import { loyerAnnuel } from "../schemas/valeurLocative.schema";
+import { loyerAnnuel, syntheseRevenus } from "../schemas/valeurLocative.schema";
 import logo from "../assets/logo.png";
 
 const NAVY = "#1A3A52";
@@ -182,7 +182,7 @@ export function ValeurLocativePDF({ e }: { e: ValeurLocative }) {
         <View style={s.box}>
           <Text style={s.boxLbl}>VALEUR LOCATIVE MENSUELLE ESTIMÉE</Text>
           <Text style={s.boxNum}>{fmtEur(e.loyerMensuelHc)} / mois HC</Text>
-          <Text style={s.boxSub}>soit {fmtEur(annuel)} de revenus bruts annuels</Text>
+          <Text style={s.boxSub}>{syntheseRevenus(e.regimeLocatif, fmtEur(annuel))}</Text>
           {!!e.syntheseLoyer && <Text style={s.boxFine}>{e.syntheseLoyer}</Text>}
         </View>
         {!!e.vigilance && (<><Text style={s.sub}>Points de vigilance et décote appliquée</Text>{e.vigilance.split("\n").filter(Boolean).map((p, i) => (<Text key={i} style={s.body}>{p}</Text>))}</>)}
