@@ -1,7 +1,7 @@
 import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from "docx";
 import type { Bail } from "../schemas/bail.schema";
 import { articlesBail, loyerCc, titreBail, sousTitreLegal } from "../schemas/bail.schema";
-import { E, fd, PT, bold, normal, run, title, subtitle, centered, articleHeading, bodyText, spacer, divider, dataRow, GREY, LINE, TB, noBorders } from "./docxHelpers";
+import { E, fd, PT, bold, run, title, subtitle, centered, articleHeading, bodyText, spacer, divider, dataRow, GREY, LINE, TB, noBorders } from "./docxHelpers";
 
 function nom(p: { civilite: string; prenom: string; nom: string }) {
   return [p.civilite, p.prenom, p.nom].filter(Boolean).join(" ") || "—";
