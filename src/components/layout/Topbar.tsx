@@ -20,8 +20,9 @@ const PAGE_LABELS: Record<ViewId, string> = {
   calculatrice: "Calculatrice",
   estimation: "Expertises immobilières",
   valeur_venale: "Estimations de valeur vénale",
+  valeur_locative: "Estimations de valeur locative",
   compte_rendu: "Comptes rendus de visite",
-  matching: "Matching clients ↔ biens",
+  matching: "Matching clients \u2194 biens",
   documents: "Bibliothèque de documents",
   registre: "Registre des mandats",
   mes_dossiers: "Mes dossiers",
@@ -35,7 +36,6 @@ export function Topbar({ alertCount: _alertCount = 0 }: { alertCount?: number })
   const user = useSessionStore((s) => s.user);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // Global Ctrl+K
   useState(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -63,7 +63,6 @@ export function Topbar({ alertCount: _alertCount = 0 }: { alertCount?: number })
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {/* Recherche globale */}
           <button
             onClick={() => setSearchOpen(true)}
             className="flex items-center gap-2 rounded border border-line bg-bg px-2.5 py-1.5 text-[12.5px] text-ink-muted hover:border-primary/40 hover:text-ink transition-colors"
@@ -71,12 +70,9 @@ export function Topbar({ alertCount: _alertCount = 0 }: { alertCount?: number })
           >
             <Search size={13} />
             <span className="hidden sm:inline">Rechercher</span>
-            <kbd className="hidden rounded border border-line px-1 text-[10px] sm:inline">⌘K</kbd>
+            <kbd className="hidden rounded border border-line px-1 text-[10px] sm:inline">\u2318K</kbd>
           </button>
-
-          {/* Cloche notifications */}
           <NotificationsBell />
-
           {user && (
             <span className="hidden text-[12.5px] text-ink-muted sm:inline">
               Bonjour,&nbsp;<b className="text-ink">{user.name}</b>
@@ -84,7 +80,6 @@ export function Topbar({ alertCount: _alertCount = 0 }: { alertCount?: number })
           )}
         </div>
       </header>
-
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
     </>
   );

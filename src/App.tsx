@@ -17,6 +17,7 @@ import { FinanceView } from "./components/finance/FinanceView";
 import { RedacteurView } from "./components/redacteur/RedacteurView";
 import { EstimationView } from "./components/estimation/EstimationView";
 import { ValeurVenaleView } from "./components/estimation/ValeurVenaleView";
+import { ValeurLocativeView } from "./components/estimation/ValeurLocativeView";
 import { CompteRenduView } from "./components/compteRendu/CompteRenduView";
 import { CalculatriceView } from "./components/tools/CalculatriceView";
 import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
@@ -50,6 +51,7 @@ function CurrentView(): ReactElement {
     case "finance": return <FinanceView />;
     case "estimation": return <EstimationView />;
     case "valeur_venale": return <ValeurVenaleView />;
+    case "valeur_locative": return <ValeurLocativeView />;
     case "compte_rendu": return <CompteRenduView />;
     case "agenda": return <AgendaView />;
     case "taches": return <TachesView />;
@@ -71,7 +73,6 @@ function useAlertCount(): number {
   return relances + fin.alertesDelais.length;
 }
 
-/** Raccourcis clavier globaux */
 function useKeyboardShortcuts() {
   const setView = useUiStore((s) => s.setView);
   const isDir = useSessionStore((s) => s.isDirecteur());
