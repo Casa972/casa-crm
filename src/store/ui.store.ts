@@ -3,7 +3,7 @@ import { create } from "zustand";
 export type ViewId =
   | "today" | "clients" | "biens" | "redacteur" | "documents"
   | "pilotage" | "revenus" | "reporting" | "finance" | "estimation"
-  | "valeur_venale"
+  | "valeur_venale" | "valeur_locative"
   | "pilotage_agent" | "agenda" | "taches" | "calculatrice" | "compte_rendu"
   | "matching" | "import" | "registre" | "mes_dossiers" | "pipeline_clients" | "notes";
 
