@@ -18,6 +18,7 @@ import { RedacteurView } from "./components/redacteur/RedacteurView";
 import { EstimationView } from "./components/estimation/EstimationView";
 import { ValeurVenaleView } from "./components/estimation/ValeurVenaleView";
 import { ValeurLocativeView } from "./components/estimation/ValeurLocativeView";
+import { BailView } from "./components/bail/BailView";
 import { CompteRenduView } from "./components/compteRendu/CompteRenduView";
 import { CalculatriceView } from "./components/tools/CalculatriceView";
 import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
@@ -30,7 +31,6 @@ import { daysDiff } from "./lib/format";
 import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
-/** Vues réservées au directeur — un agent est redirigé vers son tableau de bord. */
 const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance", "estimation"];
 
 function CurrentView(): ReactElement {
@@ -52,6 +52,7 @@ function CurrentView(): ReactElement {
     case "estimation": return <EstimationView />;
     case "valeur_venale": return <ValeurVenaleView />;
     case "valeur_locative": return <ValeurLocativeView />;
+    case "bail": return <BailView />;
     case "compte_rendu": return <CompteRenduView />;
     case "agenda": return <AgendaView />;
     case "taches": return <TachesView />;
