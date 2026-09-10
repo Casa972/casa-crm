@@ -2,7 +2,7 @@ import {
   Sun, Users, Building2, FileText, Target, TrendingUp, ClipboardList,
   BarChart2, Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
   GraduationCap, ExternalLink, Landmark, FileSearch, Award, BookOpen, Briefcase,
-  Columns, Clipboard,
+  Columns, Clipboard, Home,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
@@ -29,6 +29,7 @@ const NAV_DIR: NavEntry[] = [
   { kind: "group", label: "Terrain" },
   { kind: "item", id: "biens",        label: "Biens & Mandats", Icon: Building2 },
   { kind: "item", id: "valeur_venale",label: "Estimations",     Icon: FileSearch },
+  { kind: "item", id: "valeur_locative", label: "Valeur locative", Icon: Home },
   { kind: "item", id: "estimation",   label: "Expertises",      Icon: Award },
   { kind: "item", id: "compte_rendu", label: "Comptes rendus",  Icon: ClipboardList },
   { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
@@ -65,6 +66,7 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "group", label: "Terrain" },
   { kind: "item", id: "biens",        label: "Biens & Mandats", Icon: Building2 },
   { kind: "item", id: "valeur_venale",label: "Estimations",     Icon: FileSearch },
+  { kind: "item", id: "valeur_locative", label: "Valeur locative", Icon: Home },
   { kind: "item", id: "compte_rendu", label: "Comptes rendus",  Icon: ClipboardList },
   { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
   { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },
@@ -81,7 +83,6 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "item", id: "import", label: "Formation", Icon: GraduationCap, href: FORMATION_URL },
 ];
 
-/** Badge rouge sur "Registre mandats" si des mandats expirent dans < 30j */
 function useMandatExpBadge(): number {
   const { data } = useAgencyData();
   return data.mandats.filter((m) => {
@@ -143,8 +144,6 @@ export function Sidebar() {
             }
 
             const { id, label, Icon, href } = entry;
-
-            // Badge mandats expirants sur "registre" (directeur)
             const showBadge = id === "registre" && mandatBadge > 0;
 
             if (href) {
@@ -186,7 +185,6 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Raccourcis clavier hint */}
         <div className="border-t border-line px-3 py-2">
           <div className="mb-1 text-[10px] text-ink-muted opacity-60">
             Alt+1–6 pour navigation rapide
