@@ -10,6 +10,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   clients: "Clients",
   biens: "Biens & Mandats",
   redacteur: "Rédacteur Juridique",
+  bail: "Rédaction de baux",
   pilotage: "Pilotage",
   revenus: "Revenus",
   reporting: "Reporting",
