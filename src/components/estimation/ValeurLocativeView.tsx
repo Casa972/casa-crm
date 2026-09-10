@@ -7,7 +7,10 @@ import { useSessionStore } from "../../store/session.store";
 import { COMMUNES_MARTINIQUE } from "../../schemas/enums";
 import { eur } from "../../lib/format";
 import type { LigneEquipement, LigneSurface, ValeurLocative } from "../../schemas/valeurLocative.schema";
-import { loyerAnnuel } from "../../schemas/valeurLocative.schema";
+import {
+  loyerAnnuel, REGIMES_LOCATIFS, analyseMarcheDefaut, estAnalyseParDefaut,
+  estMeuble, libelleLoyer, REFERENCES_AGENCE_DEFAUT, DISCLAIMER_DEFAUT,
+} from "../../schemas/valeurLocative.schema";
 
 const ValeurLocativePDFDownload = lazy(() => import("./ValeurLocativePDFDownload"));
 const KEY = "casa.valeur_locative.v1";
@@ -20,7 +23,6 @@ function loadAll(): ValeurLocative[] {
 }
 function persist(list: ValeurLocative[]) { localStorage.setItem(KEY, JSON.stringify(list)); }
 
-const REGIMES = ["Location longue durée meublée", "Location longue durée nue", "Location saisonnière", "Bail mobilité"] as const;
 function ligneS(nom = "", surface = 0, detail = ""): LigneSurface { return { id: uid(), nom, surface, detail }; }
 function ligneE(label = "", valeur = ""): LigneEquipement { return { id: uid(), label, valeur }; }
 
@@ -31,16 +33,16 @@ function nouveauDoc(agentId?: string): ValeurLocative {
     adresse: "", commune: "Saint-Esprit", codePostal: "97270", sectionCadastrale: "", parcelle: "",
     mandantNom: "", mandantVille: "", agenceNom: "Casa Caraïbes SARL", agenceMention: "Agence Immobilière — Martinique",
     dateDocument: today(), lieuSignature: "FORT-DE-FRANCE", dateSignature: today(),
-    referencesAgence: "La présente estimation est établie par Casa Caraïbes SARL, agence immobilière exerçant en Martinique, titulaire de la carte professionnelle n° CPI 97212024000000007 (mention Transaction sur immeubles et fonds de commerce), délivrée par la CCI Martinique. RCS Fort-de-France 928 647 981.\n\nFort d'une connaissance approfondie du marché locatif martiniquais, l'agence s'appuie sur son historique de mises en location dans le secteur, une veille active des annonces comparables et son réseau de gestionnaires et propriétaires bailleurs locaux.",
+    referencesAgence: REFERENCES_AGENCE_DEFAUT,
     superficieTerrain: 0, zonagePlu: "", natureBien: "", surfaceShon: 0, empriseSol: 0, descriptionBien: "",
     pieces: [ligneS("Séjour"), ligneS("Cuisine"), ligneS("Chambre 1"), ligneS("Salle de bain")],
     exterieurs: [ligneS("Terrasse"), ligneS("Piscine et plage")],
     noteSurfaces: "",
     equipements: [ligneE("Construction"), ligneE("Façades"), ligneE("Toiture"), ligneE("Menuiseries"), ligneE("Ameublement"), ligneE("Piscine"), ligneE("Vue"), ligneE("Terrain"), ligneE("Stationnement")],
     localisation: "", atouts: ["", "", ""],
-    analyseMarche: "L'estimation ci-dessous porte sur une location longue durée meublée (bail d'un an renouvelable, régi par la loi du 6 juillet 1989 et le décret n° 2015-981 du 31 juillet 2015 relatif à la liste des éléments d'un logement meublé). Elle s'appuie sur une analyse des références locatives actuelles recensées en priorité sur la commune puis sur les communes voisines.",
+    analyseMarche: analyseMarcheDefaut("Location longue durée meublée"),
     loyerMensuelHc: 0, syntheseLoyer: "", vigilance: "", mentionPrevisionnelle: "",
-    disclaimer: "Le présent document est établi sur la base des informations transmises et d'une analyse du marché locatif à la date de l'estimation. Il constitue une estimation et non une garantie de loyer. L'agence Casa Caraïbes SARL décline toute responsabilité quant aux conditions définitives de mise en location.",
+    disclaimer: DISCLAIMER_DEFAUT,
   };
 }
 
@@ -50,6 +52,21 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
   const [e, setE] = useState<ValeurLocative>(initial);
   const [step, setStep] = useState(1);
   const upd = useCallback(<K extends keyof ValeurLocative>(k: K, v: ValeurLocative[K]) => { setE((p) => ({ ...p, [k]: v })); }, []);
+  const setRegime = (regime: string) => {
+    setE((p) => {
+      let eqs = p.equipements;
+      const hasAmeublement = eqs.some((x) => /ameublement/i.test(x.label));
+      if (!estMeuble(regime)) {
+        eqs = eqs.filter((x) => !/ameublement/i.test(x.label) || x.valeur.trim());
+        if (!eqs.some((x) => /non meubl/i.test(x.label) || x.label === "Occupation")) {
+          eqs = [...eqs, ligneE("Occupation", "Logement proposé non meublé (location nue)")];
+        }
+      } else if (!hasAmeublement) {
+        eqs = [...eqs.filter((x) => x.label !== "Occupation" && !/non meubl/i.test(x.label)), ligneE("Ameublement", "")];
+      }
+      return { ...p, regimeLocatif: regime, analyseMarche: estAnalyseParDefaut(p.analyseMarche) ? analyseMarcheDefaut(regime) : p.analyseMarche, equipements: eqs };
+    });
+  };
   useEffect(() => { const t = setTimeout(() => onSave(e), 1500); return () => clearTimeout(t); }, [e, onSave]);
   const setPiece = (i: number, patch: Partial<LigneSurface>) => upd("pieces", e.pieces.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
   const setExt = (i: number, patch: Partial<LigneSurface>) => upd("exterieurs", e.exterieurs.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -72,7 +89,7 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
       {step === 1 && (<>
         <Grid2>
           <Field label="Titre du bien (couverture)"><Input value={e.titreBien} onChange={(ev) => upd("titreBien", ev.target.value)} placeholder="Bungalow neuf avec piscine privative" /></Field>
-          <Field label="Régime locatif"><Select value={e.regimeLocatif} onChange={(v) => upd("regimeLocatif", v)} options={REGIMES} /></Field>
+          <Field label="Régime locatif"><Select value={e.regimeLocatif} onChange={setRegime} options={REGIMES_LOCATIFS} /></Field>
         </Grid2>
         <Field label="Mention sous l'adresse"><Input value={e.mentionCouverture} onChange={(ev) => upd("mentionCouverture", ev.target.value)} /></Field>
         <Grid2>
@@ -145,7 +162,7 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
       {step === 3 && (<>
         <Field label="Analyse de marché (§5)"><Textarea rows={8} value={e.analyseMarche} onChange={(ev) => upd("analyseMarche", ev.target.value)} /></Field>
         <Grid2>
-          <Field label="Loyer mensuel estimé HC (€)"><Input type="number" value={e.loyerMensuelHc || ""} onChange={(ev) => upd("loyerMensuelHc", Number(ev.target.value))} /></Field>
+          <Field label={libelleLoyer(e.regimeLocatif)}><Input type="number" value={e.loyerMensuelHc || ""} onChange={(ev) => upd("loyerMensuelHc", Number(ev.target.value))} /></Field>
           <Field label="Revenus bruts annuels"><Input readOnly value={e.loyerMensuelHc ? eur(loyerAnnuel(e.loyerMensuelHc)) : "—"} /></Field>
         </Grid2>
         <Field label="Ligne sous le montant"><Input value={e.syntheseLoyer} onChange={(ev) => upd("syntheseLoyer", ev.target.value)} /></Field>
@@ -178,7 +195,7 @@ export function ValeurLocativeView() {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-semibold text-ink">Estimations de valeur locative</h1>
-          <p className="text-[13px] text-ink-muted">{list.length} document(s) — PDF au format Casa Caraïbes</p>
+          <p className="text-[13px] text-ink-muted">{list.length} document(s) — PDF et Word au format Casa Caraïbes</p>
         </div>
         <button className="btn-primary" onClick={() => setEditing(nouveauDoc(user?.id))}><Plus size={14} /> Nouvelle estimation locative</button>
       </div>
