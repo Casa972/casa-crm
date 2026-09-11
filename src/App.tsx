@@ -15,7 +15,7 @@ import { PilotageAgentView } from "./components/pilotage/PilotageAgentView";
 import { RevenusView } from "./components/revenus/RevenusView";
 import { ReportingView } from "./components/reporting/ReportingView";
 import { FinanceView } from "./components/finance/FinanceView";
-import { RedacteurView } from "./components/redacteur/RedacteurView";
+import { ActesHome } from "./components/redacteur/ActesHome";
 import { EstimationView } from "./components/estimation/EstimationView";
 import { ValeurVenaleView } from "./components/estimation/ValeurVenaleView";
 import { ValeurLocativeView } from "./components/estimation/ValeurLocativeView";
@@ -44,7 +44,7 @@ function CurrentView(): ReactElement {
     case "clients": return <ClientsView />;
     case "pipeline_clients": return <PipelineView />;
     case "biens": return <BiensView />;
-    case "redacteur": return <RedacteurView />;
+    case "redacteur": return <ActesHome />;
     case "pilotage": return <PilotageView />;
     case "pilotage_agent": return <PilotageAgentView />;
     case "revenus": return <RevenusView />;
