@@ -22,7 +22,8 @@ cp .env.example .env.local        # renseigner VITE_SUPABASE_ANON_KEY
 npm run dev                        # http://localhost:5173
 ```
 
-Comptes de démo (à migrer vers Supabase Auth en prod) : voir `src/components/auth/Login.tsx`.
+Comptes : plus de mots de passe dans le code. Créer Luc / Noham / Steeve dans
+Supabase → Authentication → Users, puis exécuter `supabase/migrations/012_profiles.sql`.
 
 ## Scripts
 
@@ -66,8 +67,12 @@ Tout le calcul est centralisé et mémoïsé dans `useFinancials`.
 Les **baux** et **valeurs locatives** ne vivent plus dans le navigateur.
 Ils sont stockés dans Supabase (`public.baux`, `public.valeurs_locatives`).
 
-1. Ouvrir le projet Supabase Casa Caraïbes
-2. SQL Editor → coller `supabase/migrations/011_docs_locaux.sql` → Run
-3. Recharger le CRM : les brouillons déjà tapés dans ce navigateur sont importés une fois
+## Auth agence (étape 2)
 
-Sans cette requête SQL, l'écran affichera un bandeau d'erreur au lieu d'une liste vide.
+1. Authentication → Providers → Email : **Confirm email OFF**
+2. Authentication → Users → Add user (auto-confirm) :
+   - luc@casacaraibes.com
+   - noham@casacaraibes.com
+   - steeve@casacaraibes.com
+3. SQL Editor → `supabase/migrations/012_profiles.sql` → Run
+4. Se connecter dans le CRM avec ces emails (nouveaux mots de passe)

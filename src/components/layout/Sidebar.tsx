@@ -8,6 +8,7 @@ import {
 import { cn } from "../../lib/cn";
 import { useUiStore, type ViewId } from "../../store/ui.store";
 import { useSessionStore } from "../../store/session.store";
+import { signOut } from "../../services/auth.service";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { daysDiff } from "../../lib/format";
 
@@ -204,7 +205,7 @@ export function Sidebar() {
             </div>
           </div>
           <button
-            onClick={() => setUser(null)}
+            onClick={() => { void signOut(); setUser(null); }}
             className="flex w-full items-center gap-2.5 rounded px-3 py-2 text-[13px] font-medium text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger"
           >
             <LogOut size={14} /> Déconnexion

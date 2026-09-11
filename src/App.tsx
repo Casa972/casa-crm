@@ -1,5 +1,6 @@
 import { useEffect, type ReactElement } from "react";
 import { useSessionStore } from "./store/session.store";
+import { useAuthBootstrap } from "./hooks/useAuthBootstrap";
 import { useUiStore, type ViewId } from "./store/ui.store";
 import { useAgencyData } from "./hooks/queries/useAgencyData";
 import { useFinancials } from "./hooks/useFinancials";
@@ -97,7 +98,9 @@ function useKeyboardShortcuts() {
 }
 
 export function App() {
+  useAuthBootstrap();
   const user = useSessionStore((s) => s.user);
+  const ready = useSessionStore((s) => s.ready);
   const { isLoading, isError } = useAgencyData();
   const alertCount = useAlertCount();
 
@@ -110,6 +113,7 @@ export function App() {
   useKeyboardShortcuts();
   useRealtimeSync();
 
+  if (!ready) return <div className="flex h-screen items-center justify-center text-ink-sub">Connexion…</div>;
   if (!user) return <Login />;
   if (isLoading) return <div className="flex h-screen items-center justify-center text-ink-sub">Chargement…</div>;
   if (isError) return <div className="flex h-screen items-center justify-center text-danger">Erreur de chargement des données.</div>;
