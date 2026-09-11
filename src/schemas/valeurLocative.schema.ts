@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { analyseLocativeAuto } from "../lib/estimationTextes";
 
 export const REGIMES_LOCATIFS = [
   "Location longue durée meublée",
@@ -27,19 +28,18 @@ export const REFERENCES_AGENCE_DEFAUT =
   "La présente estimation est établie par Casa Caraïbes SARL, agence immobilière exerçant en Martinique, titulaire de la carte professionnelle n° CPI 97212024000000007 (mention Transaction sur immeubles et fonds de commerce), délivrée par la CCI Martinique. RCS Fort-de-France 928 647 981.\n\nFort d'une connaissance approfondie du marché locatif martiniquais, l'agence s'appuie sur son historique de mises en location dans le secteur, une veille active des annonces comparables et son réseau de gestionnaires et propriétaires bailleurs locaux.";
 
 export const DISCLAIMER_DEFAUT =
-  "Le présent document est établi sur la base des informations transmises et d'une analyse du marché locatif à la date de l'estimation. Il constitue une estimation et non une garantie de loyer. L'agence Casa Caraïbes SARL décline toute responsabilité quant aux conditions définitives de mise en location.";
+  "Le présent document est établi sur la base des informations transmises et d'une analyse du marché locatif à la date de l'estimation. Il constitue une estimation et non une garantie de loyer. L'agence Casa Caraïbes SARL décline toute responsabilité quant aux conditions définitives de mise en location. Toute évolution des diagnostics, de l'état du bien ou du marché peut conduire à réviser le loyer proposé.";
 
-export function analyseMarcheDefaut(regime: string): string {
-  switch (regime) {
-    case "Location longue durée nue":
-      return "L'estimation ci-dessous porte sur une location longue durée nue (bail d'habitation régi par la loi du 6 juillet 1989). Le logement est proposé non meublé. Elle s'appuie sur une analyse des références locatives nues actuelles recensées en priorité sur la commune puis sur les communes voisines.";
-    case "Location saisonnière":
-      return "L'estimation ci-dessous porte sur une location saisonnière (meublée de tourisme). Elle s'appuie sur les tarifs pratiqués pour des biens comparables dans le secteur, le calendrier d'occupation habituel et la saisonnalité du marché locatif martiniquais. Le loyer indiqué est un équivalent mensuel hors charges, à adapter selon le taux d'occupation réel.";
-    case "Bail mobilité":
-      return "L'estimation ci-dessous porte sur un bail mobilité (logement meublé, durée de 1 à 10 mois non renouvelable, instauré par la loi ELAN). Elle s'appuie sur une analyse des références locatives meublées de courte à moyenne durée recensées en priorité sur la commune puis sur les communes voisines.";
-    default:
-      return "L'estimation ci-dessous porte sur une location longue durée meublée (bail d'un an renouvelable, régi par la loi du 6 juillet 1989 et le décret n° 2015-981 du 31 juillet 2015 relatif à la liste des éléments d'un logement meublé). Elle s'appuie sur une analyse des références locatives meublées actuelles recensées en priorité sur la commune puis sur les communes voisines.";
-  }
+export function analyseMarcheDefaut(regime: string, commune = ""): string {
+  const cadre =
+    regime === "Location longue durée nue"
+      ? "Le logement est proposé non meublé. Le cadre juridique est le bail d'habitation régi par la loi du 6 juillet 1989."
+      : regime === "Location saisonnière"
+        ? "Le cadre est celui de la location meublée de tourisme. Le loyer indiqué est un équivalent mensuel hors charges, à adapter selon le taux d'occupation réel et la saisonnalité martiniquaise."
+        : regime === "Bail mobilité"
+          ? "Le cadre est le bail mobilité (logement meublé, 1 à 10 mois non renouvelable, loi ELAN)."
+          : "Le cadre est la location longue durée meublée (bail d'un an renouvelable, loi du 6 juillet 1989 et décret n° 2015-981 du 31 juillet 2015).";
+  return `${analyseLocativeAuto({ regime, commune })}\n\n${cadre}`;
 }
 
 const ANALYSES_DEFAUT = [
@@ -53,7 +53,7 @@ export function estAnalyseParDefaut(texte: string): boolean {
   const t = (texte || "").trim();
   if (!t) return true;
   if (ANALYSES_DEFAUT.some((d) => d.trim() === t)) return true;
-  return t.includes("décret n° 2015-981") || t.includes("decret n° 2015-981");
+  return t.includes("décret n° 2015-981") || t.includes("decret n° 2015-981") || t.includes("L'estimation porte sur une");
 }
 
 export function estMeuble(regime: string): boolean {
