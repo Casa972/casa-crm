@@ -2,7 +2,7 @@ import {
   Sun, Users, Building2, Target, TrendingUp, ClipboardList,
   BarChart2, Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
   GraduationCap, ExternalLink, Landmark, BookOpen, Briefcase,
-  Columns, Clipboard,
+  Columns, Clipboard, FileText, KeyRound, Home,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
@@ -19,6 +19,14 @@ interface NavItem  { kind: "item";  id: ViewId; label: string; Icon: LucideIcon;
 interface NavGroup { kind: "group"; label: string; }
 type NavEntry = NavItem | NavGroup;
 
+const DOCS_COMMON: NavEntry[] = [
+  { kind: "group", label: "Rédaction" },
+  { kind: "item", id: "redacteur",       label: "Actes (mandat, compromis)", Icon: FileText },
+  { kind: "item", id: "bail",            label: "Baux",                   Icon: KeyRound },
+  { kind: "item", id: "valeur_venale",   label: "Valeur vénale",          Icon: Home },
+  { kind: "item", id: "valeur_locative", label: "Valeur locative",        Icon: Home },
+];
+
 const NAV_DIR: NavEntry[] = [
   { kind: "group", label: "Tableau de bord" },
   { kind: "item", id: "today",       label: "Aujourd'hui",    Icon: Sun },
@@ -34,8 +42,8 @@ const NAV_DIR: NavEntry[] = [
   { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
   { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },
 
-  { kind: "group", label: "Documents" },
-  { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
+  ...DOCS_COMMON,
+  { kind: "item", id: "documents",    label: "Bibliothèque",    Icon: Library },
   { kind: "item", id: "registre",     label: "Registre mandats", Icon: BookOpen },
 
   { kind: "group", label: "Analyse" },
@@ -67,8 +75,8 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
   { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },
 
-  { kind: "group", label: "Documents" },
-  { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
+  ...DOCS_COMMON,
+  { kind: "item", id: "documents",    label: "Bibliothèque",    Icon: Library },
 
   { kind: "group", label: "Outils" },
   { kind: "item", id: "notes",       label: "Notes",          Icon: Clipboard },
@@ -153,7 +161,7 @@ export function Sidebar() {
             return (
               <button
                 key={id}
-                onClick={() => setView(id)}
+                onClick={() => { setView(id); closeSidebar(); }}
                 className={cn(
                   "flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] font-medium transition-colors",
                   activeView === id
@@ -172,12 +180,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-
-        <div className="border-t border-line px-3 py-2">
-          <div className="mb-1 text-[10px] text-ink-muted opacity-60">
-            Alt+1–6 pour navigation rapide
-          </div>
-        </div>
 
         <div className="border-t border-line p-2">
           <div className="mb-1.5 flex items-center gap-2.5 rounded bg-bg px-2.5 py-2">
