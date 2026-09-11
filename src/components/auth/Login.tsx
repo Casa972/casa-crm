@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Building2 } from "lucide-react";
 import { Field, Input } from "../ui/Field";
 import { signIn } from "../../services/auth.service";
+import logo from "../../assets/logo.png";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -25,10 +25,7 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center bg-bg p-4">
       <div className="card w-[360px] p-8">
         <div className="mb-6 flex flex-col items-center gap-3">
-          <div className="flex size-12 items-center justify-center rounded-lg bg-primary">
-            <Building2 size={22} className="text-white" />
-          </div>
-          <h1 className="font-heading text-xl font-semibold text-ink">Casa Caraïbes</h1>
+          <img src={logo} alt="Casa Caraïbes" className="h-12 w-auto object-contain" />
           <p className="text-center text-[12px] text-ink-muted">Connexion agence</p>
         </div>
         <Field label="Email">
