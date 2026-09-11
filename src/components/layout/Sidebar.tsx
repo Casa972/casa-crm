@@ -11,6 +11,7 @@ import { useSessionStore } from "../../store/session.store";
 import { signOut } from "../../services/auth.service";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { daysDiff } from "../../lib/format";
+import logo from "../../assets/logo.png";
 
 const FORMATION_URL = "https://casa-formation.vercel.app";
 
@@ -107,17 +108,10 @@ export function Sidebar() {
           sidebarOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full",
         )}
       >
-        <div className="border-b border-line px-4 pb-4 pt-5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded bg-primary">
-              <Building2 size={16} className="text-white" />
-            </div>
-            <div>
-              <div className="font-heading text-sm font-semibold text-ink">Casa Caraïbes</div>
-              <div className="text-[11px] font-medium text-primary">
-                {isDir ? "Espace directeur" : `Espace ${user.name}`}
-              </div>
-            </div>
+        <div className="border-b border-line px-3 pb-3 pt-4">
+          <img src={logo} alt="Casa Caraïbes" className="mb-1.5 h-8 w-auto max-w-full object-contain object-left" />
+          <div className="text-[11px] font-medium text-primary">
+            {isDir ? "Espace directeur" : `Espace ${user.name}`}
           </div>
         </div>
 
