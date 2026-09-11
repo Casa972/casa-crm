@@ -124,7 +124,6 @@ export function ValeurLocativePDF({ e }: { e: ValeurLocative }) {
           {e.superficieTerrain > 0 && <View style={s.row}><Text style={s.lab}>Superficie du terrain</Text><Text style={s.val}>{fmtM2(e.superficieTerrain)}{e.zonagePlu ? ` — Zonage PLU : ${e.zonagePlu}` : ""}</Text></View>}
           {!!e.natureBien && <View style={s.row}><Text style={s.lab}>Nature du bien</Text><Text style={s.val}>{e.natureBien}</Text></View>}
           {e.surfaceShon > 0 && <View style={s.row}><Text style={s.lab}>Surface de plancher (SHON)</Text><Text style={s.val}>{fmtM2(e.surfaceShon)}</Text></View>}
-          {e.empriseSol > 0 && <View style={s.row}><Text style={s.lab}>Emprise au sol (construction)</Text><Text style={s.val}>{fmtM2(e.empriseSol)}</Text></View>}
         </View>
         {!!e.descriptionBien.trim() && (<><SH n={3} title="DESCRIPTION DU BIEN" />{e.descriptionBien.split("\n").filter(Boolean).map((p, i) => (<Text key={i} style={s.body}>{p}</Text>))}</>)}
         {pieces.length > 0 && (
