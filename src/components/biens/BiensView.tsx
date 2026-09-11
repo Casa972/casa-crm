@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
-import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText, User, Sparkles, TrendingDown } from "lucide-react";
+import { Plus, Edit2, Trash2, AlertCircle, MapPin, FileText, Upload, ScrollText, User, Sparkles, TrendingDown, FolderOpen } from "lucide-react";
 import { NouveauDossierWizard } from "./NouveauDossierWizard";
+import { DossierPanel } from "./DossierPanel";
 import { DataTable } from "../shared/DataTable";
 import { StatusPill } from "../shared/StatusPill";
 import { Modal } from "../ui/Modal";
@@ -34,6 +35,7 @@ export function BiensView() {
   const [tab, setTab] = useState<Tab>("biens");
   const [modal, setModal] = useState<Modal_>(null);
   const [ficheBien, setFicheBien] = useState<Bien | null>(null);
+  const [dossierBien, setDossierBien] = useState<Bien | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [monPortefeuille, setMonPortefeuille] = useState(false);
@@ -69,6 +71,7 @@ export function BiensView() {
     (id) => confirm("Supprimer ce bien ?") && delBien.mutate(id),
     (b) => setFicheBien(b),
     (b) => setModal({ kind: "mandats", prefillBienId: b.ref }),
+    (b) => setDossierBien(b),
   );
   const mandatCols = useMandatColumns(
     data.biens,
@@ -77,7 +80,6 @@ export function BiensView() {
     handleGenererMandat,
   );
 
-  // Mandat initial selon contexte (édition ou création depuis un bien)
   const mandatInitial = modal?.kind === "mandats"
     ? modal.item ?? (modal.prefillBienId ? { bienId: modal.prefillBienId } as Partial<Mandat> : undefined)
     : undefined;
@@ -126,8 +128,8 @@ export function BiensView() {
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex gap-1.5">
-          <TabBtn active={tab === "biens"} onClick={() => setTab("biens")}>🏠 Biens ({data.biens.length})</TabBtn>
-          <TabBtn active={tab === "mandats"} onClick={() => setTab("mandats")}>📋 Mandats ({data.mandats.length})</TabBtn>
+          <TabBtn active={tab === "biens"} onClick={() => setTab("biens")}>Biens ({data.biens.length})</TabBtn>
+          <TabBtn active={tab === "mandats"} onClick={() => setTab("mandats")}>Mandats ({data.mandats.length})</TabBtn>
         </div>
         <div className="flex gap-2">
           {tab === "biens" && (
@@ -165,6 +167,7 @@ export function BiensView() {
             ? data.biens.filter((b) => data.mandats.some((m) => (m.agentId === user.id || !m.agentId) && (m.bienId === b.id || m.bienId === b.ref)))
             : data.biens}
           columns={bienCols} globalFilter={search} emptyMessage="Aucun bien"
+          onRowClick={(b) => setDossierBien(b)}
         />
       ) : (
         <DataTable
@@ -196,6 +199,9 @@ export function BiensView() {
       {ficheBien && (
         <FicheCommercialeModal bien={ficheBien} onClose={() => setFicheBien(null)} />
       )}
+      {dossierBien && (
+        <DossierPanel bien={dossierBien} onClose={() => setDossierBien(null)} />
+      )}
       {importOpen && (
         <ImportCSVModal type="biens" onClose={() => setImportOpen(false)} />
       )}
@@ -226,6 +232,7 @@ function useBienColumns(
   onDelete: (id: string) => void,
   onFiche: (b: Bien) => void,
   onMandat: (b: Bien) => void,
+  onDossier: (b: Bien) => void,
 ): ColumnDef<Bien, any>[] {
   return useMemo(() => [
     bh.accessor("ref", { header: "Réf.", cell: (c) => <span className="font-semibold">{c.getValue()}</span> }),
@@ -251,6 +258,10 @@ function useBienColumns(
       id: "actions", header: "",
       cell: (c) => (
         <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => onDossier(c.row.original)} title="Ouvrir le dossier"
+            className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-primary-soft hover:text-primary">
+            <FolderOpen size={13} />
+          </button>
           <button onClick={() => onFiche(c.row.original)} title="Fiche commerciale"
             className="flex size-8 items-center justify-center rounded text-ink-muted hover:bg-primary-soft hover:text-primary">
             <FileText size={13} />
@@ -270,7 +281,7 @@ function useBienColumns(
         </div>
       ),
     }),
-  ] as ColumnDef<Bien, any>[], [mandats, onEdit, onDelete, onFiche, onMandat]);
+  ] as ColumnDef<Bien, any>[], [mandats, onEdit, onDelete, onFiche, onMandat, onDossier]);
 }
 
 const mh = createColumnHelper<Mandat>();
