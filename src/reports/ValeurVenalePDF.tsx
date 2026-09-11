@@ -1,363 +1,225 @@
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import "./pdfFonts";
+import logo from "../assets/logo.png";
 import type { Estimation } from "../schemas/estimation.schema";
 import { nombreEnLettres } from "../schemas/estimation.schema";
+import { LIMITES_VENALE, commentaireMarcheVenaleAuto, argumentaireVenaleAuto } from "../lib/estimationTextes";
 
 const PRIMARY = "#1A3A52";
-const BEIGE   = "#F5EFE6";
-const LINE    = "#E4E4E0";
-const INK     = "#1A1A18";
-const SUB     = "#5B5B57";
-const MUTED   = "#9B9B97";
-const BG_ALT  = "#FAFAF8";
+const BEIGE = "#F5EFE6";
+const LINE = "#E4E4E0";
+const INK = "#1A1A18";
+const SUB = "#5B5B57";
+const MUTED = "#9B9B97";
+const BG = "#FAFAF8";
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 9, color: INK, padding: "18mm 16mm 22mm" },
-
-  /* ── Couverture ── */
-  coverBand:     { backgroundColor: PRIMARY, padding: "10 0", marginBottom: 14, alignItems: "center" },
-  coverBandTop:  { fontSize: 8, color: "#B0C4D8", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 },
-  coverTitle:    { fontSize: 26, fontFamily: "Helvetica-Bold", color: "#FFFFFF", textAlign: "center", textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 },
-  coverSub:      { fontSize: 11, color: "#B0C4D8", textAlign: "center", letterSpacing: 0.5 },
-
-  coverBienType: { fontSize: 11, fontFamily: "Helvetica-Bold", color: INK, textAlign: "center", marginBottom: 2 },
-  coverBienAdr:  { fontSize: 10, textAlign: "center", color: INK, marginBottom: 2 },
-  coverCad:      { fontSize: 8.5, textAlign: "center", color: SUB, fontStyle: "italic", marginBottom: 12 },
-
-  coverBlock:    { border: `0.5 solid ${LINE}`, padding: "8 12", flex: 1 },
-  coverBlockLbl: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: PRIMARY, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 3 },
-  coverBlockVal: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: INK, marginBottom: 1 },
-  coverBlockSub: { fontSize: 8.5, color: SUB, fontStyle: "italic" },
-  coverDate:     { fontSize: 9, color: SUB, textAlign: "center", fontStyle: "italic", marginTop: 10 },
-  coverPhoto:    { width: "100%", height: 210, objectFit: "cover", marginTop: 14, borderRadius: 4 },
-
-  /* ── En-têtes ── */
-  secTitle:    { fontSize: 11, fontFamily: "Helvetica-Bold", color: PRIMARY, marginTop: 14, marginBottom: 2, textTransform: "uppercase" },
-  secDivider:  { height: 1.5, backgroundColor: PRIMARY, marginBottom: 8 },
-  subTitle:    { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: PRIMARY, marginTop: 8, marginBottom: 5, borderLeft: `3 solid ${PRIMARY}`, paddingLeft: 6 },
-
-  /* ── Corps ── */
-  body:   { fontSize: 9, color: INK, lineHeight: 1.6, marginBottom: 5 },
-  bold:   { fontFamily: "Helvetica-Bold" },
-  italic: { fontStyle: "italic" },
-
-  /* ── Grille 2 colonnes ── */
-  row2:   { flexDirection: "row", marginBottom: 3 },
-  cell2L: { width: "50%", paddingRight: 8 },
-  cell2R: { width: "50%" },
-  lbl:    { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: SUB, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 1 },
-  val:    { fontSize: 9, color: INK },
-
-  /* ── Tableau ── */
-  tableHead: { flexDirection: "row", backgroundColor: PRIMARY },
-  th:  { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 8, padding: "5 6" },
-  tr:  { flexDirection: "row", borderBottom: `0.5 solid ${LINE}` },
-  trA: { flexDirection: "row", borderBottom: `0.5 solid ${LINE}`, backgroundColor: BG_ALT },
-  td:  { fontSize: 8.5, padding: "4 6", color: INK },
-  tdB: { fontFamily: "Helvetica-Bold" },
-
-  /* ── Valeur vénale ── */
-  valBox:     { backgroundColor: BEIGE, border: `1 solid ${LINE}`, borderRadius: 5, padding: "14 20", alignItems: "center", marginTop: 10, marginBottom: 10 },
-  valLabel:   { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: PRIMARY, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 },
-  valNum:     { fontSize: 30, fontFamily: "Helvetica-Bold", color: PRIMARY, marginBottom: 4 },
-  valLettres: { fontSize: 9, color: INK, fontStyle: "italic", marginBottom: 3 },
-  valM2:      { fontSize: 8.5, color: SUB, marginBottom: 4 },
-  valFourch:  { fontSize: 8.5, color: SUB, fontStyle: "italic" },
-
-  /* ── Signature ── */
-  sigBlock:   { marginTop: 20, flexDirection: "row", justifyContent: "flex-end" },
-  sigInner:   { width: "45%", alignItems: "center" },
-  sigLine:    { height: 0.5, backgroundColor: LINE, width: "100%", marginBottom: 4 },
-  sigName:    { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: INK, textAlign: "center" },
-  sigRole:    { fontSize: 7.5, color: SUB, textAlign: "center", fontStyle: "italic" },
-
-  /* ── Pied de page ── */
-  footer:    { position: "absolute", bottom: "10mm", left: "16mm", right: "16mm", borderTop: `0.5 solid ${LINE}`, paddingTop: 5, flexDirection: "row", justifyContent: "space-between" },
+  page: { fontFamily: "Montserrat", fontSize: 9, color: INK, padding: "18mm 16mm 22mm" },
+  cover: { fontFamily: "Montserrat", color: INK, padding: "22mm 20mm", alignItems: "center", justifyContent: "center" },
+  coverInner: { width: "100%", alignItems: "center" },
+  logo: { width: 168, height: 56, objectFit: "contain", marginBottom: 22 },
+  hair: { width: "42%", height: 0.9, backgroundColor: PRIMARY, marginBottom: 18 },
+  band: { backgroundColor: PRIMARY, padding: "12 10", marginBottom: 16, alignItems: "center", width: "100%" },
+  bandTop: { fontSize: 8, color: "#B0C4D8", letterSpacing: 1.6, textTransform: "uppercase", marginBottom: 4 },
+  coverTitle: { fontSize: 20, fontFamily: "Montserrat", fontWeight: 700, color: "#fff", textAlign: "center", letterSpacing: 1.2 },
+  coverSub: { fontSize: 10, color: "#B0C4D8", textAlign: "center", marginTop: 4 },
+  coverType: { fontSize: 11, fontFamily: "Montserrat", fontWeight: 700, textAlign: "center", marginBottom: 3 },
+  coverAdr: { fontSize: 10, textAlign: "center", marginBottom: 2 },
+  coverCad: { fontSize: 8.5, textAlign: "center", color: SUB, fontStyle: "italic", marginBottom: 12 },
+  block: { border: `0.5 solid ${LINE}`, padding: "10 12", flex: 1 },
+  blockLbl: { fontSize: 7.5, fontFamily: "Montserrat", fontWeight: 700, color: PRIMARY, letterSpacing: 0.7, marginBottom: 3, textAlign: "center" },
+  blockVal: { fontSize: 10, fontFamily: "Montserrat", fontWeight: 700, textAlign: "center" },
+  blockSub: { fontSize: 8.5, color: SUB, textAlign: "center", marginTop: 2 },
+  coverDate: { fontSize: 9, color: SUB, fontStyle: "italic", textAlign: "center", marginTop: 12 },
+  photo: { width: "100%", height: 180, objectFit: "cover", marginTop: 14 },
+  sec: { fontSize: 11, fontFamily: "Montserrat", fontWeight: 700, color: PRIMARY, marginTop: 12, marginBottom: 2, textTransform: "uppercase" },
+  secLine: { height: 1.4, backgroundColor: PRIMARY, marginBottom: 8 },
+  sub: { fontSize: 9.5, fontFamily: "Montserrat", fontWeight: 700, color: PRIMARY, marginTop: 8, marginBottom: 5, borderLeft: `3 solid ${PRIMARY}`, paddingLeft: 6 },
+  body: { fontSize: 9, color: INK, lineHeight: 1.6, marginBottom: 5, textAlign: "justify" },
+  thRow: { flexDirection: "row", backgroundColor: PRIMARY },
+  th: { color: "#fff", fontFamily: "Montserrat", fontWeight: 700, fontSize: 8, padding: "5 6", textAlign: "center" },
+  tr: { flexDirection: "row", borderBottom: `0.5 solid ${LINE}` },
+  trA: { flexDirection: "row", borderBottom: `0.5 solid ${LINE}`, backgroundColor: BG },
+  td: { fontSize: 8.5, padding: "4 6", color: INK, textAlign: "center" },
+  tdB: { fontFamily: "Montserrat", fontWeight: 700 },
+  row2: { flexDirection: "row", marginBottom: 2 },
+  valBox: { backgroundColor: BEIGE, border: `1 solid ${LINE}`, padding: "14 20", alignItems: "center", marginVertical: 10 },
+  valLbl: { fontSize: 8.5, fontFamily: "Montserrat", fontWeight: 700, color: PRIMARY, letterSpacing: 1, marginBottom: 6 },
+  valNum: { fontSize: 26, fontFamily: "Montserrat", fontWeight: 700, color: PRIMARY, marginBottom: 4 },
+  valFine: { fontSize: 8.5, color: SUB, marginBottom: 3 },
+  notice: { marginTop: 10, backgroundColor: BG, border: `0.5 solid ${LINE}`, padding: "8 10" },
+  noticeTxt: { fontSize: 8, color: SUB, lineHeight: 1.5, textAlign: "justify" },
+  footer: { position: "absolute", bottom: "10mm", left: "16mm", right: "16mm", borderTop: `0.5 solid ${LINE}`, paddingTop: 5, flexDirection: "row", justifyContent: "space-between" },
   footerTxt: { fontSize: 7, color: MUTED },
-
-  /* ── Notice ── */
-  notice:    { marginTop: 12, backgroundColor: BG_ALT, border: `0.5 solid ${LINE}`, borderRadius: 4, padding: "8 10" },
-  noticeTxt: { fontSize: 8, color: SUB, lineHeight: 1.5 },
 });
 
-const E = (n: number) => {
-  const str = String(Math.round(n || 0));
-  return str.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0") + " \u20AC";
-};
-const fd = (d: string) =>
-  d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "\u2014";
+const E = (n: number) => `${Math.round(n || 0).toLocaleString("fr-FR").replace(/\s/g, "\u00A0")} \u20AC`;
+const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "\u2014";
 
 function Footer() {
   return (
     <View style={s.footer} fixed>
-      <Text style={s.footerTxt}>CASA CARAÏBES — Estimation de valeur vénale — Document confidentiel</Text>
-      <Text
-        style={s.footerTxt}
-        render={({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
-          `Page ${pageNumber} / ${totalPages}`
-        }
-      />
+      <Text style={s.footerTxt}>Casa Caraïbes — Estimation de valeur vénale — Document confidentiel</Text>
+      <Text style={s.footerTxt} render={({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) => `Page ${pageNumber} / ${totalPages}`} />
     </View>
   );
 }
-
 function SH({ title }: { title: string }) {
-  return (
-    <>
-      <Text style={s.secTitle}>{title}</Text>
-      <View style={s.secDivider} />
-    </>
-  );
+  return (<><Text style={s.sec}>{title}</Text><View style={s.secLine} /></>);
 }
-
-function LV({ label, value }: { label: string; value: string | number }) {
-  if (!value && value !== 0) return null;
+function LV({ label, value }: { label: string; value?: string | number | null }) {
+  if (value === undefined || value === null || value === "" || value === 0) return null;
   return (
     <View style={s.row2}>
-      <Text style={[s.td, s.tdB, { width: "38%", paddingLeft: 0 }]}>{label}</Text>
+      <Text style={[s.td, s.tdB, { width: "40%", paddingLeft: 0 }]}>{label}</Text>
       <Text style={[s.td, { flex: 1, paddingLeft: 0 }]}>{String(value)}</Text>
     </View>
   );
 }
 
 export function ValeurVenalePDF({ e }: { e: Estimation }) {
-  const surface = e.surfaceHabitable;
-  const prixM2  = surface > 0 ? Math.round(e.valeurVenale / surface) : 0;
-  const dateStr = e.dateEstimation
-    ? fd(e.dateEstimation)
-    : new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-
-  const allRefs = [...e.refsAnnonces, ...e.refsDVF].filter(r => r.prix > 0 || r.prixM2 > 0);
-  const moyM2   = allRefs.length > 0
-    ? Math.round(allRefs.reduce((acc, r) => acc + r.prixM2, 0) / allRefs.length)
-    : 0;
-
-  const fourchetteBasse = e.fourchetteBasse || Math.round(e.valeurVenale * 0.95);
-  const fourchetteHaute = e.fourchetteHaute || Math.round(e.valeurVenale * 1.05);
+  const surface = e.surfaceHabitable || 0;
+  const prixM2 = surface > 0 ? Math.round((e.valeurVenale || 0) / surface) : 0;
+  const dateStr = e.dateEstimation ? fd(e.dateEstimation) : fd(new Date().toISOString().slice(0, 10));
+  const allRefs = [...(e.refsAnnonces || []), ...(e.refsDVF || [])].filter((r) => r.prix > 0 || r.prixM2 > 0);
+  const moyM2 = allRefs.length ? Math.round(allRefs.reduce((a, r) => a + r.prixM2, 0) / allRefs.length) : 0;
+  const basse = e.fourchetteBasse || Math.round((e.valeurVenale || 0) * 0.95);
+  const haute = e.fourchetteHaute || Math.round((e.valeurVenale || 0) * 1.05);
+  const commentaire = (e.commentaireMarche || "").trim() || commentaireMarcheVenaleAuto({ commune: e.commune, nbRefs: allRefs.length, moyM2 });
+  const argumentaire = (e.argumentaireValeur || "").trim() || argumentaireVenaleAuto({ typeBien: e.typeBien, commune: e.commune, surface, etat: e.etatGeneral, valeur: e.valeurVenale, prixM2 });
+  const limites = (e.limites || "").trim() || LIMITES_VENALE;
 
   return (
     <Document>
-
-      {/* ══════════════════════════════════════════
-          PAGE 1 — COUVERTURE
-      ══════════════════════════════════════════ */}
-      <Page size="A4" style={s.page}>
-        {/* Bandeau titre */}
-        <View style={s.coverBand}>
-          <Text style={s.coverBandTop}>Casa Caraïbes</Text>
-          <Text style={s.coverTitle}>Estimation de valeur vénale</Text>
-          <Text style={s.coverSub}>Avis de valeur — Usage confidentiel</Text>
-        </View>
-
-        {/* Identification du bien */}
-        <Text style={s.coverBienType}>{e.typeBien.toUpperCase()}</Text>
-        {!!e.residence && <Text style={s.coverBienAdr}>{e.residence}</Text>}
-        {!!e.adresse   && <Text style={s.coverBienAdr}>{e.adresse}</Text>}
-        <Text style={s.coverBienAdr}>{e.codePostal} {e.commune.toUpperCase()} — MARTINIQUE</Text>
-        {!!(e.sectionCadastrale || e.parcelles) && (
-          <Text style={s.coverCad}>
-            {e.sectionCadastrale ? `Section ${e.sectionCadastrale}` : ""}
-            {e.sectionCadastrale && e.parcelles ? " — " : ""}
-            {e.parcelles ? `Parcelle(s) ${e.parcelles}` : ""}
-          </Text>
-        )}
-
-        {/* Demandeur / Rédacteur */}
-        <View style={{ flexDirection: "row", marginTop: 6, marginBottom: 4 }}>
-          <View style={[s.coverBlock, { marginRight: 6 }]}>
-            <Text style={s.coverBlockLbl}>Demandeur</Text>
-            <Text style={s.coverBlockVal}>{e.demandeur || "—"}</Text>
+      <Page size="A4" style={s.cover}>
+        <View style={s.coverInner}>
+          <Image src={logo} style={s.logo} />
+          <View style={s.hair} />
+          <View style={s.band}>
+            <Text style={s.bandTop}>Casa Caraïbes — Agence immobilière</Text>
+            <Text style={s.coverTitle}>ESTIMATION DE VALEUR VÉNALE</Text>
+            <Text style={s.coverSub}>Avis de valeur — Usage confidentiel</Text>
           </View>
-          <View style={[s.coverBlock, { marginLeft: 6 }]}>
-            <Text style={s.coverBlockLbl}>Établi par</Text>
-            <Text style={s.coverBlockVal}>{e.redacteur || "Casa Caraïbes"}</Text>
-            <Text style={s.coverBlockSub}>Agent immobilier</Text>
+          <Text style={s.coverType}>{(e.typeBien || "Bien").toUpperCase()}</Text>
+          {!!e.residence && <Text style={s.coverAdr}>{e.residence}</Text>}
+          {!!e.adresse && <Text style={s.coverAdr}>{e.adresse}</Text>}
+          <Text style={s.coverAdr}>{e.codePostal} {(e.commune || "").toUpperCase()} — MARTINIQUE</Text>
+          {(e.sectionCadastrale || e.parcelles) && (
+            <Text style={s.coverCad}>
+              {[e.sectionCadastrale && `Section ${e.sectionCadastrale}`, e.parcelles && `Parcelle(s) ${e.parcelles}`].filter(Boolean).join(" — ")}
+            </Text>
+          )}
+          <View style={{ flexDirection: "row", width: "100%", marginTop: 8 }}>
+            <View style={[s.block, { marginRight: 6 }]}>
+              <Text style={s.blockLbl}>DEMANDEUR</Text>
+              <Text style={s.blockVal}>{e.demandeur || "\u2014"}</Text>
+            </View>
+            <View style={[s.block, { marginLeft: 6 }]}>
+              <Text style={s.blockLbl}>ÉTABLI PAR</Text>
+              <Text style={s.blockVal}>{e.redacteur || "Casa Caraïbes"}</Text>
+              <Text style={s.blockSub}>Agent immobilier</Text>
+            </View>
           </View>
+          <Text style={s.coverDate}>Établi le {dateStr}</Text>
+          {!!e.photoBase64 && <Image style={s.photo} src={e.photoBase64} />}
         </View>
-        <Text style={s.coverDate}>Établi le {dateStr}</Text>
-
-        {/* Photo du bien */}
-        {!!e.photoBase64 && <Image style={s.coverPhoto} src={e.photoBase64} />}
-
         <Footer />
       </Page>
 
-      {/* ══════════════════════════════════════════
-          PAGE 2 — IDENTIFICATION + MARCHÉ
-      ══════════════════════════════════════════ */}
       <Page size="A4" style={s.page}>
-        {/* ── Section : Identification du bien ── */}
         <SH title="Identification du bien" />
-
-        {/* 2 colonnes */}
         <View style={{ flexDirection: "row", marginBottom: 6 }}>
           <View style={{ flex: 1, marginRight: 10 }}>
-            <Text style={s.subTitle}>Situation</Text>
+            <Text style={s.sub}>Situation</Text>
             <LV label="Type" value={e.typeBien} />
-            {!!e.residence     && <LV label="Résidence" value={e.residence} />}
-            {!!e.adresse       && <LV label="Adresse" value={e.adresse} />}
+            <LV label="Résidence" value={e.residence} />
+            <LV label="Adresse" value={e.adresse} />
             <LV label="Commune" value={`${e.commune} (${e.codePostal})`} />
-            {!!e.regimeJuridique && <LV label="Régime juridique" value={e.regimeJuridique} />}
-            {!!e.etage          && <LV label="Étage" value={e.etage} />}
+            <LV label="Régime" value={e.regimeJuridique} />
+            <LV label="Étage" value={e.etage} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.subTitle}>Surfaces & prestations</Text>
-            <LV label="Surface habitable" value={`${e.surfaceHabitable} m²`} />
-            {e.surfaceTerrasse > 0 && <LV label="Terrasse / Loggia" value={`${e.surfaceTerrasse} m²`} />}
-            {e.surfaceJardin > 0   && <LV label="Jardin" value={`${e.surfaceJardin} m²`} />}
-            {e.surfaceTerrain > 0  && <LV label="Terrain" value={`${e.surfaceTerrain} m²`} />}
-            {!!e.distribution      && <LV label="Distribution" value={e.distribution} />}
-            {!!e.parking           && <LV label="Parking" value={e.parking} />}
-            {e.piscine             && <LV label="Piscine" value="Oui" />}
+            <Text style={s.sub}>Surfaces & prestations</Text>
+            <LV label="Surface habitable" value={surface ? `${surface} m²` : ""} />
+            <LV label="Terrasse" value={e.surfaceTerrasse ? `${e.surfaceTerrasse} m²` : ""} />
+            <LV label="Jardin" value={e.surfaceJardin ? `${e.surfaceJardin} m²` : ""} />
+            <LV label="Terrain" value={e.surfaceTerrain ? `${e.surfaceTerrain} m²` : ""} />
+            <LV label="Distribution" value={e.distribution} />
+            <LV label="Parking" value={e.parking} />
+            <LV label="Piscine" value={e.piscine ? "Oui" : ""} />
           </View>
         </View>
-
-        {/* État général */}
-        <Text style={s.subTitle}>État général</Text>
-        <View style={s.tableHead}>
-          <Text style={[s.th, { width: "40%" }]}>Élément</Text>
-          <Text style={[s.th, { flex: 1 }]}>Appréciation</Text>
-        </View>
-        {[
-          ["État général",             e.etatGeneral],
-          ["Structure / Gros œuvre",   e.structureGeneral],
-          ["Finitions intérieures",    e.finitionsInterieures],
-          ["Équipements sanitaires",   e.equipementsSanitaires],
-          ["Travaux à prévoir",        e.travauxAPrevoir || "Aucun à court terme"],
-        ].map(([lbl, val], i) => (
-          <View key={lbl} style={i % 2 === 0 ? s.tr : s.trA}>
-            <Text style={[s.td, s.tdB, { width: "40%" }]}>{lbl}</Text>
-            <Text style={[s.td, { flex: 1 }]}>{val}</Text>
+        {!!e.notesDescription && (<><Text style={s.sub}>Description</Text><Text style={s.body}>{e.notesDescription}</Text></>)}
+        {!!e.descriptionEnvironnement && (<><Text style={s.sub}>Environnement</Text><Text style={s.body}>{e.descriptionEnvironnement}</Text></>)}
+        <Text style={s.sub}>État général</Text>
+        <View style={s.thRow}><Text style={[s.th, { width: "40%" }]}>Élément</Text><Text style={[s.th, { flex: 1 }]}>Appréciation</Text></View>
+        {[["État général", e.etatGeneral], ["Structure", e.structureGeneral], ["Finitions", e.finitionsInterieures], ["Sanitaires", e.equipementsSanitaires], ["Travaux à prévoir", e.travauxAPrevoir || "Aucun à court terme"]].map(([l, v], i) => (
+          <View key={l} style={i % 2 ? s.trA : s.tr}>
+            <Text style={[s.td, s.tdB, { width: "40%" }]}>{l}</Text>
+            <Text style={[s.td, { flex: 1 }]}>{v}</Text>
           </View>
         ))}
-
-        {/* ── Section : Analyse du marché ── */}
         <SH title="Analyse du marché local" />
-
-        {allRefs.length > 0 ? (
+        <Text style={s.body}>{commentaire}</Text>
+        {allRefs.length > 0 && (
           <>
-            <Text style={[s.body, { marginBottom: 6 }]}>
-              L'étude comparative porte sur {allRefs.length} référence{allRefs.length > 1 ? "s" : ""} de
-              biens similaires dans le secteur de {e.commune}.
-              {moyM2 > 0 ? ` Prix moyen observé : ${E(moyM2)}/m².` : ""}
-            </Text>
-            {/* Tableau références */}
-            <View style={s.tableHead}>
+            <View style={s.thRow}>
               <Text style={[s.th, { width: "14%" }]}>Réf.</Text>
-              <Text style={[s.th, { width: "20%" }]}>Type · Surface</Text>
-              <Text style={[s.th, { flex: 1   }]}>Localisation</Text>
+              <Text style={[s.th, { width: "22%" }]}>Type · Surface</Text>
+              <Text style={[s.th, { flex: 1 }]}>Localisation</Text>
               <Text style={[s.th, { width: "18%" }]}>Prix</Text>
               <Text style={[s.th, { width: "14%" }]}>€/m²</Text>
             </View>
             {allRefs.map((r, i) => (
-              <View key={i} style={i % 2 === 0 ? s.tr : s.trA}>
+              <View key={i} style={i % 2 ? s.trA : s.tr}>
                 <Text style={[s.td, { width: "14%" }]}>{r.reference || `#${i + 1}`}</Text>
-                <Text style={[s.td, { width: "20%" }]}>{r.type}{r.surface > 0 ? ` · ${r.surface} m²` : ""}</Text>
-                <Text style={[s.td, { flex: 1   }]}>{r.localisation || "—"}</Text>
-                <Text style={[s.td, { width: "18%" }]}>{r.prix > 0 ? E(r.prix) : "—"}</Text>
-                <Text style={[s.td, { width: "14%" }]}>{r.prixM2 > 0 ? `${E(r.prixM2).replace(" €", "")} €` : "—"}</Text>
+                <Text style={[s.td, { width: "22%" }]}>{r.type}{r.surface ? ` · ${r.surface} m²` : ""}</Text>
+                <Text style={[s.td, { flex: 1 }]}>{r.localisation || "\u2014"}</Text>
+                <Text style={[s.td, { width: "18%" }]}>{r.prix ? E(r.prix) : "\u2014"}</Text>
+                <Text style={[s.td, { width: "14%" }]}>{r.prixM2 ? `${r.prixM2.toLocaleString("fr-FR")} €` : "\u2014"}</Text>
               </View>
             ))}
           </>
-        ) : (
-          <Text style={[s.body, s.italic]}>Aucune référence comparative renseignée.</Text>
         )}
-
-        {!!e.commentaireMarche && (
-          <Text style={[s.body, { marginTop: 8 }]}>{e.commentaireMarche}</Text>
-        )}
-
         <Footer />
       </Page>
 
-      {/* ══════════════════════════════════════════
-          PAGE 3 — VALEUR VÉNALE + CONCLUSION
-      ══════════════════════════════════════════ */}
       <Page size="A4" style={s.page}>
         <SH title="Conclusion — Valeur vénale estimée" />
-
-        {/* Critères d'ajustement (si renseignés) */}
-        {e.criteres.filter(c => c.critere).length > 0 && (
+        {(e.criteres || []).filter((c) => c.critere).length > 0 && (
           <>
-            <Text style={s.subTitle}>Grille d'ajustements</Text>
-            <View style={s.tableHead}>
-              <Text style={[s.th, { width: "40%" }]}>Critère</Text>
-              <Text style={[s.th, { flex: 1 }]}>Appréciation</Text>
-              <Text style={[s.th, { width: "22%" }]}>Ajustement</Text>
-            </View>
-            {e.criteres.filter(c => c.critere).map((c, i) => (
-              <View key={i} style={i % 2 === 0 ? s.tr : s.trA}>
+            <Text style={s.sub}>Grille d'ajustements</Text>
+            <View style={s.thRow}><Text style={[s.th, { width: "40%" }]}>Critère</Text><Text style={[s.th, { flex: 1 }]}>Appréciation</Text><Text style={[s.th, { width: "22%" }]}>Ajustement</Text></View>
+            {e.criteres.filter((c) => c.critere).map((c, i) => (
+              <View key={i} style={i % 2 ? s.trA : s.tr}>
                 <Text style={[s.td, s.tdB, { width: "40%" }]}>{c.critere}</Text>
-                <Text style={[s.td, { flex: 1 }]}>{c.situationBien || c.impact || "—"}</Text>
-                <Text style={[s.td, { width: "22%" }]}>{c.ajustement || "—"}</Text>
+                <Text style={[s.td, { flex: 1 }]}>{c.situationBien || c.impact || "\u2014"}</Text>
+                <Text style={[s.td, { width: "22%" }]}>{c.ajustement || "\u2014"}</Text>
               </View>
             ))}
           </>
         )}
-
-        {/* Argumentation valeur */}
-        {!!e.argumentaireValeur && (
-          <>
-            <Text style={s.subTitle}>Justification de la valeur</Text>
-            <Text style={s.body}>{e.argumentaireValeur}</Text>
-          </>
-        )}
-
-        {/* Boîte valeur vénale */}
+        <Text style={s.sub}>Justification de la valeur</Text>
+        <Text style={s.body}>{argumentaire}</Text>
         <View style={s.valBox}>
-          <Text style={s.valLabel}>Valeur vénale estimée</Text>
-          <Text style={s.valNum}>{E(e.valeurVenale)}</Text>
-          <Text style={s.valLettres}>{nombreEnLettres(e.valeurVenale)}</Text>
-          {prixM2 > 0 && (
-            <Text style={s.valM2}>soit {E(prixM2)}/m² pour {surface} m² habitables</Text>
-          )}
-          {(fourchetteBasse > 0 || fourchetteHaute > 0) && (
-            <Text style={s.valFourch}>
-              Fourchette : {E(fourchetteBasse)} — {E(fourchetteHaute)}
-            </Text>
-          )}
+          <Text style={s.valLbl}>Valeur vénale estimée</Text>
+          <Text style={s.valNum}>{E(e.valeurVenale || 0)}</Text>
+          <Text style={s.valFine}>{nombreEnLettres(e.valeurVenale || 0)}</Text>
+          {prixM2 > 0 && <Text style={s.valFine}>soit {E(prixM2)}/m² pour {surface} m² habitables</Text>}
+          {(basse > 0 || haute > 0) && <Text style={s.valFine}>Fourchette : {E(basse)} — {E(haute)}</Text>}
         </View>
-
-        {/* Valeur coup de cœur */}
         {e.valeurCoupDeCœur > 0 && (
-          <View style={{ border: `0.5 solid ${LINE}`, borderRadius: 4, padding: "8 12", marginBottom: 8 }}>
-            <Text style={[s.body, { marginBottom: 2 }]}>
-              <Text style={s.bold}>Valeur « coup de cœur » : </Text>{E(e.valeurCoupDeCœur)}
-            </Text>
-            {!!e.argumentaireCoupDeCœur && (
-              <Text style={[s.body, { marginBottom: 0 }]}>{e.argumentaireCoupDeCœur}</Text>
-            )}
-          </View>
+          <Text style={s.body}>Valeur « coup de cœur » : {E(e.valeurCoupDeCœur)}{e.argumentaireCoupDeCœur ? ` — ${e.argumentaireCoupDeCœur}` : ""}</Text>
         )}
-
-        {/* Limites */}
-        {!!e.limites && (
-          <View style={s.notice}>
-            <Text style={s.noticeTxt}>{e.limites}</Text>
-          </View>
-        )}
-
-        {/* Notice standard */}
-        <View style={[s.notice, { marginTop: 8 }]}>
-          <Text style={s.noticeTxt}>
-            Cet avis de valeur est établi à titre indicatif sur la base des informations communiquées et des
-            références de marché disponibles à la date d'établissement. Il ne constitue pas une expertise judiciaire
-            ou certifiée. Casa Caraïbes décline toute responsabilité quant à l'utilisation de ce document à des fins
-            autres que celles pour lesquelles il a été établi.
-          </Text>
-        </View>
-
-        {/* Signature */}
-        <View style={s.sigBlock}>
-          <View style={s.sigInner}>
-            <Text style={[s.body, { marginBottom: 8, fontStyle: "italic", fontSize: 8, textAlign: "center" }]}>
-              Fait à {e.lieu || "Le Lamentin (Martinique)"}, le {dateStr}
-            </Text>
-            <View style={s.sigLine} />
-            <Text style={s.sigName}>{e.redacteur || "Casa Caraïbes"}</Text>
-            <Text style={s.sigRole}>Agent immobilier</Text>
+        <View style={s.notice}><Text style={s.noticeTxt}>{limites}</Text></View>
+        <View style={{ marginTop: 20, alignItems: "flex-end" }}>
+          <View style={{ width: "46%", alignItems: "center" }}>
+            <Text style={[s.body, { fontStyle: "italic", fontSize: 8, textAlign: "center" }]}>Fait à {e.lieu || "Le Lamentin (Martinique)"}, le {dateStr}</Text>
+            <View style={{ height: 0.5, backgroundColor: LINE, width: "100%", marginVertical: 8 }} />
+            <Text style={{ fontSize: 8.5, fontFamily: "Montserrat", fontWeight: 700 }}>{e.redacteur || "Casa Caraïbes"}</Text>
+            <Text style={{ fontSize: 7.5, color: SUB, fontStyle: "italic" }}>Agent immobilier</Text>
           </View>
         </View>
-
         <Footer />
       </Page>
     </Document>
