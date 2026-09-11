@@ -244,7 +244,7 @@ export function DocumentsView() {
             <p className="mt-1 text-[12.5px] text-ink-muted">
               {filter === "tous"
                 ? "Les documents seront sauvegardés automatiquement lors du téléchargement depuis le Rédacteur."
-                : `Aucun ${TYPE_LABEL[f]?.toLowerCase()} enregistré.`}
+                : `Aucun ${TYPE_LABEL[filter]?.toLowerCase()} enregistré.`}
             </p>
           </div>
         )}
