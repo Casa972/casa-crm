@@ -1,10 +1,25 @@
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun } from "docx";
 import type { Bail } from "../schemas/bail.schema";
 import { articlesBail, loyerCc, titreBail, sousTitreLegal } from "../schemas/bail.schema";
 import { E, fd, PT, bold, run, title, subtitle, centered, articleHeading, bodyText, spacer, divider, dataRow, GREY, LINE, TB, noBorders } from "./docxHelpers";
+import logoUrl from "../assets/logo.png";
 
 function nom(p: { civilite: string; prenom: string; nom: string }) {
   return [p.civilite, p.prenom, p.nom].filter(Boolean).join(" ") || "—";
+}
+
+async function logoParagraph(): Promise<Paragraph> {
+  try {
+    const res = await fetch(logoUrl);
+    const buf = new Uint8Array(await res.arrayBuffer());
+    return new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 120 },
+      children: [new ImageRun({ data: buf, transformation: { width: 200, height: 52 }, type: "png" })],
+    });
+  } catch {
+    return title("CASA CARAÏBES", PT(16));
+  }
 }
 
 export async function generateBailDOCX(e: Bail): Promise<Blob> {
@@ -13,8 +28,8 @@ export async function generateBailDOCX(e: Bail): Promise<Blob> {
   const preneur = e.preneurs[0];
   const arts = articlesBail(e);
   const children: (Paragraph | Table)[] = [
-    title("CASA CARAÏBES", PT(16)),
-    centered("Agence Immobilière — Martinique", PT(9)),
+    await logoParagraph(),
+    centered("Agence immobilière — Martinique", PT(9)),
     divider(),
     title(titreBail(e.typeBail), PT(16)),
     centered(sousTitreLegal(e.typeBail), PT(9)),
