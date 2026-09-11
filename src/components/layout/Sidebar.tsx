@@ -1,8 +1,8 @@
 import {
-  Sun, Users, Building2, FileText, Target, TrendingUp, ClipboardList,
+  Sun, Users, Building2, Target, TrendingUp, ClipboardList,
   BarChart2, Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
-  GraduationCap, ExternalLink, Landmark, FileSearch, Award, BookOpen, Briefcase,
-  Columns, Clipboard, Home, ScrollText,
+  GraduationCap, ExternalLink, Landmark, BookOpen, Briefcase,
+  Columns, Clipboard,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
@@ -29,16 +29,11 @@ const NAV_DIR: NavEntry[] = [
 
   { kind: "group", label: "Terrain" },
   { kind: "item", id: "biens",        label: "Biens & Mandats", Icon: Building2 },
-  { kind: "item", id: "valeur_venale",label: "Estimations",     Icon: FileSearch },
-  { kind: "item", id: "valeur_locative", label: "Valeur locative", Icon: Home },
-  { kind: "item", id: "estimation",   label: "Expertises",      Icon: Award },
   { kind: "item", id: "compte_rendu", label: "Comptes rendus",  Icon: ClipboardList },
   { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
   { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },
 
   { kind: "group", label: "Documents" },
-  { kind: "item", id: "redacteur",    label: "Rédacteur Actes", Icon: FileText },
-  { kind: "item", id: "bail",         label: "Rédaction de baux", Icon: ScrollText },
   { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
   { kind: "item", id: "registre",     label: "Registre mandats", Icon: BookOpen },
 
@@ -67,15 +62,11 @@ const NAV_AGENT: NavEntry[] = [
 
   { kind: "group", label: "Terrain" },
   { kind: "item", id: "biens",        label: "Biens & Mandats", Icon: Building2 },
-  { kind: "item", id: "valeur_venale",label: "Estimations",     Icon: FileSearch },
-  { kind: "item", id: "valeur_locative", label: "Valeur locative", Icon: Home },
   { kind: "item", id: "compte_rendu", label: "Comptes rendus",  Icon: ClipboardList },
   { kind: "item", id: "agenda",       label: "Agenda",          Icon: Calendar },
   { kind: "item", id: "taches",       label: "Tâches",          Icon: CheckCircle },
 
   { kind: "group", label: "Documents" },
-  { kind: "item", id: "redacteur",    label: "Rédacteur Actes", Icon: FileText },
-  { kind: "item", id: "bail",         label: "Rédaction de baux", Icon: ScrollText },
   { kind: "item", id: "documents",    label: "Documents",       Icon: Library },
 
   { kind: "group", label: "Outils" },
