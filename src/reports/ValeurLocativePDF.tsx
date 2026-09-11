@@ -13,21 +13,53 @@ const MUTED = "#8A8A86";
 
 const s = StyleSheet.create({
   page: { fontFamily: "Montserrat", fontSize: 9.5, color: INK, padding: "16mm 16mm 18mm" },
-  coverPage: { fontFamily: "Montserrat", color: INK, padding: "22mm 20mm 20mm", alignItems: "center" },
-  logo: { width: 168, height: 58, objectFit: "contain", marginBottom: 18 },
-  hair: { width: "100%", height: 0.8, backgroundColor: NAVY, marginVertical: 14 },
-  hairThin: { width: "100%", height: 0.5, backgroundColor: NAVY, marginVertical: 12 },
-  coverTitle: { fontSize: 18, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, textAlign: "center", letterSpacing: 1.4, lineHeight: 1.35, marginTop: 6 },
-  coverSub: { fontSize: 10.5, color: INK, textAlign: "center", marginTop: 10, lineHeight: 1.45 },
-  coverPlace: { fontSize: 10, color: INK, textAlign: "center", marginTop: 14 },
-  coverCad: { fontSize: 9, color: SUB, textAlign: "center", marginTop: 3 },
-  parties: { flexDirection: "row", width: "100%", marginTop: 28, border: `0.8 solid ${LINE}` },
-  partie: { flex: 1, padding: "12 14" },
-  partieR: { flex: 1, padding: "12 14", borderLeft: `0.8 solid ${LINE}` },
-  partieLbl: { fontSize: 8, fontFamily: "Montserrat", fontWeight: 700, color: SUB, letterSpacing: 0.8, marginBottom: 6 },
-  partieVal: { fontSize: 10, fontFamily: "Montserrat", fontWeight: 700, color: INK },
-  partieSub: { fontSize: 9, color: SUB, marginTop: 2 },
-  coverDate: { fontSize: 9, color: SUB, fontStyle: "italic", marginTop: 22 },
+  coverPage: {
+    fontFamily: "Montserrat",
+    color: INK,
+    padding: "24mm 22mm 22mm",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  coverInner: { width: "100%", alignItems: "center" },
+  logo: { width: 176, height: 60, objectFit: "contain", marginBottom: 28 },
+  hair: { width: "42%", height: 0.9, backgroundColor: NAVY, marginBottom: 22 },
+  hairThin: { width: "28%", height: 0.5, backgroundColor: NAVY, marginVertical: 16 },
+  coverKicker: {
+    fontSize: 8,
+    fontFamily: "Montserrat",
+    fontWeight: 700,
+    color: SUB,
+    letterSpacing: 2.2,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  coverTitle: {
+    fontSize: 20,
+    fontFamily: "Montserrat",
+    fontWeight: 700,
+    color: NAVY,
+    textAlign: "center",
+    letterSpacing: 1.8,
+    lineHeight: 1.35,
+  },
+  coverSub: { fontSize: 11, color: INK, textAlign: "center", marginTop: 12, lineHeight: 1.45 },
+  coverPlace: { fontSize: 10.5, color: INK, textAlign: "center", marginTop: 4 },
+  coverCad: { fontSize: 9, color: SUB, textAlign: "center", marginTop: 4 },
+  parties: { flexDirection: "row", width: "100%", marginTop: 32, border: `0.8 solid ${LINE}` },
+  partie: { flex: 1, padding: "16 14", alignItems: "center" },
+  partieR: { flex: 1, padding: "16 14", alignItems: "center", borderLeft: `0.8 solid ${LINE}` },
+  partieLbl: {
+    fontSize: 8,
+    fontFamily: "Montserrat",
+    fontWeight: 700,
+    color: SUB,
+    letterSpacing: 1.1,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  partieVal: { fontSize: 10.5, fontFamily: "Montserrat", fontWeight: 700, color: INK, textAlign: "center" },
+  partieSub: { fontSize: 9, color: SUB, marginTop: 3, textAlign: "center" },
+  coverDate: { fontSize: 9, color: SUB, fontStyle: "italic", marginTop: 26, textAlign: "center" },
   sec: { fontSize: 11, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, marginTop: 12, marginBottom: 3 },
   secLine: { height: 1.2, backgroundColor: NAVY, marginBottom: 8 },
   sub: { fontSize: 10, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, marginTop: 10, marginBottom: 6 },
@@ -85,30 +117,33 @@ export function ValeurLocativePDF({ e }: { e: ValeurLocative }) {
   return (
     <Document>
       <Page size="A4" style={s.coverPage}>
-        <Image src={logo} style={s.logo} />
-        <View style={s.hair} />
-        <Text style={s.coverTitle}>ESTIMATION{"\n"}DE VALEUR LOCATIVE</Text>
-        {!!e.titreBien && <Text style={s.coverSub}>{e.titreBien}</Text>}
-        {!!e.regimeLocatif && <Text style={s.coverSub}>{e.regimeLocatif}</Text>}
-        <View style={s.hairThin} />
-        <Text style={s.coverPlace}>{e.codePostal} {e.commune}{e.commune ? " — Martinique" : ""}</Text>
-        {(e.sectionCadastrale || e.parcelle) && (
-          <Text style={s.coverCad}>{[e.sectionCadastrale && `Section cadastrale ${e.sectionCadastrale}`, e.parcelle && `Parcelle ${e.parcelle}`].filter(Boolean).join(" — ")}</Text>
-        )}
-        {!!e.mentionCouverture && <Text style={s.coverCad}>{e.mentionCouverture}</Text>}
-        <View style={s.parties}>
-          <View style={s.partie}>
-            <Text style={s.partieLbl}>MANDANT</Text>
-            <Text style={s.partieVal}>{e.mandantNom || "—"}</Text>
-            {!!e.mandantVille && <Text style={s.partieSub}>{e.mandantVille}</Text>}
+        <View style={s.coverInner}>
+          <Image src={logo} style={s.logo} />
+          <View style={s.hair} />
+          <Text style={s.coverKicker}>CASA CARAÏBES — AGENCE IMMOBILIÈRE</Text>
+          <Text style={s.coverTitle}>ESTIMATION{"\n"}DE VALEUR LOCATIVE</Text>
+          {!!e.titreBien && <Text style={s.coverSub}>{e.titreBien}</Text>}
+          {!!e.regimeLocatif && <Text style={s.coverSub}>{e.regimeLocatif}</Text>}
+          <View style={s.hairThin} />
+          <Text style={s.coverPlace}>{e.codePostal} {e.commune}{e.commune ? " — Martinique" : ""}</Text>
+          {(e.sectionCadastrale || e.parcelle) && (
+            <Text style={s.coverCad}>{[e.sectionCadastrale && `Section cadastrale ${e.sectionCadastrale}`, e.parcelle && `Parcelle ${e.parcelle}`].filter(Boolean).join(" — ")}</Text>
+          )}
+          {!!e.mentionCouverture && <Text style={s.coverCad}>{e.mentionCouverture}</Text>}
+          <View style={s.parties}>
+            <View style={s.partie}>
+              <Text style={s.partieLbl}>MANDANT</Text>
+              <Text style={s.partieVal}>{e.mandantNom || "—"}</Text>
+              {!!e.mandantVille && <Text style={s.partieSub}>{e.mandantVille}</Text>}
+            </View>
+            <View style={s.partieR}>
+              <Text style={s.partieLbl}>AGENCE MANDATAIRE</Text>
+              <Text style={s.partieVal}>{e.agenceNom}</Text>
+              <Text style={s.partieSub}>{e.agenceMention}</Text>
+            </View>
           </View>
-          <View style={s.partieR}>
-            <Text style={s.partieLbl}>AGENCE MANDATAIRE</Text>
-            <Text style={s.partieVal}>{e.agenceNom}</Text>
-            <Text style={s.partieSub}>{e.agenceMention}</Text>
-          </View>
+          <Text style={s.coverDate}>Document établi le {dateDoc}</Text>
         </View>
-        <Text style={s.coverDate}>Document établi le : {dateDoc}</Text>
       </Page>
       <Page size="A4" style={s.page}>
         <SH n={1} title="RÉFÉRENCES DE L'AGENCE" />
