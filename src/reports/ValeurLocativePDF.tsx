@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+import "./pdfFonts";
 import type { ValeurLocative } from "../schemas/valeurLocative.schema";
 import { loyerAnnuel, syntheseRevenus } from "../schemas/valeurLocative.schema";
 import logo from "../assets/logo.png";
@@ -11,46 +12,46 @@ const SUB = "#5B5B57";
 const MUTED = "#8A8A86";
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 9.5, color: INK, padding: "16mm 16mm 18mm" },
-  coverPage: { fontFamily: "Helvetica", color: INK, padding: "22mm 20mm 20mm", alignItems: "center" },
+  page: { fontFamily: "Montserrat", fontSize: 9.5, color: INK, padding: "16mm 16mm 18mm" },
+  coverPage: { fontFamily: "Montserrat", color: INK, padding: "22mm 20mm 20mm", alignItems: "center" },
   logo: { width: 168, height: 58, objectFit: "contain", marginBottom: 18 },
   hair: { width: "100%", height: 0.8, backgroundColor: NAVY, marginVertical: 14 },
   hairThin: { width: "100%", height: 0.5, backgroundColor: NAVY, marginVertical: 12 },
-  coverTitle: { fontSize: 18, fontFamily: "Helvetica-Bold", color: NAVY, textAlign: "center", letterSpacing: 1.4, lineHeight: 1.35, marginTop: 6 },
+  coverTitle: { fontSize: 18, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, textAlign: "center", letterSpacing: 1.4, lineHeight: 1.35, marginTop: 6 },
   coverSub: { fontSize: 10.5, color: INK, textAlign: "center", marginTop: 10, lineHeight: 1.45 },
   coverPlace: { fontSize: 10, color: INK, textAlign: "center", marginTop: 14 },
   coverCad: { fontSize: 9, color: SUB, textAlign: "center", marginTop: 3 },
   parties: { flexDirection: "row", width: "100%", marginTop: 28, border: `0.8 solid ${LINE}` },
   partie: { flex: 1, padding: "12 14" },
   partieR: { flex: 1, padding: "12 14", borderLeft: `0.8 solid ${LINE}` },
-  partieLbl: { fontSize: 8, fontFamily: "Helvetica-Bold", color: SUB, letterSpacing: 0.8, marginBottom: 6 },
-  partieVal: { fontSize: 10, fontFamily: "Helvetica-Bold", color: INK },
+  partieLbl: { fontSize: 8, fontFamily: "Montserrat", fontWeight: 700, color: SUB, letterSpacing: 0.8, marginBottom: 6 },
+  partieVal: { fontSize: 10, fontFamily: "Montserrat", fontWeight: 700, color: INK },
   partieSub: { fontSize: 9, color: SUB, marginTop: 2 },
   coverDate: { fontSize: 9, color: SUB, fontStyle: "italic", marginTop: 22 },
-  sec: { fontSize: 11, fontFamily: "Helvetica-Bold", color: NAVY, marginTop: 12, marginBottom: 3 },
+  sec: { fontSize: 11, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, marginTop: 12, marginBottom: 3 },
   secLine: { height: 1.2, backgroundColor: NAVY, marginBottom: 8 },
-  sub: { fontSize: 10, fontFamily: "Helvetica-Bold", color: NAVY, marginTop: 10, marginBottom: 6 },
+  sub: { fontSize: 10, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, marginTop: 10, marginBottom: 6 },
   body: { fontSize: 9.5, color: INK, lineHeight: 1.55, textAlign: "justify", marginBottom: 6 },
   bullet: { fontSize: 9.5, color: INK, lineHeight: 1.5, marginLeft: 8, marginBottom: 2 },
   row: { flexDirection: "row", borderBottom: `0.5 solid ${LINE}` },
-  lab: { width: "38%", fontSize: 9, fontFamily: "Helvetica-Bold", color: INK, padding: "5 7", backgroundColor: "#FAFAF8" },
-  val: { width: "62%", fontSize: 9, color: INK, padding: "5 7" },
+  lab: { width: "38%", fontSize: 9, fontFamily: "Montserrat", fontWeight: 700, color: INK, padding: "5 7", backgroundColor: "#FAFAF8", textAlign: "center" },
+  val: { width: "62%", fontSize: 9, color: INK, padding: "5 7", textAlign: "center" },
   thRow: { flexDirection: "row", backgroundColor: NAVY },
-  th: { color: "#fff", fontFamily: "Helvetica-Bold", fontSize: 8.5, padding: "5 6" },
-  td: { fontSize: 9, padding: "4 6", color: INK },
+  th: { color: "#fff", fontFamily: "Montserrat", fontWeight: 700, fontSize: 8.5, padding: "5 6", textAlign: "center" },
+  td: { fontSize: 9, padding: "4 6", color: INK, textAlign: "center" },
   tr: { flexDirection: "row", borderBottom: `0.5 solid ${LINE}` },
   trA: { flexDirection: "row", borderBottom: `0.5 solid ${LINE}`, backgroundColor: "#F7F7F5" },
-  note: { fontSize: 8, color: SUB, fontStyle: "italic", marginTop: 5, marginBottom: 6, lineHeight: 1.4 },
+  note: { fontSize: 8, color: SUB, fontStyle: "italic", marginTop: 5, marginBottom: 6, lineHeight: 1.4, textAlign: "justify" },
   box: { backgroundColor: BEIGE, border: `0.8 solid ${LINE}`, padding: "14 16", alignItems: "center", marginVertical: 10 },
-  boxLbl: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: NAVY, letterSpacing: 1, marginBottom: 6 },
-  boxNum: { fontSize: 22, fontFamily: "Helvetica-Bold", color: NAVY, marginBottom: 4 },
+  boxLbl: { fontSize: 8.5, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, letterSpacing: 1, marginBottom: 6 },
+  boxNum: { fontSize: 22, fontFamily: "Montserrat", fontWeight: 700, color: NAVY, marginBottom: 4 },
   boxSub: { fontSize: 9.5, color: INK, marginBottom: 6 },
   boxFine: { fontSize: 8, color: SUB, textAlign: "center", lineHeight: 1.4 },
   sigWrap: { marginTop: 16, alignItems: "center" },
   sigFait: { fontSize: 9.5, color: INK, marginBottom: 14 },
   sigBox: { width: 220, border: `0.8 solid ${LINE}`, padding: "12 10", alignItems: "center", minHeight: 90 },
-  sigLbl: { fontSize: 8, fontFamily: "Helvetica-Bold", color: SUB, letterSpacing: 0.6 },
-  sigName: { fontSize: 10, fontFamily: "Helvetica-Bold", color: INK, marginTop: 4 },
+  sigLbl: { fontSize: 8, fontFamily: "Montserrat", fontWeight: 700, color: SUB, letterSpacing: 0.6 },
+  sigName: { fontSize: 10, fontFamily: "Montserrat", fontWeight: 700, color: INK, marginTop: 4 },
   sigHint: { fontSize: 8, color: MUTED, fontStyle: "italic", marginTop: 18 },
   footer: { position: "absolute", bottom: "10mm", left: "16mm", right: "16mm", borderTop: `0.5 solid ${LINE}`, paddingTop: 5, flexDirection: "row", justifyContent: "space-between" },
   footerTxt: { fontSize: 7, color: MUTED },
@@ -135,8 +136,8 @@ export function ValeurLocativePDF({ e }: { e: ValeurLocative }) {
               </View>
             ))}
             <View style={[s.tr, { backgroundColor: "#EEF2F5" }]}>
-              <Text style={[s.td, { width: "34%", fontFamily: "Helvetica-Bold" }]}>Total habitable (SHON)</Text>
-              <Text style={[s.td, { width: "18%", fontFamily: "Helvetica-Bold" }]}>{fmtM2(e.surfaceShon || totalPieces)}</Text>
+              <Text style={[s.td, { width: "34%", fontFamily: "Montserrat", fontWeight: 700 }]}>Total habitable (SHON)</Text>
+              <Text style={[s.td, { width: "18%", fontFamily: "Montserrat", fontWeight: 700 }]}>{fmtM2(e.surfaceShon || totalPieces)}</Text>
               <Text style={[s.td, { width: "48%" }]} />
             </View>
           </>
@@ -169,7 +170,7 @@ export function ValeurLocativePDF({ e }: { e: ValeurLocative }) {
         {e.localisation.split("\n").filter(Boolean).map((p, i) => (<Text key={i} style={s.body}>{p}</Text>))}
         {atouts.length > 0 && (
           <>
-            <Text style={[s.body, { fontFamily: "Helvetica-Bold", marginBottom: 3 }]}>Atouts du bien :</Text>
+            <Text style={[s.body, { fontFamily: "Montserrat", fontWeight: 700, marginBottom: 3 }]}>Atouts du bien :</Text>
             {atouts.map((a, i) => (<Text key={i} style={s.bullet}>•  {a}</Text>))}
           </>
         )}
