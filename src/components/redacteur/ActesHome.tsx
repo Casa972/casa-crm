@@ -15,6 +15,7 @@ export function ActesHome() {
   const [open, setOpen] = useState<(typeof VENTE)[number]["id"] | null>(null);
   const setPrefillRedacteur = useUiStore((s) => s.setPrefillRedacteur);
   const setView = useUiStore((s) => s.setView);
+  const openTitle = VENTE.find((d) => d.id === open)?.title;
 
   const openDoc = (id: (typeof VENTE)[number]["id"]) => {
     setPrefillRedacteur({ docType: id, sourceId: "" });
@@ -28,8 +29,11 @@ export function ActesHome() {
           <button className="btn-ghost text-[13px]" onClick={() => setOpen(null)}>
             <ChevronLeft size={14} /> Tous les actes
           </button>
+          {openTitle && (
+            <span className="font-heading text-sm font-semibold text-ink">{openTitle}</span>
+          )}
         </div>
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden [&_aside]:hidden [&_h2.mb-5]:hidden">
           <RedacteurView />
         </div>
       </div>
