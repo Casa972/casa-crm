@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, Suspense, lazy } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense, lazy } from "react";
 import { Plus, Edit2, Trash2, Download, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { EmptyState } from "../ui/Modal";
@@ -11,17 +11,13 @@ import {
   loyerAnnuel, REGIMES_LOCATIFS, analyseMarcheDefaut, estAnalyseParDefaut,
   estMeuble, libelleLoyer, REFERENCES_AGENCE_DEFAUT, DISCLAIMER_DEFAUT,
 } from "../../schemas/valeurLocative.schema";
+import {
+  useValeursLocatives, useSaveValeurLocative, useDeleteValeurLocative,
+  useMigrateLocalValeursLocatives, uid,
+} from "../../hooks/queries/useValeursLocatives";
 
 const ValeurLocativePDFDownload = lazy(() => import("./ValeurLocativePDFDownload"));
-const KEY = "casa.valeur_locative.v1";
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const today = () => new Date().toISOString().slice(0, 10);
-
-function loadAll(): ValeurLocative[] {
-  try { const raw = localStorage.getItem(KEY); return raw ? (JSON.parse(raw) as ValeurLocative[]) : []; }
-  catch { return []; }
-}
-function persist(list: ValeurLocative[]) { localStorage.setItem(KEY, JSON.stringify(list)); }
 
 function ligneS(nom = "", surface = 0, detail = ""): LigneSurface { return { id: uid(), nom, surface, detail }; }
 function ligneE(label = "", valeur = ""): LigneEquipement { return { id: uid(), label, valeur }; }
@@ -180,15 +176,28 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
 
 export function ValeurLocativeView() {
   const user = useSessionStore((s) => s.user);
-  const [list, setList] = useState<ValeurLocative[]>(() => loadAll());
+  const { data: list, isLoading, error } = useValeursLocatives();
+  const saveMut = useSaveValeurLocative();
+  const delMut = useDeleteValeurLocative();
+  const migrate = useMigrateLocalValeursLocatives();
+  const migrated = useRef(false);
   const [editing, setEditing] = useState<ValeurLocative | null>(null);
+
+  useEffect(() => {
+    if (!user || migrated.current) return;
+    migrated.current = true;
+    migrate.mutate(undefined, { onError: () => { migrated.current = false; } });
+  }, [user, migrate]);
+
   const handleSave = useCallback((d: ValeurLocative) => {
-    setList((prev) => { const next = prev.some((x) => x.id === d.id) ? prev.map((x) => (x.id === d.id ? d : x)) : [d, ...prev]; persist(next); return next; });
-  }, []);
+    saveMut.mutate(d, { onError: (err) => alert("Sauvegarde impossible : " + String(err)) });
+  }, [saveMut]);
+
   const handleDelete = (id: string) => {
     if (!confirm("Supprimer cette estimation locative ?")) return;
-    setList((prev) => { const next = prev.filter((x) => x.id !== id); persist(next); return next; });
+    delMut.mutate(id, { onError: (err) => alert("Suppression impossible : " + String(err)) });
   };
+
   if (editing) return <Editor initial={editing} onBack={() => setEditing(null)} onSave={handleSave} />;
   return (
     <div className="mx-auto max-w-[900px] px-6 py-5">
@@ -199,7 +208,14 @@ export function ValeurLocativeView() {
         </div>
         <button className="btn-primary" onClick={() => setEditing(nouveauDoc(user?.id))}><Plus size={14} /> Nouvelle estimation locative</button>
       </div>
-      {list.length === 0 ? (
+      {error ? (
+        <div className="mb-4 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-[13px] text-danger">
+          Impossible de charger les valeurs locatives. Vérifiez la table <code>valeurs_locatives</code> (migration 011).
+        </div>
+      ) : null}
+      {isLoading ? (
+        <div className="py-12 text-center text-ink-muted">Chargement…</div>
+      ) : list.length === 0 ? (
         <EmptyState Icon={Home} text="Aucune estimation locative" sub="Créez un document comme l'estimation CAROLE." />
       ) : (
         <div className="flex flex-col gap-3">

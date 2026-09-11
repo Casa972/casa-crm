@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, Suspense, lazy } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense, lazy } from "react";
 import { Plus, Edit2, Trash2, Download, ChevronLeft, ChevronRight, KeyRound } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { EmptyState } from "../ui/Modal";
@@ -10,17 +10,12 @@ import type { Bail, PartieBail } from "../../schemas/bail.schema";
 import {
   TYPES_BAIL, loyerCc, depotDefaut, dureeDefaut, usageDefaut, titreBail,
 } from "../../schemas/bail.schema";
+import {
+  useBaux, useSaveBail, useDeleteBail, useMigrateLocalBaux, uid,
+} from "../../hooks/queries/useBaux";
 
 const BailDownloads = lazy(() => import("./BailDownloads"));
-const KEY = "casa.bail.v1";
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const today = () => new Date().toISOString().slice(0, 10);
-
-function loadAll(): Bail[] {
-  try { const raw = localStorage.getItem(KEY); return raw ? (JSON.parse(raw) as Bail[]) : []; }
-  catch { return []; }
-}
-function persist(list: Bail[]) { localStorage.setItem(KEY, JSON.stringify(list)); }
 
 function newPartie(qualite = ""): PartieBail {
   return { id: uid(), civilite: "M.", prenom: "", nom: "", dateNaissance: "", lieuNaissance: "", nationalite: "Française", adresse: "", codePostal: "", ville: "", tel: "", email: "", qualite };
@@ -238,15 +233,28 @@ function Editor({ initial, onSave, onBack }: { initial: Bail; onSave: (d: Bail) 
 
 export function BailView() {
   const user = useSessionStore((s) => s.user);
-  const [list, setList] = useState<Bail[]>(() => loadAll());
+  const { data: list, isLoading, error } = useBaux();
+  const saveMut = useSaveBail();
+  const delMut = useDeleteBail();
+  const migrate = useMigrateLocalBaux();
+  const migrated = useRef(false);
   const [editing, setEditing] = useState<Bail | null>(null);
+
+  useEffect(() => {
+    if (!user || migrated.current) return;
+    migrated.current = true;
+    migrate.mutate(undefined, { onError: () => { migrated.current = false; } });
+  }, [user, migrate]);
+
   const handleSave = useCallback((d: Bail) => {
-    setList((prev) => { const next = prev.some((x) => x.id === d.id) ? prev.map((x) => x.id === d.id ? d : x) : [d, ...prev]; persist(next); return next; });
-  }, []);
+    saveMut.mutate(d, { onError: (err) => alert("Sauvegarde impossible : " + String(err)) });
+  }, [saveMut]);
+
   const handleDelete = (id: string) => {
     if (!confirm("Supprimer ce bail ?")) return;
-    setList((prev) => { const next = prev.filter((x) => x.id !== id); persist(next); return next; });
+    delMut.mutate(id, { onError: (err) => alert("Suppression impossible : " + String(err)) });
   };
+
   if (editing) return <Editor initial={editing} onSave={handleSave} onBack={() => setEditing(null)} />;
   return (
     <div className="mx-auto max-w-[900px] px-6 py-5">
@@ -257,7 +265,14 @@ export function BailView() {
         </div>
         <button className="btn-primary" onClick={() => setEditing(nouveauDoc(user?.id))}><Plus size={14} /> Nouveau bail</button>
       </div>
-      {list.length === 0 ? (
+      {error ? (
+        <div className="mb-4 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-[13px] text-danger">
+          Impossible de charger les baux. Vérifiez que la table <code>baux</code> existe dans Supabase (migration 011).
+        </div>
+      ) : null}
+      {isLoading ? (
+        <div className="py-12 text-center text-ink-muted">Chargement…</div>
+      ) : list.length === 0 ? (
         <EmptyState Icon={KeyRound} text="Aucun bail" sub="Rédigez un bail d'habitation nu, meublé, mobilité ou saisonnier." />
       ) : (
         <div className="flex flex-col gap-3">
