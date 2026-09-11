@@ -4,6 +4,7 @@ import { Download, FileText, Loader2 } from "lucide-react";
 import { ValeurLocativePDF } from "../../reports/ValeurLocativePDF";
 import { generateValeurLocativeDOCX } from "../../reports/ValeurLocativeDOCX";
 import type { ValeurLocative } from "../../schemas/valeurLocative.schema";
+import { ensurePdfFonts } from "../../reports/pdfFonts";
 
 function baseName(doc: ValeurLocative) {
   const who = (doc.mandantNom || doc.commune || "Martinique").replace(/\s+/g, "_");
@@ -21,6 +22,11 @@ function triggerDownload(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 400);
 }
 
+function errMsg(e: unknown) {
+  if (e instanceof Error) return e.message;
+  return String(e);
+}
+
 export function ValeurLocativeDOCXDownload({ doc }: { doc: ValeurLocative }) {
   const [loading, setLoading] = useState(false);
   const handle = async () => {
@@ -30,7 +36,7 @@ export function ValeurLocativeDOCXDownload({ doc }: { doc: ValeurLocative }) {
       triggerDownload(await generateValeurLocativeDOCX(doc), `${baseName(doc)}.docx`);
     } catch (e) {
       console.error(e);
-      alert("Erreur lors de la génération du fichier Word.");
+      alert("Erreur Word : " + errMsg(e));
     } finally {
       setLoading(false);
     }
@@ -49,11 +55,12 @@ export default function ValeurLocativePDFDownload({ doc }: { doc: ValeurLocative
     if (loading) return;
     setLoading(true);
     try {
+      ensurePdfFonts();
       const blob = await pdf(<ValeurLocativePDF e={doc} />).toBlob();
       triggerDownload(blob, `${baseName(doc)}.pdf`);
     } catch (e) {
       console.error(e);
-      alert("Erreur lors de la génération du PDF. Réessayez, ou utilisez le Word.");
+      alert("Erreur PDF : " + errMsg(e));
     } finally {
       setLoading(false);
     }
