@@ -93,7 +93,9 @@ function PartieFields({ p, onChange, onRemove }: { p: PartieBail; onChange: (pat
 function Editor({ initial, onSave, onBack }: { initial: Bail; onSave: (d: Bail) => void; onBack: () => void }) {
   const [e, setE] = useState<Bail>(initial);
   const [step, setStep] = useState(1);
-  const upd = useCallback(<K extends keyof Bail>(k: K, v: Bail[K]) => setE((p) => ({ ...p, [k]: v })), []);
+  const upd = useCallback(<K extends keyof Bail,>(k: K, v: Bail[K]) => {
+    setE((p) => ({ ...p, [k]: v }));
+  }, []);
 
   const setType = (typeBail: string) => {
     setE((p) => {
@@ -153,7 +155,7 @@ function Editor({ initial, onSave, onBack }: { initial: Bail; onSave: (d: Bail) 
         <button className="btn-ghost text-[12px]" onClick={() => upd("preneurs", [...e.preneurs, newPartie("Locataire")])}><Plus size={12} /> Co-preneur</button>
         <h3 className="mb-2 mt-4 text-[13px] font-semibold text-ink">Caution solidaire (optionnel)</h3>
         {e.garant ? (
-          <PartieFields p={e.garant} onChange={(patch) => upd("garant", { ...e.garant!, ...patch })} onRemove={() => setE((p) => { const n = { ...p }; delete n.garant; return n; })} />
+          <PartieFields p={e.garant} onChange={(patch) => upd("garant", { ...e.garant!, ...patch })} onRemove={() => setE((p) => ({ ...p, garant: undefined }))} />
         ) : (
           <button className="btn-ghost text-[12px]" onClick={() => upd("garant", newPartie("Caution"))}><Plus size={12} /> Ajouter une caution</button>
         )}
@@ -211,8 +213,8 @@ function Editor({ initial, onSave, onBack }: { initial: Bail; onSave: (d: Bail) 
       {step === 4 && (<>
         <h3 className="mb-2 text-[13px] font-semibold text-ink">Diagnostics</h3>
         <Grid2>
-          <Field label="DPE (énergie)"><Select value={e.dpeClasse || ""} onChange={(v) => upd("dpeClasse", v)} options={["", "A", "B", "C", "D", "E", "F", "G", "Vierge"]} /></Field>
-          <Field label="GES"><Select value={e.gesClasse || ""} onChange={(v) => upd("gesClasse", v)} options={["", "A", "B", "C", "D", "E", "F", "G"]} /></Field>
+          <Field label="DPE (énergie)"><Select value={e.dpeClasse || ""} onChange={(v) => upd("dpeClasse", v)} options={["A", "B", "C", "D", "E", "F", "G", "Vierge"]} /></Field>
+          <Field label="GES"><Select value={e.gesClasse || ""} onChange={(v) => upd("gesClasse", v)} options={["A", "B", "C", "D", "E", "F", "G"]} /></Field>
           <Field label="Date du DPE"><Input type="date" value={e.dateDpe} onChange={(ev) => upd("dateDpe", ev.target.value)} /></Field>
           <Field label="Termites"><Input value={e.termites} onChange={(ev) => upd("termites", ev.target.value)} placeholder="Présence / absence — date" /></Field>
         </Grid2>
