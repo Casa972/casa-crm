@@ -23,7 +23,7 @@ export async function generateValeurLocativeDOCX(e: ValeurLocative): Promise<Blo
     new TableRow({
       children: cols.map((text, i) =>
         new TableCell({
-          children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: PT(9), color: WHITE })] })],
+          children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: PT(9), color: WHITE })], alignment: AlignmentType.CENTER })],
           shading: { fill: PRIMARY, type: ShadingType.SOLID, color: PRIMARY },
           borders: noBorders,
           width: { size: widths[i] ?? 33, type: WidthType.PERCENTAGE },
@@ -35,7 +35,7 @@ export async function generateValeurLocativeDOCX(e: ValeurLocative): Promise<Blo
     new TableRow({
       children: vals.map((text, i) =>
         new TableCell({
-          children: [new Paragraph({ children: [normal(text, PT(9))], spacing: { before: 40, after: 40 } })],
+          children: [new Paragraph({ children: [normal(text, PT(9))], alignment: AlignmentType.CENTER, spacing: { before: 40, after: 40 } })],
           shading: alt ? { fill: "F7F7F5", type: ShadingType.SOLID, color: "F7F7F5" } : undefined,
           borders: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINE }, top: noBorders.top, left: noBorders.left, right: noBorders.right },
           width: { size: widths[i] ?? 33, type: WidthType.PERCENTAGE },
@@ -123,7 +123,7 @@ export async function generateValeurLocativeDOCX(e: ValeurLocative): Promise<Blo
       borders: TB,
     }));
   }
-  if (e.noteSurfaces) paras.push(new Paragraph({ children: [run(e.noteSurfaces, { italic: true, size: PT(8), color: GREY })], spacing: { before: 80, after: 80 } }));
+  if (e.noteSurfaces) paras.push(new Paragraph({ children: [run(e.noteSurfaces, { italic: true, size: PT(8), color: GREY })], spacing: { before: 80, after: 80 }, alignment: AlignmentType.BOTH }));
   if (eqs.length) {
     paras.push(subtitle("3.2  Équipements et prestations"));
     paras.push(new Table({
