@@ -26,7 +26,7 @@ export async function generateValeurLocativeDOCX(e: ValeurLocative): Promise<Blo
           children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: PT(9), color: WHITE })] })],
           shading: { fill: PRIMARY, type: ShadingType.SOLID, color: PRIMARY },
           borders: noBorders,
-          width: { size: widths[i], type: WidthType.PERCENTAGE },
+          width: { size: widths[i] ?? 33, type: WidthType.PERCENTAGE },
         }),
       ),
     });
@@ -38,7 +38,7 @@ export async function generateValeurLocativeDOCX(e: ValeurLocative): Promise<Blo
           children: [new Paragraph({ children: [normal(text, PT(9))], spacing: { before: 40, after: 40 } })],
           shading: alt ? { fill: "F7F7F5", type: ShadingType.SOLID, color: "F7F7F5" } : undefined,
           borders: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINE }, top: noBorders.top, left: noBorders.left, right: noBorders.right },
-          width: { size: widths[i], type: WidthType.PERCENTAGE },
+          width: { size: widths[i] ?? 33, type: WidthType.PERCENTAGE },
         }),
       ),
     });
