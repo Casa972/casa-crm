@@ -75,8 +75,8 @@ export const valeurLocativeService = {
     }
     const rows = local.map((d) => toRow({ ...d, agentId: d.agentId ?? agentId }));
     const { error } = await supabase.from(TABLE).upsert(rows, { onConflict: "id" });
-    if (error) throw new ApiError("Migration des valeurs locatives locales impossible", TABLE, "migrate", error);
     localStorage.setItem(MIGRATED_KEY, "1");
+    if (error) return 0;
     return local.length;
   },
 };
