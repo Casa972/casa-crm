@@ -1,31 +1,24 @@
 import { useState } from "react";
 import { Building2 } from "lucide-react";
-import { useSessionStore } from "../../store/session.store";
 import { Field, Input } from "../ui/Field";
-import type { SessionUser } from "../../types/domain";
-
-/**
- * Comptes de démonstration. En production : migrer vers Supabase Auth
- * (cf. supabase/migrations/001_rls.sql qui attend app_metadata.role).
- */
-const USERS: (SessionUser & { password: string })[] = [
-  { id: "dir", role: "directeur", name: "Luc", email: "luc@casacaraibes.com", password: "casa2024!", label: "Directeur" },
-  { id: "noham", role: "agent", name: "Noham", email: "noham@casacaraibes.com", password: "noham2024", label: "Agent commercial" },
-  { id: "steeve", role: "agent", name: "Steeve", email: "steeve@casacaraibes.com", password: "steeve2024", label: "Agent commercial" },
-];
+import { signIn } from "../../services/auth.service";
 
 export function Login() {
-  const setUser = useSessionStore((s) => s.setUser);
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const submit = () => {
-    const u = USERS.find((x) => x.email === email.trim().toLowerCase() && x.password === pass);
-    if (u) {
-      const { password: _pw, ...session } = u;
-      setUser(session);
-    } else setErr("Identifiants incorrects.");
+  const submit = async () => {
+    setErr("");
+    setBusy(true);
+    try {
+      await signIn(email, pass);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Connexion impossible.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -36,15 +29,29 @@ export function Login() {
             <Building2 size={22} className="text-white" />
           </div>
           <h1 className="font-heading text-xl font-semibold text-ink">Casa Caraïbes</h1>
+          <p className="text-center text-[12px] text-ink-muted">Connexion agence</p>
         </div>
         <Field label="Email">
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <Input
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void submit()}
+          />
         </Field>
         <Field label="Mot de passe">
-          <Input type="password" value={pass} onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <Input
+            type="password"
+            autoComplete="current-password"
+            value={pass}
+            onChange={(e) => setPass(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void submit()}
+          />
         </Field>
         {err && <p className="mb-2 text-[12px] text-danger">{err}</p>}
-        <button className="btn-primary mt-2 w-full justify-center" onClick={submit}>Se connecter</button>
+        <button className="btn-primary mt-2 w-full justify-center" disabled={busy} onClick={() => void submit()}>
+          {busy ? "Connexion…" : "Se connecter"}
+        </button>
       </div>
     </div>
   );
