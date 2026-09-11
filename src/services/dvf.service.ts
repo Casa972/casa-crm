@@ -34,23 +34,25 @@ const INSEE: Record<string, string> = {
   "Saint-Esprit": "97223",
   "Gros-Morne": "97212",
   "Saint-Joseph": "97224",
-  "Le François": "97210",
 };
 
 export function codeInseeCommune(commune: string): string | null {
   if (!commune) return null;
-  if (INSEE[commune]) return INSEE[commune];
+  const direct = INSEE[commune];
+  if (direct) return direct;
   const hit = Object.keys(INSEE).find((k) => k.toLowerCase() === commune.toLowerCase());
-  return hit ? INSEE[hit] : null;
+  return hit ? (INSEE[hit] ?? null) : null;
 }
 
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.split(/\r?\n/).filter(Boolean);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map((h) => h.replace(/^"|"$/g, ""));
+  const headerLine = lines[0];
+  if (!headerLine || lines.length < 2) return [];
+  const headers = headerLine.split(",").map((h) => h.replace(/^"|"$/g, ""));
   return lines.slice(1).map((line) => {
     const cols: string[] = [];
-    let cur = "", inQ = false;
+    let cur = "";
+    let inQ = false;
     for (const ch of line) {
       if (ch === '"') { inQ = !inQ; continue; }
       if (ch === "," && !inQ) { cols.push(cur); cur = ""; continue; }
@@ -83,7 +85,9 @@ export async function fetchDvfComparables(commune: string, typeBien?: string): P
       const res = await fetch(url);
       if (!res.ok) return;
       rows.push(...parseCsv(await res.text()));
-    } catch { /* millésime absent */ }
+    } catch {
+      /* millésime absent */
+    }
   }));
 
   const out: DvfComparable[] = [];
@@ -106,7 +110,7 @@ export async function fetchDvfComparables(commune: string, typeBien?: string): P
       prix,
       prixM2,
       localisation: [voie, r.nom_commune || commune].filter(Boolean).join(", "),
-      reference: `DVF ${ (r.date_mutation || "").slice(0, 4)}`,
+      reference: `DVF ${(r.date_mutation || "").slice(0, 4)}`,
     });
   }
 
@@ -119,28 +123,4 @@ export async function fetchDvfComparables(commune: string, typeBien?: string): P
   });
   uniq.sort((a, b) => b.date.localeCompare(a.date));
   return uniq.slice(0, 25);
-}
-
-export function proposerPrix(opts: {
-  surface: number;
-  refs: { prixM2: number; surface: number }[];
-  etat?: string;
-}): { min: number; retenu: number; max: number; m2: number; nb: number } | null {
-  const vals = opts.refs.map((r) => r.prixM2).filter((n) => n > 0).sort((a, b) => a - b);
-  if (!vals.length || !opts.surface) return null;
-  const mid = vals[Math.floor(vals.length / 2)];
-  const COEF: Record<string, number> = {
-    "Parfait état": 1.08, "Très bon état": 1.04, "Bon état": 1,
-    "État moyen": 0.93, "Travaux à prévoir": 0.85,
-  };
-  const coef = COEF[opts.etat || ""] ?? 1;
-  const m2 = Math.round(mid * coef);
-  const round = (n: number) => Math.round(n / 1000) * 1000;
-  return {
-    min: round(vals[0] * coef * opts.surface),
-    retenu: round(m2 * opts.surface),
-    max: round(vals[vals.length - 1] * coef * opts.surface),
-    m2,
-    nb: vals.length,
-  };
 }
