@@ -18,7 +18,7 @@ sécurisée (RLS Supabase) et hautement scannable.
 ```bash
 npm install
 cp .env.example .env.local        # renseigner VITE_SUPABASE_ANON_KEY
-# Exécuter supabase/migrations/001_rls.sql dans le SQL Editor Supabase
+# Exécuter supabase/migrations/001_rls.sql puis 011_docs_locaux.sql dans le SQL Editor Supabase
 npm run dev                        # http://localhost:5173
 ```
 
@@ -60,3 +60,14 @@ src/
 `services/compromis.service.ts` synchronise atomiquement un compromis et son revenu lié :
 passage en « Acte signé » → création/MAJ du revenu ; retour en arrière → suppression du revenu fantôme.
 Tout le calcul est centralisé et mémoïsé dans `useFinancials`.
+
+## Persistance documents (étape 1)
+
+Les **baux** et **valeurs locatives** ne vivent plus dans le navigateur.
+Ils sont stockés dans Supabase (`public.baux`, `public.valeurs_locatives`).
+
+1. Ouvrir le projet Supabase Casa Caraïbes
+2. SQL Editor → coller `supabase/migrations/011_docs_locaux.sql` → Run
+3. Recharger le CRM : les brouillons déjà tapés dans ce navigateur sont importés une fois
+
+Sans cette requête SQL, l'écran affichera un bandeau d'erreur au lieu d'une liste vide.
