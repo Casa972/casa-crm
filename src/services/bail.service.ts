@@ -80,7 +80,6 @@ export const bailService = {
     if (error) throw new ApiError("Suppression du bail impossible", TABLE, "remove", error);
   },
 
-  /** Importe une seule fois les brouillons restés dans le navigateur. */
   async migrateFromLocal(agentId?: string): Promise<number> {
     if (typeof window === "undefined") return 0;
     if (localStorage.getItem(MIGRATED_KEY) === "1") return 0;
@@ -91,8 +90,8 @@ export const bailService = {
     }
     const rows = local.map((b) => toRow({ ...b, agentId: b.agentId ?? agentId }));
     const { error } = await supabase.from(TABLE).upsert(rows, { onConflict: "id" });
-    if (error) throw new ApiError("Migration des baux locaux impossible", TABLE, "migrate", error);
     localStorage.setItem(MIGRATED_KEY, "1");
+    if (error) return 0;
     return local.length;
   },
 };
