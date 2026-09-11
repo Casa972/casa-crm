@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { FileText, Trash2, Library, AlertCircle, Loader2, Pencil, Check, X, ScrollText, Home, FileSearch, Award, ClipboardList } from "lucide-react";
+import { FileText, Trash2, Library, AlertCircle, Loader2, Pencil, Check, X } from "lucide-react";
 import { useDocuments, useDeleteDocument, useUpdateDocument } from "../../hooks/queries/useDocuments";
-import { useUiStore, type ViewId } from "../../store/ui.store";
-import { useSessionStore } from "../../store/session.store";
 import type { DocumentRow } from "../../types/database";
 
 type Filter = "tous" | "mandat" | "compromis" | "offre";
@@ -151,20 +149,9 @@ function DocumentCard({ doc }: { doc: DocumentRow }) {
   );
 }
 
-const HUB: { id: ViewId; title: string; sub: string; Icon: typeof FileText; dirOnly?: boolean }[] = [
-  { id: "redacteur", title: "Actes", sub: "Mandat, compromis, offre", Icon: FileText },
-  { id: "bail", title: "Baux", sub: "Nu, meublé, mobilité, saisonnier", Icon: ScrollText },
-  { id: "valeur_locative", title: "Valeur locative", sub: "Estimation de loyer", Icon: Home },
-  { id: "valeur_venale", title: "Valeur vénale", sub: "Estimation de vente", Icon: FileSearch },
-  { id: "estimation", title: "Expertises", sub: "Rapport d'expertise", Icon: Award, dirOnly: true },
-  { id: "compte_rendu", title: "Comptes rendus", sub: "Visites clients", Icon: ClipboardList },
-];
-
 export function DocumentsView() {
   const [filter, setFilter] = useState<Filter>("tous");
   const { data: docs = [], isLoading, isError, error } = useDocuments();
-  const setView = useUiStore((s) => s.setView);
-  const isDir = useSessionStore((s) => s.isDirecteur());
 
   const filtered = filter === "tous" ? docs : docs.filter(d => d.type_doc === filter);
 
@@ -181,25 +168,9 @@ export function DocumentsView() {
         <div className="flex items-center gap-3">
           <Library size={20} className="text-primary" />
           <div>
-            <h2 className="font-heading text-lg font-semibold text-ink">Documents</h2>
-            <p className="text-[12px] text-ink-muted">Rédiger un acte, un bail ou une estimation — puis retrouver les fichiers ici</p>
+            <h2 className="font-heading text-lg font-semibold text-ink">Bibliothèque</h2>
+            <p className="text-[12px] text-ink-muted">Fichiers téléchargés (PDF / Word). Pour rédiger : menu Rédaction.</p>
           </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {HUB.filter((h) => isDir || !h.dirOnly).map((h) => (
-            <button
-              key={h.id}
-              type="button"
-              onClick={() => setView(h.id)}
-              className="flex items-start gap-2.5 rounded-lg border border-line bg-bg px-3 py-2.5 text-left transition-colors hover:border-primary/40 hover:bg-primary-soft/40"
-            >
-              <h.Icon size={16} className="mt-0.5 shrink-0 text-primary" />
-              <span>
-                <span className="block text-[13px] font-semibold text-ink">{h.title}</span>
-                <span className="block text-[11px] text-ink-muted">{h.sub}</span>
-              </span>
-            </button>
-          ))}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {(["tous", "mandat", "compromis", "offre"] as Filter[]).map(f => (
@@ -231,7 +202,7 @@ export function DocumentsView() {
               <span className="text-[13px] font-medium">Impossible de charger les documents</span>
             </div>
             <p className="text-[12px] pl-6">
-              {error instanceof Error ? error.message : "Vérifiez que la table \"documents\" et le bucket Storage \"documents\" existent dans Supabase."}
+              {error instanceof Error ? error.message : "Vérifiez la table documents et le bucket Storage dans Supabase."}
             </p>
           </div>
         )}
@@ -240,10 +211,10 @@ export function DocumentsView() {
             <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-line">
               <Library size={28} className="text-ink-muted" />
             </div>
-            <p className="text-[14px] font-medium text-ink-sub">Aucun document</p>
+            <p className="text-[14px] font-medium text-ink-sub">Aucun fichier</p>
             <p className="mt-1 text-[12.5px] text-ink-muted">
               {filter === "tous"
-                ? "Les documents seront sauvegardés automatiquement lors du téléchargement depuis le Rédacteur."
+                ? "Les PDF et Word téléchargés depuis Vente ou Baux apparaîtront ici."
                 : `Aucun ${TYPE_LABEL[filter]?.toLowerCase()} enregistré.`}
             </p>
           </div>
