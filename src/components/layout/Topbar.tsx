@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, Search } from "lucide-react";
 import { useUiStore, type ViewId } from "../../store/ui.store";
 import { useSessionStore } from "../../store/session.store";
-import { NotificationsBell } from "./NotificationsBell";
 import { SearchModal } from "../search/SearchModal";
 
 const PAGE_LABELS: Record<ViewId, string> = {
@@ -32,12 +31,12 @@ const PAGE_LABELS: Record<ViewId, string> = {
   import: "Import CSV",
 };
 
-export function Topbar({ alertCount: _alertCount = 0 }: { alertCount?: number }) {
+export function Topbar() {
   const { activeView, toggleSidebar } = useUiStore();
   const user = useSessionStore((s) => s.user);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
@@ -46,34 +45,32 @@ export function Topbar({ alertCount: _alertCount = 0 }: { alertCount?: number })
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  });
+  }, []);
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex h-13 shrink-0 items-center justify-between border-b border-line bg-surface px-4 py-3">
+      <header className="sticky top-0 z-20 flex min-h-12 shrink-0 items-center justify-between border-b border-line bg-surface px-3 py-2 md:px-4" style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <button
             onClick={toggleSidebar}
-            className="flex size-9 items-center justify-center rounded border border-line bg-surface md:hidden"
+            className="hidden size-11 items-center justify-center rounded border border-line bg-surface max-md:flex"
             aria-label="Menu"
           >
             <Menu size={20} className="text-ink" />
           </button>
-          <span className="truncate font-heading text-sm font-semibold text-ink">
+          <span className="truncate font-heading text-[15px] font-semibold text-ink md:text-sm">
             {PAGE_LABELS[activeView]}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 rounded border border-line bg-bg px-2.5 py-1.5 text-[12.5px] text-ink-muted hover:border-primary/40 hover:text-ink transition-colors"
-            title="Recherche globale (Ctrl+K)"
+            className="flex size-11 items-center justify-center rounded border border-line bg-bg md:size-auto md:gap-2 md:px-2.5 md:py-1.5"
+            title="Recherche globale"
           >
-            <Search size={13} />
-            <span className="hidden sm:inline">Rechercher</span>
-            <kbd className="hidden rounded border border-line px-1 text-[10px] sm:inline">\u2318K</kbd>
+            <Search size={16} />
+            <span className="hidden sm:inline text-[13px]">Rechercher</span>
           </button>
-          <NotificationsBell />
           {user && (
             <span className="hidden text-[12.5px] text-ink-muted sm:inline">
               Bonjour,&nbsp;<b className="text-ink">{user.name}</b>

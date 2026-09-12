@@ -2,18 +2,18 @@ import type { ReactNode, InputHTMLAttributes } from "react";
 import { cn } from "../../lib/cn";
 
 const base =
-  "w-full rounded border border-line2 bg-surface px-3 py-2 text-[13.5px] text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft placeholder:text-ink-muted";
+  "w-full rounded border border-line2 bg-surface px-3 py-2.5 text-[16px] md:py-2 md:text-[13.5px] text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft placeholder:text-ink-muted";
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(base, className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cn(base, "resize-y", className)} {...props} />;
+  return <textarea className={cn(base, "resize-y min-h-[88px]")} {...props} />;
 }
 
 export function Select({
-  value, onChange, options, placeholder = "— Choisir —", className,
+  value, onChange, options, placeholder = "\u2014 Choisir \u2014", className,
 }: {
   value: string;
   onChange: (v: string) => void;
