@@ -3,7 +3,6 @@ import { useSessionStore } from "./store/session.store";
 import { useAuthBootstrap } from "./hooks/useAuthBootstrap";
 import { useUiStore, type ViewId } from "./store/ui.store";
 import { useAgencyData } from "./hooks/queries/useAgencyData";
-import { useFinancials } from "./hooks/useFinancials";
 import { Login } from "./components/auth/Login";
 import { AppShell } from "./components/layout/AppShell";
 import { TodayView } from "./components/today/TodayView";
@@ -28,7 +27,6 @@ import { DocumentsView } from "./components/documents/DocumentsView";
 import { RegistreView } from "./components/registre/RegistreView";
 import { MesDossiersView } from "./components/pilotage/MesDossiersView";
 import { NotesView } from "./components/notes/NotesView";
-import { daysDiff } from "./lib/format";
 import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
@@ -44,17 +42,17 @@ function CurrentView(): ReactElement {
     case "clients": return <ClientsView />;
     case "pipeline_clients": return <PipelineView />;
     case "biens": return <BiensView />;
-    case "redacteur": return <ActesHome />;
     case "pilotage": return <PilotageView />;
-    case "pilotage_agent": return <PilotageAgentView />;
     case "revenus": return <RevenusView />;
     case "reporting": return <ReportingView />;
     case "finance": return <FinanceView />;
+    case "redacteur": return <ActesHome />;
     case "estimation": return <EstimationView />;
     case "valeur_venale": return <ValeurVenaleView />;
     case "valeur_locative": return <ValeurLocativeView />;
     case "bail": return <BailView />;
     case "compte_rendu": return <CompteRenduView />;
+    case "pilotage_agent": return <PilotageAgentView />;
     case "agenda": return <AgendaView />;
     case "taches": return <TachesView />;
     case "calculatrice": return <CalculatriceView />;
@@ -66,13 +64,6 @@ function CurrentView(): ReactElement {
     case "import": return <TodayView />;
     default: return <TodayView />;
   }
-}
-
-function useAlertCount(): number {
-  const { data } = useAgencyData();
-  const fin = useFinancials(data);
-  const relances = data.clients.filter((c) => c.relanceDate && (daysDiff(c.relanceDate) ?? 99) <= 0).length;
-  return relances + fin.alertesDelais.length;
 }
 
 function useKeyboardShortcuts() {
@@ -102,7 +93,6 @@ export function App() {
   const user = useSessionStore((s) => s.user);
   const ready = useSessionStore((s) => s.ready);
   const { isLoading, isError } = useAgencyData();
-  const alertCount = useAlertCount();
 
   const setView = useUiStore((s) => s.setView);
   const isDir = useSessionStore((s) => s.isDirecteur());
@@ -113,14 +103,14 @@ export function App() {
   useKeyboardShortcuts();
   useRealtimeSync();
 
-  if (!ready) return <div className="flex h-screen items-center justify-center text-ink-sub">Connexion…</div>;
+  if (!ready) return <div className="flex h-[100dvh] items-center justify-center text-ink-sub">Connexion\u2026</div>;
   if (!user) return <Login />;
-  if (isLoading) return <div className="flex h-screen items-center justify-center text-ink-sub">Chargement…</div>;
-  if (isError) return <div className="flex h-screen items-center justify-center text-danger">Erreur de chargement des données.</div>;
+  if (isLoading) return <div className="flex h-[100dvh] items-center justify-center text-ink-sub">Chargement\u2026</div>;
+  if (isError) return <div className="flex h-[100dvh] items-center justify-center text-danger">Erreur de chargement des données.</div>;
 
   return (
     <>
-      <AppShell alertCount={alertCount}>
+      <AppShell>
         <CurrentView />
       </AppShell>
       <Toaster />

@@ -5,8 +5,12 @@
 @tailwind utilities;
 
 @layer base {
+  html, body, #root {
+    height: 100%;
+  }
   body {
     @apply bg-bg text-ink font-sans antialiased;
+    overflow: hidden;
   }
   ::-webkit-scrollbar {
     width: 4px;
@@ -15,20 +19,24 @@
   ::-webkit-scrollbar-thumb {
     @apply rounded-full bg-line2;
   }
+  @media (max-width: 767px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer components {
-  /* Primitives réutilisables — composées avec cn() côté composants. */
   .card {
     @apply rounded-lg border border-line bg-surface shadow-card;
   }
   .btn {
-    @apply inline-flex items-center gap-2 rounded font-semibold transition-colors;
+    @apply inline-flex items-center justify-center gap-2 rounded font-semibold transition-colors;
   }
   .btn-primary {
-    @apply btn bg-primary px-4 py-2 text-sm text-white hover:bg-primary-hover;
+    @apply btn min-h-11 bg-primary px-4 py-2 text-sm text-white hover:bg-primary-hover;
   }
   .btn-ghost {
-    @apply btn border border-line2 px-3.5 py-1.5 text-sm text-ink-sub hover:bg-line/40;
+    @apply btn min-h-11 border border-line2 px-3.5 py-1.5 text-sm text-ink-sub hover:bg-line/40;
   }
 }
