@@ -1,52 +1,47 @@
 import { useState } from "react";
-import {
-  Plus, Trash2, Edit2, ChevronLeft, ChevronRight, List, CalendarDays, ExternalLink,
-} from "lucide-react";
+import { Plus, Trash2, CalendarDays } from "lucide-react";
 import { Modal, FormActions, EmptyState } from "../ui/Modal";
-import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
+import { Field, Grid2, Input, Select } from "../ui/Field";
 import { PageHeader } from "../shared/PageHeader";
 import { StatusPill } from "../shared/StatusPill";
 import { useRdv, useSaveRdv, useDeleteRdv } from "../../hooks/queries/useRdv";
-import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import type { Rdv } from "../../types/domain";
-import { TypeRdv, StatutRdv } from "../../schemas/rdv.schema";
+import { TypeRdv } from "../../schemas/rdv.schema";
 import { agendaSubtitle } from "./agendaSubtitle";
-import { AGENTS_NAMES } from "../../config/agents";
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const today = () => new Date().toISOString().slice(0, 10);
 const TYPE_RDV_OPTIONS = TypeRdv.options;
-const STATUT_RDV_OPTIONS = StatutRdv.options;
-const MONTH_FR = ["Janvier","Fevrier","Mars","Avril","Mai","Juin","Juillet","Aout","Septembre","Octobre","Novembre","Decembre"];
-const DAY_FR = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 type Tone = "emerald" | "amber" | "danger" | "primary" | "violet" | "neutral";
-const TYPE_STYLES: Record<string, { badge: string; pill: Tone; cell: string }> = {
-  Visite: { badge: "bg-primary-soft text-primary", pill: "primary", cell: "bg-primary-soft text-primary" },
-  Appel: { badge: "bg-emerald-soft text-emerald", pill: "emerald", cell: "bg-emerald-soft text-emerald" },
-  "RDV Signature": { badge: "bg-violet-soft text-violet", pill: "violet", cell: "bg-violet-soft text-violet" },
-  Estimation: { badge: "bg-amber-soft text-amber", pill: "amber", cell: "bg-amber-soft text-amber" },
-  "Suivi Agent": { badge: "bg-primary-soft text-primary", pill: "primary", cell: "bg-primary-soft text-primary" },
-  Autre: { badge: "bg-line/60 text-ink-sub", pill: "neutral", cell: "bg-line/60 text-ink-sub" },
+const TYPE_STYLES: Record<string, { pill: Tone }> = {
+  Visite: { pill: "primary" },
+  Appel: { pill: "emerald" },
+  "RDV Signature": { pill: "violet" },
+  Estimation: { pill: "amber" },
+  "Suivi Agent": { pill: "primary" },
+  Autre: { pill: "neutral" },
 };
-const FALLBACK_STYLE = { badge: "bg-line/60 text-ink-sub", pill: "neutral" as Tone, cell: "bg-line/60 text-ink-sub" };
 
 function emptyRdv(): Rdv {
-  return { id: "", titre: "", date: today(), heureDebut: "09:00", heureFin: "10:00", typeRdv: "Visite", statut: "Planifie" as Rdv["statut"] };
+  return {
+    id: "",
+    titre: "",
+    date: today(),
+    heureDebut: "09:00",
+    heureFin: "10:00",
+    typeRdv: "Visite",
+    statut: "Planifi\u00e9",
+  };
 }
 
 export function AgendaView() {
   const { data: rdvList } = useRdv();
   const del = useDeleteRdv();
-  const save = useSaveRdv();
   const [modal, setModal] = useState<{ item?: Rdv } | null>(null);
-  const [view, setView] = useState<"month" | "list">("list");
-  const [current] = useState(() => {
-    const d = new Date();
-    return { year: d.getFullYear(), month: d.getMonth() };
-  });
+  const now = new Date();
   const rdvInMonth = rdvList.filter((r) => {
     const [y, m] = r.date.split("-").map(Number);
-    return y === current.year && m === current.month + 1;
+    return y === now.getFullYear() && m === now.getMonth() + 1;
   });
 
   return (
@@ -64,21 +59,23 @@ export function AgendaView() {
         {rdvInMonth.length === 0 ? (
           <EmptyState Icon={CalendarDays} text="Aucun RDV ce mois" sub="Cliquez sur + pour creer un rendez-vous." />
         ) : (
-          rdvInMonth.sort((a, b) => a.date.localeCompare(b.date) || a.heureDebut.localeCompare(b.heureDebut)).map((r) => (
-            <div key={r.id} className="card flex items-start gap-3 p-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[13.5px] font-semibold text-ink">{r.titre}</span>
-                  <StatusPill label={r.typeRdv} tone={(TYPE_STYLES[r.typeRdv] ?? FALLBACK_STYLE).pill} />
-                  {r.statut !== "Planifie" && r.statut !== "Planifi\u00e9" && <StatusPill label={r.statut} />}
+          rdvInMonth
+            .sort((a, b) => a.date.localeCompare(b.date) || a.heureDebut.localeCompare(b.heureDebut))
+            .map((r) => (
+              <div key={r.id} className="card flex items-start gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[13.5px] font-semibold text-ink">{r.titre}</span>
+                    <StatusPill label={r.typeRdv} tone={(TYPE_STYLES[r.typeRdv] ?? { pill: "neutral" as Tone }).pill} />
+                    {r.statut !== "Planifi\u00e9" && <StatusPill label={r.statut} />}
+                  </div>
+                  <div className="text-xs text-ink-muted">{r.date} {r.heureDebut}-{r.heureFin}</div>
                 </div>
-                <div className="text-xs text-ink-muted">{r.date} {r.heureDebut}-{r.heureFin}</div>
+                <button className="btn-ghost text-[12px]" onClick={() => { if (confirm("Supprimer ce RDV ?")) del.mutate(r.id); }}>
+                  <Trash2 size={12} />
+                </button>
               </div>
-              <button className="btn-ghost text-[12px]" onClick={() => { if (confirm("Supprimer ce RDV ?")) del.mutate(r.id); }}>
-                <Trash2 size={12} />
-              </button>
-            </div>
-          ))
+            ))
         )}
       </div>
       {modal && (
@@ -105,7 +102,10 @@ function RdvMiniForm({ initial, onClose }: { initial?: Rdv; onClose: () => void 
         <Field label="Type"><Select value={form.typeRdv} onChange={(v) => setForm((f) => ({ ...f, typeRdv: v as Rdv["typeRdv"] }))} options={TYPE_RDV_OPTIONS} /></Field>
       </Grid2>
       <FormActions
-        onSave={() => { save.mutate({ ...form, id: form.id || uid(), statut: form.statut || "Planifi\u00e9" }); onClose(); }}
+        onSave={() => {
+          save.mutate({ ...form, id: form.id || uid(), statut: form.statut || "Planifi\u00e9" });
+          onClose();
+        }}
         onClose={onClose}
         label={initial ? "Modifier" : "Creer le RDV"}
       />
