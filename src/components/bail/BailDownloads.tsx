@@ -4,7 +4,7 @@ import { Download, FileText, Loader2 } from "lucide-react";
 import { BailPDF } from "../../reports/BailPDF";
 import { generateBailDOCX } from "../../reports/BailDOCX";
 import type { Bail } from "../../schemas/bail.schema";
-import { erreursBail } from "../../schemas/bail.schema";
+import { erreursBail } from "../../schemas/bail.guards";
 import { toast } from "../../store/toast.store";
 
 function baseName(doc: Bail) {
