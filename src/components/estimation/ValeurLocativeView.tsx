@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, Edit2, Trash2, Download, ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { Plus, Edit2, Trash2, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { EmptyState } from "../ui/Modal";
 import { StatusPill } from "../shared/StatusPill";
@@ -25,7 +25,7 @@ function ligneE(label = "", valeur = ""): LigneEquipement { return { id: uid(), 
 function nouveauDoc(agentId?: string): ValeurLocative {
   return {
     id: uid(), statut: "Brouillon", agentId,
-    titreBien: "", regimeLocatif: "Location longue duree meublee", mentionCouverture: "",
+    titreBien: "", regimeLocatif: REGIMES_LOCATIFS[0], mentionCouverture: "",
     adresse: "", commune: "Saint-Esprit", codePostal: "97270", sectionCadastrale: "", parcelle: "",
     mandantNom: "", mandantVille: "", agenceNom: "Casa Caraibes SARL", agenceMention: "Agence Immobiliere - Martinique",
     dateDocument: today(), lieuSignature: "Le Lamentin", dateSignature: today(),
@@ -36,7 +36,7 @@ function nouveauDoc(agentId?: string): ValeurLocative {
     noteSurfaces: "",
     equipements: [ligneE("Construction"), ligneE("Facades"), ligneE("Toiture"), ligneE("Menuiseries"), ligneE("Ameublement"), ligneE("Piscine"), ligneE("Vue"), ligneE("Terrain"), ligneE("Stationnement")],
     localisation: "", atouts: ["", "", ""],
-    analyseMarche: analyseMarcheDefaut("Location longue duree meublee"),
+    analyseMarche: analyseMarcheDefaut(REGIMES_LOCATIFS[0]),
     loyerMensuelHc: 0, syntheseLoyer: "", vigilance: "", mentionPrevisionnelle: "",
     disclaimer: DISCLAIMER_DEFAUT,
   };
@@ -74,7 +74,7 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
         <div className="flex gap-2">
           {e.loyerMensuelHc > 0 && <ValeurLocativePDFDownload doc={e} />}
           <button className="btn-ghost text-[13px]" onClick={() => { upd("statut", "Brouillon"); onSave({ ...e, statut: "Brouillon" }); }}>Enregistrer</button>
-          <button className="btn-primary text-[13px]" onClick={() => { if (!confirm("Finaliser cette estimation ?")) return; const n = { ...e, statut: "Finalisee" as const }; setE(n); onSave(n); onBack(); }}>Finaliser</button>
+          <button className="btn-primary text-[13px]" onClick={() => { if (!confirm("Finaliser cette estimation ?")) return; const n = { ...e, statut: "Finalis\u00e9e" as const }; setE(n); onSave(n); onBack(); }}>Finaliser</button>
         </div>
       </div>
       <div className="mb-5 flex gap-2">
@@ -224,10 +224,9 @@ export function ValeurLocativeView() {
                 <div className="min-w-0 flex-1">
                   <div className="mb-1.5 flex flex-wrap items-center gap-2">
                     <span className="font-heading text-[15px] font-semibold text-ink">{est.titreBien || est.adresse || "Sans titre"}</span>
-                    <StatusPill label={est.statut} tone={est.statut === "Finalisee" || est.statut === "Finalisée" ? "emerald" : "amber"} />
+                    <StatusPill label={est.statut} tone={est.statut === "Finalis\u00e9e" ? "emerald" : "amber"} />
                   </div>
                   <div className="text-[12.5px] text-ink-sub">{est.regimeLocatif} - {est.commune}</div>
-                  <div className="text-[12px] text-ink-muted">Mandant : {est.mandantNom || "-"}{est.surfaceShon > 0 && ` - ${est.surfaceShon} m2`}{est.dateDocument && ` - ${est.dateDocument}`}</div>
                 </div>
                 <div className="shrink-0 text-right">
                   {est.loyerMensuelHc > 0 && (<><div className="font-heading text-lg font-bold text-primary">{eur(est.loyerMensuelHc)} / mois HC</div><div className="text-[11.5px] text-ink-muted">{eur(loyerAnnuel(est.loyerMensuelHc))} / an</div></>)}
