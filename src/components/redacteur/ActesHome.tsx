@@ -7,9 +7,9 @@ import { downloadFicheApportAffaires } from "../../reports/FicheApportAffairesPD
 import { downloadFicheApportPromo } from "../../reports/FicheApportPromo";
 
 const VENTE = [
-  { id: "mandat" as const, title: "Mandat de vente", sub: "Simple, exclusif ou semi-exclusif \u2014 Hoguet / ALUR" },
-  { id: "offre" as const, title: "Offre d'achat", sub: "Offre ferme, conditions suspensives, validit\u00e9" },
-  { id: "compromis" as const, title: "Compromis de vente", sub: "Promesse synallagmatique \u2014 articles ALUR" },
+  { id: "mandat" as const, title: "Mandat de vente", sub: "Simple, exclusif ou semi-exclusif — Hoguet / ALUR" },
+  { id: "offre" as const, title: "Offre d'achat", sub: "Offre ferme, conditions suspensives, validité" },
+  { id: "compromis" as const, title: "Compromis de vente", sub: "Promesse synallagmatique — articles ALUR" },
 ];
 
 export function ActesHome() {
@@ -59,10 +59,10 @@ export function ActesHome() {
   }
 
   return (
-    <div className="mx-auto max-w-[860px] px-6 py-6">
-      <h1 className="font-heading text-2xl font-semibold text-ink">R\u00e9daction</h1>
+    <div className="mx-auto max-w-[900px] px-6 py-5">
+      <h1 className="font-heading text-2xl font-semibold text-ink">Rédaction</h1>
       <p className="mb-6 text-[13px] text-ink-muted">
-        Actes de vente et mandat de location. Les baux d\u00e9taill\u00e9s sont dans le menu Baux.
+        Actes de vente et mandat de location. Les baux détaillés sont dans le menu Baux.
       </p>
 
       <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Cycle de vente</h2>
@@ -81,12 +81,12 @@ export function ActesHome() {
         <button onClick={() => setOpen("mandat_loc")} className="card p-4 text-left hover:border-primary/40">
           <div className="font-heading text-[15px] font-semibold text-ink">Mandat de location</div>
           <p className="mt-1 text-[12px] text-ink-muted">
-            Recherche de locataire, exclusif ou simple \u2014 honoraires et mission
+            Recherche de locataire, exclusif ou simple — honoraires et mission
           </p>
         </button>
         <button onClick={() => setView("bail")} className="card p-4 text-left hover:border-primary/40">
-          <div className="font-heading text-[15px] font-semibold text-ink">R\u00e9diger un bail</div>
-          <p className="mt-1 text-[12px] text-ink-muted">Bail d\u2019habitation, meubl\u00e9, mobilit\u00e9 ou saisonnier</p>
+          <div className="font-heading text-[15px] font-semibold text-ink">Rédiger un bail</div>
+          <p className="mt-1 text-[12px] text-ink-muted">Bail d'habitation, meublé, mobilité ou saisonnier</p>
         </button>
       </div>
 
@@ -96,8 +96,8 @@ export function ActesHome() {
           className="card p-4 text-left hover:border-primary/40"
           onClick={() => void downloadFicheApportAffaires()}
         >
-          <div className="font-heading text-[15px] font-semibold text-ink">Fiche apport d\u2019affaires</div>
-          <p className="mt-1 text-[12px] text-ink-muted">Document partenaire \u00e0 t\u00e9l\u00e9charger</p>
+          <div className="font-heading text-[15px] font-semibold text-ink">Fiche apport d'affaires</div>
+          <p className="mt-1 text-[12px] text-ink-muted">Document partenaire à télécharger</p>
         </button>
         <button
           className="card p-4 text-left hover:border-primary/40"
