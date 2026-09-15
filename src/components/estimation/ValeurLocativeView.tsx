@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, Suspense, lazy } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Edit2, Trash2, Download, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { EmptyState } from "../ui/Modal";
@@ -15,8 +15,8 @@ import {
   useValeursLocatives, useSaveValeurLocative, useDeleteValeurLocative,
   useMigrateLocalValeursLocatives, uid,
 } from "../../hooks/queries/useValeursLocatives";
+import ValeurLocativePDFDownload from "./ValeurLocativePDFDownload";
 
-const ValeurLocativePDFDownload = lazy(() => import("./ValeurLocativePDFDownload"));
 const today = () => new Date().toISOString().slice(0, 10);
 
 function ligneS(nom = "", surface = 0, detail = ""): LigneSurface { return { id: uid(), nom, surface, detail }; }
@@ -25,24 +25,24 @@ function ligneE(label = "", valeur = ""): LigneEquipement { return { id: uid(), 
 function nouveauDoc(agentId?: string): ValeurLocative {
   return {
     id: uid(), statut: "Brouillon", agentId,
-    titreBien: "", regimeLocatif: "Location longue durée meublée", mentionCouverture: "",
+    titreBien: "", regimeLocatif: "Location longue duree meublee", mentionCouverture: "",
     adresse: "", commune: "Saint-Esprit", codePostal: "97270", sectionCadastrale: "", parcelle: "",
-    mandantNom: "", mandantVille: "", agenceNom: "Casa Caraïbes SARL", agenceMention: "Agence Immobilière — Martinique",
-    dateDocument: today(), lieuSignature: "FORT-DE-FRANCE", dateSignature: today(),
+    mandantNom: "", mandantVille: "", agenceNom: "Casa Caraibes SARL", agenceMention: "Agence Immobiliere - Martinique",
+    dateDocument: today(), lieuSignature: "Le Lamentin", dateSignature: today(),
     referencesAgence: REFERENCES_AGENCE_DEFAUT,
     superficieTerrain: 0, zonagePlu: "", natureBien: "", surfaceShon: 0, empriseSol: 0, descriptionBien: "",
-    pieces: [ligneS("Séjour"), ligneS("Cuisine"), ligneS("Chambre 1"), ligneS("Salle de bain")],
+    pieces: [ligneS("Sejour"), ligneS("Cuisine"), ligneS("Chambre 1"), ligneS("Salle de bain")],
     exterieurs: [ligneS("Terrasse"), ligneS("Piscine et plage")],
     noteSurfaces: "",
-    equipements: [ligneE("Construction"), ligneE("Façades"), ligneE("Toiture"), ligneE("Menuiseries"), ligneE("Ameublement"), ligneE("Piscine"), ligneE("Vue"), ligneE("Terrain"), ligneE("Stationnement")],
+    equipements: [ligneE("Construction"), ligneE("Facades"), ligneE("Toiture"), ligneE("Menuiseries"), ligneE("Ameublement"), ligneE("Piscine"), ligneE("Vue"), ligneE("Terrain"), ligneE("Stationnement")],
     localisation: "", atouts: ["", "", ""],
-    analyseMarche: analyseMarcheDefaut("Location longue durée meublée"),
+    analyseMarche: analyseMarcheDefaut("Location longue duree meublee"),
     loyerMensuelHc: 0, syntheseLoyer: "", vigilance: "", mentionPrevisionnelle: "",
     disclaimer: DISCLAIMER_DEFAUT,
   };
 }
 
-const STEPS = [{ id: 1, label: "Couverture" }, { id: 2, label: "Bien" }, { id: 3, label: "Marché & loyer" }];
+const STEPS = [{ id: 1, label: "Couverture" }, { id: 2, label: "Bien" }, { id: 3, label: "Marche & loyer" }];
 
 function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: (d: ValeurLocative) => void; onBack: () => void }) {
   const [e, setE] = useState<ValeurLocative>(initial);
@@ -55,7 +55,7 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
       if (!estMeuble(regime)) {
         eqs = eqs.filter((x) => !/ameublement/i.test(x.label) || x.valeur.trim());
         if (!eqs.some((x) => /non meubl/i.test(x.label) || x.label === "Occupation")) {
-          eqs = [...eqs, ligneE("Occupation", "Logement proposé non meublé (location nue)")];
+          eqs = [...eqs, ligneE("Occupation", "Logement propose non meuble (location nue)")];
         }
       } else if (!hasAmeublement) {
         eqs = [...eqs.filter((x) => x.label !== "Occupation" && !/non meubl/i.test(x.label)), ligneE("Ameublement", "")];
@@ -72,9 +72,9 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
       <div className="mb-4 flex items-center justify-between gap-3">
         <button className="btn-ghost text-[13px]" onClick={onBack}><ChevronLeft size={14} /> Retour</button>
         <div className="flex gap-2">
-          {e.loyerMensuelHc > 0 && <Suspense fallback={null}><ValeurLocativePDFDownload doc={e} /></Suspense>}
+          {e.loyerMensuelHc > 0 && <ValeurLocativePDFDownload doc={e} />}
           <button className="btn-ghost text-[13px]" onClick={() => { upd("statut", "Brouillon"); onSave({ ...e, statut: "Brouillon" }); }}>Enregistrer</button>
-          <button className="btn-primary text-[13px]" onClick={() => { const n = { ...e, statut: "Finalisée" as const }; setE(n); onSave(n); onBack(); }}>Finaliser</button>
+          <button className="btn-primary text-[13px]" onClick={() => { if (!confirm("Finaliser cette estimation ?")) return; const n = { ...e, statut: "Finalisee" as const }; setE(n); onSave(n); onBack(); }}>Finaliser</button>
         </div>
       </div>
       <div className="mb-5 flex gap-2">
@@ -84,8 +84,8 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
       </div>
       {step === 1 && (<>
         <Grid2>
-          <Field label="Titre du bien (couverture)"><Input value={e.titreBien} onChange={(ev) => upd("titreBien", ev.target.value)} placeholder="Bungalow neuf avec piscine privative" /></Field>
-          <Field label="Régime locatif"><Select value={e.regimeLocatif} onChange={setRegime} options={REGIMES_LOCATIFS} /></Field>
+          <Field label="Titre du bien (couverture)"><Input value={e.titreBien} onChange={(ev) => upd("titreBien", ev.target.value)} /></Field>
+          <Field label="Regime locatif"><Select value={e.regimeLocatif} onChange={setRegime} options={REGIMES_LOCATIFS} /></Field>
         </Grid2>
         <Field label="Mention sous l'adresse"><Input value={e.mentionCouverture} onChange={(ev) => upd("mentionCouverture", ev.target.value)} /></Field>
         <Grid2>
@@ -104,69 +104,69 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
           <Field label="Date de signature"><Input type="date" value={e.dateSignature} onChange={(ev) => upd("dateSignature", ev.target.value)} /></Field>
           <Field label="Lieu de signature"><Input value={e.lieuSignature} onChange={(ev) => upd("lieuSignature", ev.target.value)} /></Field>
         </Grid2>
-        <Field label="Références de l'agence (§1)"><Textarea rows={6} value={e.referencesAgence} onChange={(ev) => upd("referencesAgence", ev.target.value)} /></Field>
+        <Field label="References de l'agence"><Textarea rows={6} value={e.referencesAgence} onChange={(ev) => upd("referencesAgence", ev.target.value)} /></Field>
       </>)}
       {step === 2 && (<>
         <Grid2>
-          <Field label="Superficie terrain (m²)"><Input type="number" value={e.superficieTerrain || ""} onChange={(ev) => upd("superficieTerrain", Number(ev.target.value))} /></Field>
+          <Field label="Superficie terrain (m2)"><Input type="number" value={e.superficieTerrain || ""} onChange={(ev) => upd("superficieTerrain", Number(ev.target.value))} /></Field>
           <Field label="Zonage PLU"><Input value={e.zonagePlu} onChange={(ev) => upd("zonagePlu", ev.target.value)} /></Field>
-          <Field label="Surface SHON (m²)"><Input type="number" step="0.01" value={e.surfaceShon || ""} onChange={(ev) => upd("surfaceShon", Number(ev.target.value))} /></Field>
+          <Field label="Surface SHON (m2)"><Input type="number" step="0.01" value={e.surfaceShon || ""} onChange={(ev) => upd("surfaceShon", Number(ev.target.value))} /></Field>
         </Grid2>
         <Field label="Nature du bien"><Input value={e.natureBien} onChange={(ev) => upd("natureBien", ev.target.value)} /></Field>
-        <Field label="Description (§3)"><Textarea rows={7} value={e.descriptionBien} onChange={(ev) => upd("descriptionBien", ev.target.value)} /></Field>
-        <h3 className="mb-2 mt-4 text-[13px] font-semibold text-ink">Composition des pièces</h3>
+        <Field label="Description"><Textarea rows={7} value={e.descriptionBien} onChange={(ev) => upd("descriptionBien", ev.target.value)} /></Field>
+        <h3 className="mb-2 mt-4 text-[13px] font-semibold text-ink">Pieces</h3>
         {e.pieces.map((p, i) => (
           <div key={p.id} className="mb-2 grid grid-cols-[1fr_90px_1fr_28px] gap-2">
-            <Input value={p.nom} placeholder="Pièce" onChange={(ev) => setPiece(i, { nom: ev.target.value })} />
-            <Input type="number" step="0.01" value={p.surface || ""} placeholder="m²" onChange={(ev) => setPiece(i, { surface: Number(ev.target.value) })} />
-            <Input value={p.detail} placeholder="Détail" onChange={(ev) => setPiece(i, { detail: ev.target.value })} />
-            <button className="btn-ghost px-1 text-danger" onClick={() => upd("pieces", e.pieces.filter((_, idx) => idx !== i))}>{'×'}</button>
+            <Input value={p.nom} placeholder="Piece" onChange={(ev) => setPiece(i, { nom: ev.target.value })} />
+            <Input type="number" step="0.01" value={p.surface || ""} placeholder="m2" onChange={(ev) => setPiece(i, { surface: Number(ev.target.value) })} />
+            <Input value={p.detail} placeholder="Detail" onChange={(ev) => setPiece(i, { detail: ev.target.value })} />
+            <button className="btn-ghost px-1 text-danger" onClick={() => upd("pieces", e.pieces.filter((_, idx) => idx !== i))}>x</button>
           </div>
         ))}
-        <button className="btn-ghost mb-4 text-[12px]" onClick={() => upd("pieces", [...e.pieces, ligneS()])}><Plus size={12} /> Pièce</button>
-        <h3 className="mb-2 text-[13px] font-semibold text-ink">Extérieurs</h3>
+        <button className="btn-ghost mb-4 text-[12px]" onClick={() => upd("pieces", [...e.pieces, ligneS()])}><Plus size={12} /> Piece</button>
+        <h3 className="mb-2 text-[13px] font-semibold text-ink">Exterieurs</h3>
         {e.exterieurs.map((p, i) => (
           <div key={p.id} className="mb-2 grid grid-cols-[1fr_90px_1fr_28px] gap-2">
-            <Input value={p.nom} placeholder="Extérieur" onChange={(ev) => setExt(i, { nom: ev.target.value })} />
-            <Input type="number" step="0.01" value={p.surface || ""} placeholder="m²" onChange={(ev) => setExt(i, { surface: Number(ev.target.value) })} />
-            <Input value={p.detail} placeholder="Détail" onChange={(ev) => setExt(i, { detail: ev.target.value })} />
-            <button className="btn-ghost px-1 text-danger" onClick={() => upd("exterieurs", e.exterieurs.filter((_, idx) => idx !== i))}>{'×'}</button>
+            <Input value={p.nom} placeholder="Exterieur" onChange={(ev) => setExt(i, { nom: ev.target.value })} />
+            <Input type="number" step="0.01" value={p.surface || ""} placeholder="m2" onChange={(ev) => setExt(i, { surface: Number(ev.target.value) })} />
+            <Input value={p.detail} placeholder="Detail" onChange={(ev) => setExt(i, { detail: ev.target.value })} />
+            <button className="btn-ghost px-1 text-danger" onClick={() => upd("exterieurs", e.exterieurs.filter((_, idx) => idx !== i))}>x</button>
           </div>
         ))}
-        <button className="btn-ghost mb-4 text-[12px]" onClick={() => upd("exterieurs", [...e.exterieurs, ligneS()])}><Plus size={12} /> Extérieur</button>
+        <button className="btn-ghost mb-4 text-[12px]" onClick={() => upd("exterieurs", [...e.exterieurs, ligneS()])}><Plus size={12} /> Exterieur</button>
         <Field label="Note sous les surfaces"><Textarea rows={2} value={e.noteSurfaces} onChange={(ev) => upd("noteSurfaces", ev.target.value)} /></Field>
-        <h3 className="mb-2 text-[13px] font-semibold text-ink">Équipements</h3>
+        <h3 className="mb-2 text-[13px] font-semibold text-ink">Equipements</h3>
         {e.equipements.map((eq, i) => (
           <div key={eq.id} className="mb-2 grid grid-cols-[180px_1fr_28px] gap-2">
             <Input value={eq.label} onChange={(ev) => setEq(i, { label: ev.target.value })} />
             <Input value={eq.valeur} onChange={(ev) => setEq(i, { valeur: ev.target.value })} />
-            <button className="btn-ghost px-1 text-danger" onClick={() => upd("equipements", e.equipements.filter((_, idx) => idx !== i))}>{'×'}</button>
+            <button className="btn-ghost px-1 text-danger" onClick={() => upd("equipements", e.equipements.filter((_, idx) => idx !== i))}>x</button>
           </div>
         ))}
         <button className="btn-ghost mb-4 text-[12px]" onClick={() => upd("equipements", [...e.equipements, ligneE()])}><Plus size={12} /> Ligne</button>
-        <Field label="Localisation (§4)"><Textarea rows={6} value={e.localisation} onChange={(ev) => upd("localisation", ev.target.value)} /></Field>
+        <Field label="Localisation"><Textarea rows={6} value={e.localisation} onChange={(ev) => upd("localisation", ev.target.value)} /></Field>
         <h3 className="mb-2 text-[13px] font-semibold text-ink">Atouts</h3>
         {e.atouts.map((a, i) => (
           <div key={i} className="mb-2 flex gap-2">
             <Input value={a} onChange={(ev) => upd("atouts", e.atouts.map((x, idx) => (idx === i ? ev.target.value : x)))} />
-            <button className="btn-ghost px-1 text-danger" onClick={() => upd("atouts", e.atouts.filter((_, idx) => idx !== i))}>{'×'}</button>
+            <button className="btn-ghost px-1 text-danger" onClick={() => upd("atouts", e.atouts.filter((_, idx) => idx !== i))}>x</button>
           </div>
         ))}
         <button className="btn-ghost text-[12px]" onClick={() => upd("atouts", [...e.atouts, ""])}><Plus size={12} /> Atout</button>
       </>)}
       {step === 3 && (<>
-        <Field label="Analyse de marché (§5)"><Textarea rows={8} value={e.analyseMarche} onChange={(ev) => upd("analyseMarche", ev.target.value)} /></Field>
+        <Field label="Analyse de marche"><Textarea rows={8} value={e.analyseMarche} onChange={(ev) => upd("analyseMarche", ev.target.value)} /></Field>
         <Grid2>
           <Field label={libelleLoyer(e.regimeLocatif)}><Input type="number" value={e.loyerMensuelHc || ""} onChange={(ev) => upd("loyerMensuelHc", Number(ev.target.value))} /></Field>
-          <Field label="Revenus bruts annuels"><Input readOnly value={e.loyerMensuelHc ? eur(loyerAnnuel(e.loyerMensuelHc)) : "—"} /></Field>
+          <Field label="Revenus bruts annuels"><Input readOnly value={e.loyerMensuelHc ? eur(loyerAnnuel(e.loyerMensuelHc)) : "-"} /></Field>
         </Grid2>
         <Field label="Ligne sous le montant"><Input value={e.syntheseLoyer} onChange={(ev) => upd("syntheseLoyer", ev.target.value)} /></Field>
-        <Field label="Points de vigilance et décote"><Textarea rows={6} value={e.vigilance} onChange={(ev) => upd("vigilance", ev.target.value)} /></Field>
-        <Field label="Mention prévisionnelle"><Textarea rows={3} value={e.mentionPrevisionnelle} onChange={(ev) => upd("mentionPrevisionnelle", ev.target.value)} /></Field>
+        <Field label="Points de vigilance"><Textarea rows={6} value={e.vigilance} onChange={(ev) => upd("vigilance", ev.target.value)} /></Field>
+        <Field label="Mention previsionnelle"><Textarea rows={3} value={e.mentionPrevisionnelle} onChange={(ev) => upd("mentionPrevisionnelle", ev.target.value)} /></Field>
         <Field label="Clause signatures"><Textarea rows={4} value={e.disclaimer} onChange={(ev) => upd("disclaimer", ev.target.value)} /></Field>
       </>)}
       <div className="mt-6 flex justify-between">
-        <button className="btn-ghost" disabled={step === 1} onClick={() => setStep((s) => s - 1)}><ChevronLeft size={14} /> Précédent</button>
+        <button className="btn-ghost" disabled={step === 1} onClick={() => setStep((s) => s - 1)}><ChevronLeft size={14} /> Precedent</button>
         <button className="btn-primary" disabled={step === 3} onClick={() => setStep((s) => s + 1)}>Suivant <ChevronRight size={14} /></button>
       </div>
     </div>
@@ -203,19 +203,19 @@ export function ValeurLocativeView() {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-semibold text-ink">Estimations de valeur locative</h1>
-          <p className="text-[13px] text-ink-muted">{list.length} document(s) — PDF et Word au format Casa Caraïbes</p>
+          <p className="text-[13px] text-ink-muted">{list.length} document(s) - PDF et Word</p>
         </div>
         <button className="btn-primary" onClick={() => setEditing(nouveauDoc(user?.id))}><Plus size={14} /> Nouvelle estimation locative</button>
       </div>
       {error ? (
         <div className="mb-4 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-[13px] text-danger">
-          Impossible de charger les valeurs locatives. Vérifiez la table <code>valeurs_locatives</code> (migration 011).
+          Impossible de charger les valeurs locatives. Verifiez la table valeurs_locatives.
         </div>
       ) : null}
       {isLoading ? (
-        <div className="py-12 text-center text-ink-muted">Chargement…</div>
+        <div className="py-12 text-center text-ink-muted">Chargement...</div>
       ) : list.length === 0 ? (
-        <EmptyState Icon={Home} text="Aucune estimation locative" sub="Créez un document comme l'estimation CAROLE." />
+        <EmptyState Icon={Home} text="Aucune estimation locative" sub="Creez un document." />
       ) : (
         <div className="flex flex-col gap-3">
           {list.map((est) => (
@@ -224,10 +224,10 @@ export function ValeurLocativeView() {
                 <div className="min-w-0 flex-1">
                   <div className="mb-1.5 flex flex-wrap items-center gap-2">
                     <span className="font-heading text-[15px] font-semibold text-ink">{est.titreBien || est.adresse || "Sans titre"}</span>
-                    <StatusPill label={est.statut} tone={est.statut === "Finalisée" ? "emerald" : "amber"} />
+                    <StatusPill label={est.statut} tone={est.statut === "Finalisee" || est.statut === "Finalisée" ? "emerald" : "amber"} />
                   </div>
-                  <div className="text-[12.5px] text-ink-sub">{est.regimeLocatif} · {est.commune}</div>
-                  <div className="text-[12px] text-ink-muted">Mandant : {est.mandantNom || "—"}{est.surfaceShon > 0 && ` · ${est.surfaceShon} m² SHON`}{est.dateDocument && ` · ${est.dateDocument}`}</div>
+                  <div className="text-[12.5px] text-ink-sub">{est.regimeLocatif} - {est.commune}</div>
+                  <div className="text-[12px] text-ink-muted">Mandant : {est.mandantNom || "-"}{est.surfaceShon > 0 && ` - ${est.surfaceShon} m2`}{est.dateDocument && ` - ${est.dateDocument}`}</div>
                 </div>
                 <div className="shrink-0 text-right">
                   {est.loyerMensuelHc > 0 && (<><div className="font-heading text-lg font-bold text-primary">{eur(est.loyerMensuelHc)} / mois HC</div><div className="text-[11.5px] text-ink-muted">{eur(loyerAnnuel(est.loyerMensuelHc))} / an</div></>)}
@@ -235,7 +235,7 @@ export function ValeurLocativeView() {
               </div>
               <div className="mt-3 flex gap-2 border-t border-line pt-3">
                 <button className="btn-ghost text-[12px]" onClick={() => setEditing(est)}><Edit2 size={13} /> Modifier</button>
-                {est.loyerMensuelHc > 0 && <Suspense fallback={<button className="btn-ghost text-[12px] opacity-60"><Download size={13} /> PDF…</button>}><ValeurLocativePDFDownload doc={est} /></Suspense>}
+                {est.loyerMensuelHc > 0 && <ValeurLocativePDFDownload doc={est} />}
                 <button className="btn-ghost text-[12px] text-danger hover:bg-danger-soft" onClick={() => handleDelete(est.id)}><Trash2 size={13} /> Supprimer</button>
               </div>
             </div>
