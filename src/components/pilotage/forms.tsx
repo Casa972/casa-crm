@@ -94,7 +94,7 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
     <>
       <Grid2>
         <Field label="Référence dossier" error={errors.ref}><Input value={f.ref} onChange={(e) => s("ref")(e.target.value)} placeholder="COMP-2026-XXX" /></Field>
-        <Field label="Statut dossier"><Select value={f.statut} onChange={s("statut")} options={StatutCompromis.options} /></Field>
+        <Field label="Statut dossier"><Select value={f.statut} onChange={(v) => setF((p) => ({ ...p, statut: v, dateActeReel: v === "Acte signé" && !p.dateActeReel ? today() : p.dateActeReel }))} options={StatutCompromis.options} /></Field>
         <Field label="Acheteur" error={errors.acheteur}>
           {acheteurClients.length > 0 ? (
             <select
@@ -220,6 +220,11 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
             </div>
           )}
         </div>
+      )}
+      {Object.keys(errors).length > 0 && (
+        <p className="mt-3 rounded border border-danger/30 bg-danger-soft px-3 py-2 text-[12.5px] text-danger">
+          {Object.values(errors).filter(Boolean).join(" · ") || "Complète les champs signalés avant d'enregistrer."}
+        </p>
       )}
       <FormActions onSave={submit} onClose={onClose} />
     </>
