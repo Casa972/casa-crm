@@ -42,22 +42,27 @@ export function BiensView() {
   const user = useSessionStore((s) => s.user);
   const isDir = useSessionStore((s) => s.isDirecteur());
 
-  const mandatsExpSoon = data.mandats.filter((m) => {
+  const mandatsVus = monPortefeuille && user ? data.mandats.filter((m) => m.agentId === user.id) : data.mandats;
+  const biensVus = monPortefeuille && user
+    ? data.biens.filter((b) => mandatsVus.some((m) => m.bienId === b.id || m.bienId === b.ref))
+    : data.biens;
+
+  const mandatsExpSoon = mandatsVus.filter((m) => {
     const d = daysDiff(m.dateFin);
     return d !== null && d >= 0 && d <= 30 && m.statut === "Actif";
   });
 
-  const mandatsBaissePrix = data.mandats.filter((m) => {
+  const mandatsBaissePrix = mandatsVus.filter((m) => {
     const d = daysDiff(m.dateDebut);
     return m.statut === "Actif" && d !== null && d <= -90;
   });
 
   const kpis = [
-    { label: "Total biens", val: data.biens.length },
-    { label: "En vente", val: data.biens.filter((b) => b.cat === "vente").length },
-    { label: "En location", val: data.biens.filter((b) => b.cat === "location").length },
-    { label: "Disponibles", val: data.biens.filter((b) => b.statut === "Disponible").length },
-    { label: "Mandats actifs", val: data.mandats.filter((m) => m.statut === "Actif").length },
+    { label: "Total biens", val: biensVus.length },
+    { label: "En vente", val: biensVus.filter((b) => b.cat === "vente").length },
+    { label: "En location", val: biensVus.filter((b) => b.cat === "location").length },
+    { label: "Disponibles", val: biensVus.filter((b) => b.statut === "Disponible").length },
+    { label: "Mandats actifs", val: mandatsVus.filter((m) => m.statut === "Actif").length },
   ];
 
   const handleGenererMandat = (m: Mandat) => {
@@ -128,8 +133,8 @@ export function BiensView() {
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex gap-1.5">
-          <TabBtn active={tab === "biens"} onClick={() => setTab("biens")}>Biens ({data.biens.length})</TabBtn>
-          <TabBtn active={tab === "mandats"} onClick={() => setTab("mandats")}>Mandats ({data.mandats.length})</TabBtn>
+          <TabBtn active={tab === "biens"} onClick={() => setTab("biens")}>Biens ({biensVus.length})</TabBtn>
+          <TabBtn active={tab === "mandats"} onClick={() => setTab("mandats")}>Mandats ({mandatsVus.length})</TabBtn>
         </div>
         <div className="flex gap-2">
           {tab === "biens" && (
@@ -163,15 +168,13 @@ export function BiensView() {
 
       {tab === "biens" ? (
         <DataTable
-          data={monPortefeuille && user
-            ? data.biens.filter((b) => data.mandats.some((m) => m.agentId === user.id && (m.bienId === b.id || m.bienId === b.ref)))
-            : data.biens}
+          data={biensVus}
           columns={bienCols} globalFilter={search} emptyMessage="Aucun bien"
           onRowClick={(b) => setDossierBien(b)}
         />
       ) : (
         <DataTable
-          data={monPortefeuille && user ? data.mandats.filter((m) => m.agentId === user.id) : data.mandats}
+          data={mandatsVus}
           columns={mandatCols} globalFilter={search} emptyMessage="Aucun mandat"
         />
       )}
