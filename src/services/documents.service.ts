@@ -16,7 +16,7 @@ export async function uploadDocument(params: {
   try {
     const bytes = new Uint8Array(await params.blob.arrayBuffer());
     let binary = "";
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i] ?? 0);
     localStorage.setItem(`casa-doc-file:${id}`, btoa(binary));
   } catch { /* quota navigateur : la fiche reste, le fichier se retélécharge depuis Vente */ }
   const { error } = await supabase.from("documents").insert({
