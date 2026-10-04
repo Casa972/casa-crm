@@ -20,7 +20,7 @@ export function exportPipelineCSV(data: AgencyData): void {
     ].map(q).join(sep));
   }
 
-  const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -43,7 +43,7 @@ export function exportGrandLivreCSV(data: AgencyData, fin: Financials): void {
     rows.push([c.ref, `Compromis (${c.statut})`, c.acheteur, `${c.bienRef} ${c.bienDesc}`, "À ENCAISSER", fin.commMontant(c)].map(q).join(sep));
   }
 
-  const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

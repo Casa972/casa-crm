@@ -46,11 +46,11 @@ function RelanceRapideModal({ client, onClose }: { client: Client; onClose: () =
         </div>
         <div>
           <div className="text-[13.5px] font-semibold text-ink">{client.prenom} {client.nom}</div>
-          <div className="text-[11.5px] text-ink-muted">{client.tel || "\u2014"} \u00b7 {client.statut}</div>
+          <div className="text-[11.5px] text-ink-muted">{client.tel || "—"} · {client.statut}</div>
         </div>
       </div>
       <Grid2>
-        <Field label="Type d'activit\u00e9">
+        <Field label="Type d'activité">
           <Select value={type} onChange={setType}
             options={["Relance", "Appel", "Email", "Visite", "RDV", "Note"]} />
         </Field>
@@ -60,7 +60,7 @@ function RelanceRapideModal({ client, onClose }: { client: Client; onClose: () =
       </Grid2>
       <Field label="Note (optionnel)">
         <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)}
-          placeholder={`Ex: Rappelen ${client.prenom}, int\u00e9ress\u00e9 par CC-012...`} />
+          placeholder={`Ex: Rappelen ${client.prenom}, intéressé par CC-012...`} />
       </Field>
       <FormActions
         onSave={handleSave} onClose={onClose} label="Confirmer la relance"
@@ -99,7 +99,7 @@ function TodayDirecteur() {
             <h1 className="font-heading text-2xl font-semibold capitalize text-ink">
               {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
             </h1>
-            <p className="text-[13px] text-ink-muted">Vue directeur \u00b7 Casa Cara\u00efbes</p>
+            <p className="text-[13px] text-ink-muted">Vue directeur · Casa Caraïbes</p>
           </div>
           <button
             onClick={() => setWizardOpen(true)}
@@ -156,12 +156,12 @@ function TodayDirecteur() {
               );
             })}
           </div>
-          <button onClick={() => setView("reporting")} className="mt-3 text-[12px] text-primary hover:underline">Reporting complet \u2192</button>
+          <button onClick={() => setView("reporting")} className="mt-3 text-[12px] text-primary hover:underline">Reporting complet →</button>
         </div>
         <div className="card p-4 md:col-span-2">
-          <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5"><Clock size={13} /> Clients \u00e0 relancer</div>
+          <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5"><Clock size={13} /> Clients à relancer</div>
           {aTraiter.length === 0 ? (
-            <EmptyState Icon={CheckCircle} text="Tout est \u00e0 jour !" sub="Aucune relance en attente." />
+            <EmptyState Icon={CheckCircle} text="Tout est à jour !" sub="Aucune relance en attente." />
           ) : (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {aTraiter.map((c) => {
@@ -186,14 +186,14 @@ function TodayDirecteur() {
         </div>
         {fin.actesAvenir.length > 0 && (
           <div className="card p-4 md:col-span-2">
-            <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5"><TrendingUp size={13} /> Actes \u00e0 venir</div>
+            <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5"><TrendingUp size={13} /> Actes à venir</div>
             <div className="overflow-x-auto">
               <table className="w-full text-[12.5px]">
                 <thead>
                   <tr className="border-b border-line text-[10.5px] text-ink-muted uppercase tracking-wide">
                     <th className="pb-2 text-left font-semibold">Dossier</th>
                     <th className="pb-2 text-left font-semibold">Acheteur</th>
-                    <th className="pb-2 text-left font-semibold">Acte pr\u00e9vu</th>
+                    <th className="pb-2 text-left font-semibold">Acte prévu</th>
                     <th className="pb-2 text-right font-semibold">Commission</th>
                   </tr>
                 </thead>
@@ -202,7 +202,7 @@ function TodayDirecteur() {
                     <tr key={a.id} className="border-b border-line/50 last:border-0">
                       <td className="py-2 font-semibold text-ink">{a.ref}</td>
                       <td className="py-2 text-ink-sub">{a.acheteur}</td>
-                      <td className="py-2 text-ink-sub">{fdate(a.dateActePrev) || "\u2014"}</td>
+                      <td className="py-2 text-ink-sub">{fdate(a.dateActePrev) || "—"}</td>
                       <td className="py-2 text-right font-semibold text-primary">{eur(a.comm)}</td>
                     </tr>
                   ))}
@@ -245,7 +245,7 @@ function TodayAgent() {
         <h1 className="font-heading text-2xl font-semibold capitalize text-ink">
           {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
         </h1>
-        <p className="text-[13px] text-ink-muted">Votre journ\u00e9e.</p>
+        <p className="text-[13px] text-ink-muted">Votre journée.</p>
       </div>
       <div className="mb-6 grid grid-cols-3 gap-3">
         <button onClick={() => setView("clients")} className="card border-l-4 border-l-primary bg-primary-soft p-4 text-left">
@@ -263,7 +263,7 @@ function TodayAgent() {
       </div>
       {aTraiter.length > 0 ? (
         <>
-          <h2 className="mb-3 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-ink-sub"><Clock size={14} /> \u00c0 relancer</h2>
+          <h2 className="mb-3 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-ink-sub"><Clock size={14} /> À relancer</h2>
           <div className="flex flex-col gap-2">
             {aTraiter.map((c) => (
               <div key={c.id} className="card flex items-center gap-3.5 p-3">
@@ -279,7 +279,7 @@ function TodayAgent() {
           </div>
         </>
       ) : (
-        <EmptyState Icon={CheckCircle} text="Tout est \u00e0 jour !" sub="Aucune relance en attente." />
+        <EmptyState Icon={CheckCircle} text="Tout est à jour !" sub="Aucune relance en attente." />
       )}
       {relanceModal && (
         <Modal title="Relance rapide" onClose={() => setRelanceModal(null)}>

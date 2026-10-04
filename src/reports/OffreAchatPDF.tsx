@@ -40,7 +40,7 @@ const s = StyleSheet.create({
 // Formateur monétaire — évite le séparateur Unicode U+202F (rendu "/" dans react-pdf)
 const E = (n: number) => {
   const str = String(Math.round(n || 0));
-  return str.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0") + " \u20AC";
+  return str.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
 };
 
 const fd = (d: string) =>
@@ -51,7 +51,7 @@ const fd = (d: string) =>
 const dash = "……………………………………";
 
 const FOOTER_TXT =
-  "Casa Cara\u00EFbes SARL \u2014 RCS Fort-de-France 928\u00A0647\u00A0981 \u2014 Carte pro T n\u00B0CPI97212024000000007";
+  "Casa Caraïbes SARL — RCS Fort-de-France 928 647 981 — Carte pro T n°CPI97212024000000007";
 
 function AcquereurBlock({ a }: { a: PartieOffre }) {
   const name = [a.civilite, a.prenom, a.nom].filter(Boolean).join(" ");
@@ -184,7 +184,7 @@ export function OffreAchatPDF({ f }: { f: OffreAchat }) {
           <View>
             {f.conditionPret && (
               <Text style={s.body}>
-                {"\u2022"}{" "}
+                {"•"}{" "}
                 <Text style={s.bold}>Obtention d'un prêt bancaire : </Text>
                 La présente offre est soumise à l'obtention par l'acquéreur d'un ou plusieurs prêts immobiliers
                 d'un montant de {E(f.montantPret)}, au taux maximum de {f.tauxMax}% sur une durée maximale
@@ -193,7 +193,7 @@ export function OffreAchatPDF({ f }: { f: OffreAchat }) {
             )}
             {f.conditionVenteBien && (
               <Text style={s.body}>
-                {"\u2022"}{" "}
+                {"•"}{" "}
                 <Text style={s.bold}>Vente préalable d'un bien immobilier : </Text>
                 La présente offre est soumise à la vente préalable du bien appartenant à l'acquéreur
                 {!!f.descriptionBienVente ? ` (${f.descriptionBienVente})` : null}.
@@ -201,7 +201,7 @@ export function OffreAchatPDF({ f }: { f: OffreAchat }) {
             )}
             {!!f.autresConditions && (
               <Text style={s.body}>
-                {"\u2022"}{" "}
+                {"•"}{" "}
                 <Text style={s.bold}>Autres conditions : </Text>
                 {f.autresConditions}
               </Text>
@@ -277,7 +277,7 @@ export function OffreAchatPDF({ f }: { f: OffreAchat }) {
                 L'AGENCE
               </Text>
               <Text style={[s.body, { fontFamily: BF, fontWeight: 700, textAlign: "center" }]}>
-                Casa Cara\u00EFbes SARL
+                Casa Caraïbes SARL
               </Text>
               {!!f.redacteur && (
                 <Text style={[s.body, { textAlign: "center" }]}>

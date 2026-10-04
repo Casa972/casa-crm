@@ -13,7 +13,7 @@ export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<H
 }
 
 export function Select({
-  value, onChange, options, placeholder = "\u2014 Choisir \u2014", className,
+  value, onChange, options, placeholder = "— Choisir —", className,
 }: {
   value: string;
   onChange: (v: string) => void;

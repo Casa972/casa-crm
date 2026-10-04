@@ -45,11 +45,11 @@ const s = StyleSheet.create({
   footerTxt: { fontSize: 7, color: MUTED },
 });
 
-const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "\u2014";
-const eur = (n: number) => `${Math.round(n || 0).toLocaleString("fr-FR").replace(/\s/g, "\u00A0")} \u20ac`;
+const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—";
+const eur = (n: number) => `${Math.round(n || 0).toLocaleString("fr-FR").replace(/\s/g, " ")} €`;
 
 function nom(p: { civilite: string; prenom: string; nom: string }) {
-  return [p.civilite, p.prenom, p.nom].filter(Boolean).join(" ") || "\u2014";
+  return [p.civilite, p.prenom, p.nom].filter(Boolean).join(" ") || "—";
 }
 
 function Row({ k, v }: { k: string; v?: string }) {
@@ -61,7 +61,7 @@ function Sig({ label, p }: { label: string; p?: PartieBail }) {
   return (
     <View style={s.sigBox}>
       <Text style={s.sigLbl}>{label}</Text>
-      <Text style={s.sigName}>{p ? nom(p) : "\u2014"}</Text>
+      <Text style={s.sigName}>{p ? nom(p) : "—"}</Text>
       <Text style={s.sigHint}>Signature</Text>
     </View>
   );
@@ -70,7 +70,7 @@ function Sig({ label, p }: { label: string; p?: PartieBail }) {
 function Footer() {
   return (
     <View style={s.footer} fixed>
-      <Text style={s.footerTxt}>Casa Cara\u00efbes SARL \u2014 CPI 97212024000000007 \u2014 Le Lamentin \u2014 Confidentiel</Text>
+      <Text style={s.footerTxt}>Casa Caraïbes SARL — CPI 97212024000000007 — Le Lamentin — Confidentiel</Text>
       <Text style={s.footerTxt} render={({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) => `Page ${pageNumber} / ${totalPages}`} />
     </View>
   );
@@ -82,34 +82,34 @@ export function BailPDF({ e }: { e: Bail }) {
   const preneurs = e.preneurs.filter((p) => p.nom || p.prenom);
   const bailleur = bailleurs[0] ?? e.bailleurs[0];
   const preneur = preneurs[0] ?? e.preneurs[0];
-  const extraB = bailleurs.slice(1).map(nom).join(" \u00b7 ");
-  const extraP = preneurs.slice(1).map(nom).join(" \u00b7 ");
-  const cadastre = [e.sectionCadastrale && `Section ${e.sectionCadastrale}`, e.parcelle && `Parcelle ${e.parcelle}`].filter(Boolean).join(" \u2014 ");
-  const surf = [e.surfaceHabitable ? `${String(e.surfaceHabitable).replace(".", ",")} m\u00b2` : "", e.nbPieces, e.etage].filter(Boolean).join(" \u2014 ");
-  const dpe = [e.dpeClasse && `\u00c9nergie ${e.dpeClasse}`, e.gesClasse && `GES ${e.gesClasse}`].filter(Boolean).join(" \u2014 ");
+  const extraB = bailleurs.slice(1).map(nom).join(" · ");
+  const extraP = preneurs.slice(1).map(nom).join(" · ");
+  const cadastre = [e.sectionCadastrale && `Section ${e.sectionCadastrale}`, e.parcelle && `Parcelle ${e.parcelle}`].filter(Boolean).join(" — ");
+  const surf = [e.surfaceHabitable ? `${String(e.surfaceHabitable).replace(".", ",")} m²` : "", e.nbPieces, e.etage].filter(Boolean).join(" — ");
+  const dpe = [e.dpeClasse && `Énergie ${e.dpeClasse}`, e.gesClasse && `GES ${e.gesClasse}`].filter(Boolean).join(" — ");
 
   return (
     <Document>
       <Page size="A4" style={s.coverPage}>
         <Image src={logo} style={s.logo} />
         <View style={s.hair} />
-        <Text style={s.kicker}>CASA CARA\u00cfBES \u2014 AGENCE IMMOBILI\u00c8RE</Text>
+        <Text style={s.kicker}>CASA CARAÏBES — AGENCE IMMOBILIÈRE</Text>
         <Text style={s.coverTitle}>{titreBail(e.typeBail)}</Text>
         <Text style={s.coverSub}>{sousTitreLegal(e.typeBail)}</Text>
-        {!!e.numero && <Text style={s.coverSub}>N\u00b0 {e.numero}</Text>}
+        {!!e.numero && <Text style={s.coverSub}>N° {e.numero}</Text>}
         {!!(e.adresseBien || e.commune) && (
-          <Text style={s.coverPlace}>{[e.adresseBien, `${e.codePostal} ${e.commune}`].filter(Boolean).join(" \u2014 ")}</Text>
+          <Text style={s.coverPlace}>{[e.adresseBien, `${e.codePostal} ${e.commune}`].filter(Boolean).join(" — ")}</Text>
         )}
         <View style={s.parties}>
           <View style={s.partie}>
             <Text style={s.partieLbl}>{bailleurs.length > 1 ? "BAILLEURS" : "BAILLEUR"}</Text>
-            <Text style={s.partieVal}>{bailleur ? nom(bailleur) : "\u2014"}</Text>
+            <Text style={s.partieVal}>{bailleur ? nom(bailleur) : "—"}</Text>
             {!!bailleur?.ville && <Text style={s.partieSub}>{bailleur.ville}</Text>}
             {!!extraB && <Text style={s.partieSub}>{extraB}</Text>}
           </View>
           <View style={s.partieR}>
             <Text style={s.partieLbl}>{preneurs.length > 1 ? "PRENEURS" : "PRENEUR"}</Text>
-            <Text style={s.partieVal}>{preneur ? nom(preneur) : "\u2014"}</Text>
+            <Text style={s.partieVal}>{preneur ? nom(preneur) : "—"}</Text>
             {!!preneur?.ville && <Text style={s.partieSub}>{preneur.ville}</Text>}
             {!!extraP && <Text style={s.partieSub}>{extraP}</Text>}
           </View>
@@ -117,36 +117,36 @@ export function BailPDF({ e }: { e: Bail }) {
         {e.garant && (e.garant.nom || e.garant.prenom) ? (
           <Text style={s.meta}>Caution : {nom(e.garant)}</Text>
         ) : null}
-        <Text style={s.meta}>\u00c9tabli \u00e0 {e.lieuSignature || "Le Lamentin"}, le {fd(e.dateDocument)} \u2014 {e.agenceNom}</Text>
+        <Text style={s.meta}>Établi à {e.lieuSignature || "Le Lamentin"}, le {fd(e.dateDocument)} — {e.agenceNom}</Text>
       </Page>
       <Page size="A4" style={s.page}>
-        <Text style={s.sec}>D\u00e9signation du bien</Text>
+        <Text style={s.sec}>Désignation du bien</Text>
         <View style={s.secLine} />
         <Row k="Type" v={e.typeBien} />
         <Row k="Adresse" v={[e.adresseBien, `${e.codePostal} ${e.commune}`].filter(Boolean).join(", ")} />
         <Row k="Cadastre" v={cadastre} />
-        <Row k="Surface / pi\u00e8ces" v={surf} />
-        <Row k="P\u00e9riode" v={`${fd(e.dateDebut)} \u2192 ${fd(e.dateFin)}${e.dureeMois ? ` (${e.dureeMois} mois)` : ""}`} />
+        <Row k="Surface / pièces" v={surf} />
+        <Row k="Période" v={`${fd(e.dateDebut)} → ${fd(e.dateFin)}${e.dureeMois ? ` (${e.dureeMois} mois)` : ""}`} />
         <Row k="Annexes" v={e.annexes} />
         <Row k="DPE / GES" v={dpe} />
         {e.loyerHc > 0 && (
           <View style={s.box}>
             <Text style={s.boxLbl}>LOYER MENSUEL</Text>
             <Text style={s.boxNum}>{eur(e.loyerHc)} HC</Text>
-            <Text style={s.boxSub}>soit {eur(loyerCc(e))} CC{e.depotGarantie > 0 ? ` \u2014 d\u00e9p\u00f4t ${eur(e.depotGarantie)}` : ""}</Text>
+            <Text style={s.boxSub}>soit {eur(loyerCc(e))} CC{e.depotGarantie > 0 ? ` — dépôt ${eur(e.depotGarantie)}` : ""}</Text>
           </View>
         )}
         {e.bailleurs.map((p, i) => (
           <Text key={p.id} style={s.body}>
             Bailleur{e.bailleurs.length > 1 ? ` ${i + 1}` : ""} : {nom(p)}
-            {p.dateNaissance ? `, n\u00e9(e) le ${fd(p.dateNaissance)}` : ""}
+            {p.dateNaissance ? `, né(e) le ${fd(p.dateNaissance)}` : ""}
             {p.adresse ? `, demeurant ${[p.adresse, p.codePostal, p.ville].filter(Boolean).join(" ")}` : ""}.
           </Text>
         ))}
         {e.preneurs.map((p, i) => (
           <Text key={p.id} style={s.body}>
             Preneur{e.preneurs.length > 1 ? ` ${i + 1}` : ""} : {nom(p)}
-            {p.dateNaissance ? `, n\u00e9(e) le ${fd(p.dateNaissance)}` : ""}
+            {p.dateNaissance ? `, né(e) le ${fd(p.dateNaissance)}` : ""}
             {p.adresse ? `, demeurant ${[p.adresse, p.codePostal, p.ville].filter(Boolean).join(" ")}` : ""}.
           </Text>
         ))}
@@ -161,7 +161,7 @@ export function BailPDF({ e }: { e: Bail }) {
           </View>
         ))}
         {!!e.observations?.trim() && <Text style={s.body}>{e.observations}</Text>}
-        <Text style={s.body}>Fait \u00e0 {e.lieuSignature || "Le Lamentin"}, le {fd(e.dateDocument)}, en autant d'exemplaires que de parties.</Text>
+        <Text style={s.body}>Fait à {e.lieuSignature || "Le Lamentin"}, le {fd(e.dateDocument)}, en autant d'exemplaires que de parties.</Text>
         <View style={s.sigWrap}>
           <Sig label={bailleurs.length > 1 ? "LES BAILLEURS" : "LE BAILLEUR"} p={bailleur} />
           <Sig label={preneurs.length > 1 ? "LES PRENEURS" : "LE PRENEUR"} p={preneur} />

@@ -11,8 +11,8 @@ import { eur } from "../../lib/format";
 
 function emptyMandant(): Mandant {
   return {
-    civilite: "M.", prenom: "", nom: "", dateNaissance: "", nationalite: "Fran\u00e7aise",
-    adresse: "", codePostal: "", ville: "", pays: "FRANCE", tel: "", email: "", qualite: "Propri\u00e9taire",
+    civilite: "M.", prenom: "", nom: "", dateNaissance: "", nationalite: "Française",
+    adresse: "", codePostal: "", ville: "", pays: "FRANCE", tel: "", email: "", qualite: "Propriétaire",
   };
 }
 
@@ -45,29 +45,29 @@ export function MandatLocationView() {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold text-ink">Mandat de location</h1>
-          <p className="text-[13px] text-ink-muted">Hoguet / ALUR \u2014 recherche locataire et gestion</p>
+          <p className="text-[13px] text-ink-muted">Hoguet / ALUR — recherche locataire et gestion</p>
         </div>
         <button className="btn-primary" disabled={busy} onClick={() => void download()}>
-          <Download size={14} /> {busy ? "PDF\u2026" : "T\u00e9l\u00e9charger PDF"}
+          <Download size={14} /> {busy ? "PDF…" : "Télécharger PDF"}
         </button>
       </div>
 
       <h2 className="mb-2 text-[12px] font-bold uppercase tracking-wide text-ink-muted">Document</h2>
       <Grid2>
-        <Field label="N\u00b0 mandat"><Input value={f.numero} onChange={(e) => upd("numero", e.target.value)} placeholder="ML-2026-001" /></Field>
+        <Field label="N° mandat"><Input value={f.numero} onChange={(e) => upd("numero", e.target.value)} placeholder="ML-2026-001" /></Field>
         <Field label="Date"><Input type="date" value={f.date} onChange={(e) => upd("date", e.target.value)} /></Field>
         <Field label="Lieu de signature"><Input value={f.lieu} onChange={(e) => upd("lieu", e.target.value)} /></Field>
-        <Field label="R\u00e9dacteur"><Input value={f.redacteur} onChange={(e) => upd("redacteur", e.target.value)} /></Field>
+        <Field label="Rédacteur"><Input value={f.redacteur} onChange={(e) => upd("redacteur", e.target.value)} /></Field>
       </Grid2>
 
       <h2 className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wide text-ink-muted">Mandant(s)</h2>
       {f.mandants.map((m, i) => (
         <div key={i} className="mb-3 rounded-lg border border-line p-3">
           <Grid2>
-            <Field label="Civilit\u00e9"><Select value={m.civilite} onChange={(v) => setMandant(i, { civilite: v })} options={["M.", "Mme", "M. et Mme"]} /></Field>
+            <Field label="Civilité"><Select value={m.civilite} onChange={(v) => setMandant(i, { civilite: v })} options={["M.", "Mme", "M. et Mme"]} /></Field>
             <Field label="Nom"><Input value={m.nom} onChange={(e) => setMandant(i, { nom: e.target.value })} /></Field>
-            <Field label="Pr\u00e9nom"><Input value={m.prenom} onChange={(e) => setMandant(i, { prenom: e.target.value })} /></Field>
-            <Field label="T\u00e9l."><Input value={m.tel} onChange={(e) => setMandant(i, { tel: e.target.value })} /></Field>
+            <Field label="Prénom"><Input value={m.prenom} onChange={(e) => setMandant(i, { prenom: e.target.value })} /></Field>
+            <Field label="Tél."><Input value={m.tel} onChange={(e) => setMandant(i, { tel: e.target.value })} /></Field>
             <Field label="Email"><Input value={m.email} onChange={(e) => setMandant(i, { email: e.target.value })} /></Field>
             <Field label="Ville"><Input value={m.ville} onChange={(e) => setMandant(i, { ville: e.target.value })} /></Field>
           </Grid2>
@@ -88,17 +88,17 @@ export function MandatLocationView() {
         <Field label="Commune"><Select value={f.commune} onChange={(v) => upd("commune", v)} options={COMMUNES_MARTINIQUE} /></Field>
         <Field label="Code postal"><Input value={f.codePostal} onChange={(e) => upd("codePostal", e.target.value)} /></Field>
         <Field label="Type de bien"><Select value={f.typeBien} onChange={(v) => upd("typeBien", v)} options={["Appartement", "Maison", "Villa", "Studio", "Local"]} /></Field>
-        <Field label="Surface (m\u00b2)"><Input type="number" value={f.surfaceHabitable || ""} onChange={(e) => upd("surfaceHabitable", Number(e.target.value))} /></Field>
-        <Field label="Pi\u00e8ces"><Input value={f.nbPieces} onChange={(e) => upd("nbPieces", e.target.value)} placeholder="T3, 2 chambres\u2026" /></Field>
-        <Field label="R\u00e9f. cadastrale"><Input value={f.refCadastrale} onChange={(e) => upd("refCadastrale", e.target.value)} /></Field>
+        <Field label="Surface (m²)"><Input type="number" value={f.surfaceHabitable || ""} onChange={(e) => upd("surfaceHabitable", Number(e.target.value))} /></Field>
+        <Field label="Pièces"><Input value={f.nbPieces} onChange={(e) => upd("nbPieces", e.target.value)} placeholder="T3, 2 chambres…" /></Field>
+        <Field label="Réf. cadastrale"><Input value={f.refCadastrale} onChange={(e) => upd("refCadastrale", e.target.value)} /></Field>
       </Grid2>
       <Field label="Description"><Textarea rows={3} value={f.descriptionBien} onChange={(e) => upd("descriptionBien", e.target.value)} /></Field>
 
       <h2 className="mb-2 mt-4 text-[12px] font-bold uppercase tracking-wide text-ink-muted">Mandat & conditions</h2>
       <Grid2>
-        <Field label="R\u00e9gime locatif">
+        <Field label="Régime locatif">
           <Select value={f.regimeLocatif} onChange={(v) => upd("regimeLocatif", v as MandatLocation["regimeLocatif"])} options={[
-            "Location nue (loi 1989)", "Location meubl\u00e9e (loi 1989)", "Bail mobilit\u00e9", "Location saisonni\u00e8re",
+            "Location nue (loi 1989)", "Location meublée (loi 1989)", "Bail mobilité", "Location saisonnière",
           ]} />
         </Field>
         <Field label="Type de mandat">
@@ -109,15 +109,15 @@ export function MandatLocationView() {
             "Recherche de locataire", "Gestion locative", "Recherche et gestion",
           ]} />
         </Field>
-        <Field label="Dur\u00e9e (mois)"><Input type="number" value={f.dureeMois || ""} onChange={(e) => upd("dureeMois", Number(e.target.value))} /></Field>
-        <Field label="Date de d\u00e9but"><Input type="date" value={f.dateDebut} onChange={(e) => upd("dateDebut", e.target.value)} /></Field>
-        <Field label="Loyer souhait\u00e9 HC"><Input type="number" value={f.loyerSouhaite || ""} onChange={(e) => upd("loyerSouhaite", Number(e.target.value))} /></Field>
+        <Field label="Durée (mois)"><Input type="number" value={f.dureeMois || ""} onChange={(e) => upd("dureeMois", Number(e.target.value))} /></Field>
+        <Field label="Date de début"><Input type="date" value={f.dateDebut} onChange={(e) => upd("dateDebut", e.target.value)} /></Field>
+        <Field label="Loyer souhaité HC"><Input type="number" value={f.loyerSouhaite || ""} onChange={(e) => upd("loyerSouhaite", Number(e.target.value))} /></Field>
         <Field label="Charges / mois"><Input type="number" value={f.chargesMensuelles || ""} onChange={(e) => upd("chargesMensuelles", Number(e.target.value))} /></Field>
-        <Field label="Honoraires \u2014 mode">
+        <Field label="Honoraires — mode">
           <Select value={f.honorairesType} onChange={(v) => upd("honorairesType", v as MandatLocation["honorairesType"])} options={[
             { value: "mois_de_loyer", label: "Mois de loyer" },
             { value: "pourcentage", label: "% du loyer" },
-            { value: "forfait", label: "Forfait \u20ac" },
+            { value: "forfait", label: "Forfait €" },
           ]} />
         </Field>
         <Field label="Valeur honoraires"><Input type="number" step="0.1" value={f.honorairesValeur || ""} onChange={(e) => upd("honorairesValeur", Number(e.target.value))} /></Field>
@@ -132,8 +132,8 @@ export function MandatLocationView() {
 
       {calc.honoraires > 0 && (
         <div className="mb-4 rounded-lg border border-primary/20 bg-primary-soft px-4 py-3 text-[13px] text-primary">
-          Honoraires calcul\u00e9s : <b>{eur(calc.honoraires)}</b>
-          {calc.dateFin && <> \u00b7 \u00c9ch\u00e9ance indicative : {calc.dateFin}</>}
+          Honoraires calculés : <b>{eur(calc.honoraires)}</b>
+          {calc.dateFin && <> · Échéance indicative : {calc.dateFin}</>}
         </div>
       )}
 
@@ -141,7 +141,7 @@ export function MandatLocationView() {
 
       <div className="mt-4 flex justify-end">
         <button className="btn-primary" disabled={busy} onClick={() => void download()}>
-          <Download size={14} /> {busy ? "G\u00e9n\u00e9ration\u2026" : "T\u00e9l\u00e9charger le PDF"}
+          <Download size={14} /> {busy ? "Génération…" : "Télécharger le PDF"}
         </button>
       </div>
     </div>

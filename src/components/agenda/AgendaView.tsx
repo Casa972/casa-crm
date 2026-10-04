@@ -30,7 +30,7 @@ function emptyRdv(): Rdv {
     heureDebut: "09:00",
     heureFin: "10:00",
     typeRdv: "Visite",
-    statut: "Planifi\u00e9",
+    statut: "Planifié",
   };
 }
 
@@ -67,7 +67,7 @@ export function AgendaView() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[13.5px] font-semibold text-ink">{r.titre}</span>
                     <StatusPill label={r.typeRdv} tone={(TYPE_STYLES[r.typeRdv] ?? { pill: "neutral" as Tone }).pill} />
-                    {r.statut !== "Planifi\u00e9" && <StatusPill label={r.statut} />}
+                    {r.statut !== "Planifié" && <StatusPill label={r.statut} />}
                   </div>
                   <div className="text-xs text-ink-muted">{r.date} {r.heureDebut}-{r.heureFin}</div>
                 </div>
@@ -103,7 +103,7 @@ function RdvMiniForm({ initial, onClose }: { initial?: Rdv; onClose: () => void 
       </Grid2>
       <FormActions
         onSave={() => {
-          save.mutate({ ...form, id: form.id || uid(), statut: form.statut || "Planifi\u00e9" });
+          save.mutate({ ...form, id: form.id || uid(), statut: form.statut || "Planifié" });
           onClose();
         }}
         onClose={onClose}

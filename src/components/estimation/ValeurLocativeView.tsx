@@ -74,7 +74,7 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
         <div className="flex gap-2">
           <ValeurLocativePDFDownload doc={e} />
           <button className="btn-ghost text-[13px]" onClick={() => { upd("statut", "Brouillon"); onSave({ ...e, statut: "Brouillon" }); }}>Enregistrer</button>
-          <button className="btn-primary text-[13px]" onClick={() => { if (!confirm("Finaliser cette estimation ?")) return; const n = { ...e, statut: "Finalis\u00e9e" as const }; setE(n); onSave(n); onBack(); }}>Finaliser</button>
+          <button className="btn-primary text-[13px]" onClick={() => { if (!confirm("Finaliser cette estimation ?")) return; const n = { ...e, statut: "Finalisée" as const }; setE(n); onSave(n); onBack(); }}>Finaliser</button>
         </div>
       </div>
       <div className="mb-5 flex gap-2">
@@ -224,7 +224,7 @@ export function ValeurLocativeView() {
                 <div className="min-w-0 flex-1">
                   <div className="mb-1.5 flex flex-wrap items-center gap-2">
                     <span className="font-heading text-[15px] font-semibold text-ink">{est.titreBien || est.adresse || "Sans titre"}</span>
-                    <StatusPill label={est.statut} tone={est.statut === "Finalis\u00e9e" ? "emerald" : "amber"} />
+                    <StatusPill label={est.statut} tone={est.statut === "Finalisée" ? "emerald" : "amber"} />
                   </div>
                   <div className="text-[12.5px] text-ink-sub">{est.regimeLocatif} - {est.commune}</div>
                 </div>

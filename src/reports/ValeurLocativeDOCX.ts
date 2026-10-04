@@ -8,7 +8,7 @@ import {
 } from "./docxHelpers";
 
 const fmtM2 = (n: number) =>
-  n ? `${String(n).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0")} m²` : "—";
+  n ? `${String(n).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, " ")} m²` : "—";
 
 export async function generateValeurLocativeDOCX(e: ValeurLocative): Promise<Blob> {
   const { TextRun } = await import("docx");

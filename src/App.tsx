@@ -107,9 +107,9 @@ export function App() {
   useKeyboardShortcuts();
   useRealtimeSync();
 
-  if (!ready) return <div className="flex h-[100dvh] items-center justify-center text-ink-sub">Connexion\u2026</div>;
+  if (!ready) return <div className="flex h-[100dvh] items-center justify-center text-ink-sub">Connexion…</div>;
   if (!user) return <Login />;
-  if (isLoading) return <div className="flex h-[100dvh] items-center justify-center text-ink-sub">Chargement\u2026</div>;
+  if (isLoading) return <div className="flex h-[100dvh] items-center justify-center text-ink-sub">Chargement…</div>;
   if (isError) return <div className="flex h-[100dvh] items-center justify-center text-danger">Erreur de chargement des données.</div>;
 
   return (

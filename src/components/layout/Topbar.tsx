@@ -23,7 +23,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   valeur_venale: "Valeur vénale",
   valeur_locative: "Valeur locative",
   compte_rendu: "Comptes rendus de visite",
-  matching: "Matching clients \u2194 biens",
+  matching: "Matching clients ↔ biens",
   documents: "Bibliothèque",
   registre: "Registre des mandats",
   mes_dossiers: "Mes dossiers",

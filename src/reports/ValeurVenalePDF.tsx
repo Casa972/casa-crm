@@ -53,8 +53,8 @@ const s = StyleSheet.create({
   footerTxt: { fontSize: 7, color: MUTED },
 });
 
-const E = (n: number) => `${Math.round(n || 0).toLocaleString("fr-FR").replace(/\s/g, "\u00A0")} \u20AC`;
-const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "\u2014";
+const E = (n: number) => `${Math.round(n || 0).toLocaleString("fr-FR").replace(/\s/g, " ")} €`;
+const fd = (d: string) => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—";
 
 function Footer() {
   return (
@@ -112,7 +112,7 @@ export function ValeurVenalePDF({ e }: { e: Estimation }) {
           <View style={{ flexDirection: "row", width: "100%", marginTop: 8 }}>
             <View style={[s.block, { marginRight: 6 }]}>
               <Text style={s.blockLbl}>DEMANDEUR</Text>
-              <Text style={s.blockVal}>{e.demandeur || "\u2014"}</Text>
+              <Text style={s.blockVal}>{e.demandeur || "—"}</Text>
             </View>
             <View style={[s.block, { marginLeft: 6 }]}>
               <Text style={s.blockLbl}>ÉTABLI PAR</Text>
@@ -174,9 +174,9 @@ export function ValeurVenalePDF({ e }: { e: Estimation }) {
               <View key={i} style={i % 2 ? s.trA : s.tr}>
                 <Text style={[s.td, { width: "14%" }]}>{r.reference || `#${i + 1}`}</Text>
                 <Text style={[s.td, { width: "22%" }]}>{r.type}{r.surface ? ` · ${r.surface} m²` : ""}</Text>
-                <Text style={[s.td, { flex: 1 }]}>{r.localisation || "\u2014"}</Text>
-                <Text style={[s.td, { width: "18%" }]}>{r.prix ? E(r.prix) : "\u2014"}</Text>
-                <Text style={[s.td, { width: "14%" }]}>{r.prixM2 ? `${r.prixM2.toLocaleString("fr-FR")} €` : "\u2014"}</Text>
+                <Text style={[s.td, { flex: 1 }]}>{r.localisation || "—"}</Text>
+                <Text style={[s.td, { width: "18%" }]}>{r.prix ? E(r.prix) : "—"}</Text>
+                <Text style={[s.td, { width: "14%" }]}>{r.prixM2 ? `${r.prixM2.toLocaleString("fr-FR")} €` : "—"}</Text>
               </View>
             ))}
           </>
@@ -193,8 +193,8 @@ export function ValeurVenalePDF({ e }: { e: Estimation }) {
             {e.criteres.filter((c) => c.critere).map((c, i) => (
               <View key={i} style={i % 2 ? s.trA : s.tr}>
                 <Text style={[s.td, s.tdB, { width: "40%" }]}>{c.critere}</Text>
-                <Text style={[s.td, { flex: 1 }]}>{c.situationBien || c.impact || "\u2014"}</Text>
-                <Text style={[s.td, { width: "22%" }]}>{c.ajustement || "\u2014"}</Text>
+                <Text style={[s.td, { flex: 1 }]}>{c.situationBien || c.impact || "—"}</Text>
+                <Text style={[s.td, { width: "22%" }]}>{c.ajustement || "—"}</Text>
               </View>
             ))}
           </>

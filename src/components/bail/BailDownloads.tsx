@@ -15,7 +15,7 @@ function baseName(doc: Bail) {
 function guard(doc: Bail) {
   const err = erreursBail(doc);
   if (err.length) {
-    toast.error("Compl\u00e9tez : " + err.join(", "));
+    toast.error("Complétez : " + err.join(", "));
     return false;
   }
   return true;
@@ -38,7 +38,7 @@ export function BailDOCXDownload({ doc }: { doc: Bail }) {
       setTimeout(() => URL.revokeObjectURL(url), 200);
     } catch (err) {
       console.error(err);
-      toast.error("Erreur lors de la g\u00e9n\u00e9ration du fichier Word.");
+      toast.error("Erreur lors de la génération du fichier Word.");
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export function BailDOCXDownload({ doc }: { doc: Bail }) {
   return (
     <button type="button" className="btn-ghost text-[12px]" onClick={() => void handle()} disabled={loading}>
       {loading ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
-      {loading ? "Pr\u00e9paration\u2026" : "T\u00e9l\u00e9charger Word"}
+      {loading ? "Préparation…" : "Télécharger Word"}
     </button>
   );
 }
@@ -68,7 +68,7 @@ export default function BailDownloads({ doc }: { doc: Bail }) {
       setTimeout(() => URL.revokeObjectURL(url), 200);
     } catch (err) {
       console.error(err);
-      toast.error("Erreur lors de la g\u00e9n\u00e9ration du PDF.");
+      toast.error("Erreur lors de la génération du PDF.");
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function BailDownloads({ doc }: { doc: Bail }) {
     <>
       <button type="button" className="btn-ghost text-[12px]" onClick={() => void handlePdf()} disabled={loading}>
         {loading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-        {loading ? "PDF\u2026" : "T\u00e9l\u00e9charger PDF"}
+        {loading ? "PDF…" : "Télécharger PDF"}
       </button>
       <BailDOCXDownload doc={doc} />
     </>

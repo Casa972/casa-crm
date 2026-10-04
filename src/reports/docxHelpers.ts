@@ -142,7 +142,7 @@ export function headerRow(cols: string[]): TableRow {
 // ── Formatters ────────────────────────────────────────────────────────────────
 export const E = (n: number) => {
   const s = String(Math.round(n || 0));
-  return s.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0") + " €";
+  return s.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
 };
 
 export const fd = (d: string) =>

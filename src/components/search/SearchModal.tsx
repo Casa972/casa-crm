@@ -14,7 +14,7 @@ interface SearchResult {
 }
 
 function normalize(s: string): string {
-  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 /** Recherche multi-mots : tous les mots de la requête doivent apparaître dans au moins un champ. */

@@ -9,7 +9,7 @@ import { eur, fdate, daysDiff } from "../../lib/format";
 import type { Bien } from "../../types/domain";
 
 function norm(s?: string | null) {
-  return (s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 }
 
 function linkedToBien(bien: Bien, text?: string | null) {
