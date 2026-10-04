@@ -62,7 +62,7 @@ export function ActesHome() {
     <div className="mx-auto max-w-[900px] px-6 py-5">
       <h1 className="font-heading text-2xl font-semibold text-ink">Rédaction</h1>
       <p className="mb-6 text-[13px] text-ink-muted">
-        Actes de vente et mandat de location. Les baux détaillés sont dans le menu Baux.
+        Documents à rédiger. Un compromis PDF n'enregistre pas la vente : le suivi est fait par la direction.
       </p>
       <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Cycle de vente</h2>
       <div className="mb-6 grid gap-3 sm:grid-cols-3">

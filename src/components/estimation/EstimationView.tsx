@@ -879,7 +879,7 @@ export function EstimationView() {
     <div className="mx-auto max-w-[900px] px-6 py-5">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-ink">Estimations de valeur vénale</h1>
+          <h1 className="font-heading text-2xl font-semibold text-ink">Estimations</h1>
           <p className="text-[13px] text-ink-muted">{estimations.length} estimation(s)</p>
         </div>
         <button className="btn-primary" onClick={() => setEditing(newEstimation(user?.id, user?.name))}>
@@ -890,7 +890,7 @@ export function EstimationView() {
       {isLoading ? (
         <div className="py-12 text-center text-ink-muted">Chargement…</div>
       ) : estimations.length === 0 ? (
-        <EmptyState Icon={FileText} text="Aucune estimation" sub="Créez votre première estimation de valeur vénale." />
+        <EmptyState Icon={FileText} text="Aucune estimation" sub="Estimation simple du bien. Le paiement se saisit à part, côté direction." />
       ) : (
         <div className="flex flex-col gap-3">
           {estimations.map(est => {

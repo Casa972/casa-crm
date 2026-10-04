@@ -19,7 +19,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   agenda: "Agenda",
   taches: "Tâches",
   calculatrice: "Calculatrice",
-  estimation: "Expertises immobilières",
+  estimation: "Estimations",
   valeur_venale: "Valeur vénale",
   valeur_locative: "Valeur locative",
   compte_rendu: "Comptes rendus de visite",

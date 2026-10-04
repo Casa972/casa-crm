@@ -73,7 +73,7 @@ function ObjectifsPanel({ userId, data, activites, rdvList }: {
   });
 
   // Clients de l'agent (inclut les données legacy sans agentId)
-  const mesClients = data.clients.filter((c) => c.agentId === userId || !c.agentId);
+  const mesClients = data.clients.filter((c) => c.agentId === userId);
   const agentClientIds = new Set(mesClients.map((c) => c.id));
 
   // Activités de l'agent ce mois (agentId match ou client appartenant à l'agent)

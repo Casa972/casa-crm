@@ -38,7 +38,7 @@ export function BiensView() {
   const [dossierBien, setDossierBien] = useState<Bien | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [monPortefeuille, setMonPortefeuille] = useState(false);
+  const [monPortefeuille, setMonPortefeuille] = useState(() => !useSessionStore.getState().isDirecteur());
   const user = useSessionStore((s) => s.user);
   const isDir = useSessionStore((s) => s.isDirecteur());
 
@@ -164,14 +164,14 @@ export function BiensView() {
       {tab === "biens" ? (
         <DataTable
           data={monPortefeuille && user
-            ? data.biens.filter((b) => data.mandats.some((m) => (m.agentId === user.id || !m.agentId) && (m.bienId === b.id || m.bienId === b.ref)))
+            ? data.biens.filter((b) => data.mandats.some((m) => m.agentId === user.id && (m.bienId === b.id || m.bienId === b.ref)))
             : data.biens}
           columns={bienCols} globalFilter={search} emptyMessage="Aucun bien"
           onRowClick={(b) => setDossierBien(b)}
         />
       ) : (
         <DataTable
-          data={monPortefeuille && user ? data.mandats.filter((m) => m.agentId === user.id || !m.agentId) : data.mandats}
+          data={monPortefeuille && user ? data.mandats.filter((m) => m.agentId === user.id) : data.mandats}
           columns={mandatCols} globalFilter={search} emptyMessage="Aucun mandat"
         />
       )}

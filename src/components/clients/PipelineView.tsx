@@ -130,14 +130,14 @@ export function PipelineView() {
   const save = useSaveClient();
   const { search } = useFiltersStore();
   const [modal, setModal] = useState<{ item?: Client } | null>(null);
-  const [monPortefeuille, setMonPortefeuille] = useState(false);
+  const [monPortefeuille, setMonPortefeuille] = useState(() => !useSessionStore.getState().isDirecteur());
   const user = useSessionStore((s) => s.user);
   const isDir = useSessionStore((s) => s.isDirecteur());
 
   const filteredClients = useMemo(() => {
     let list = data.clients;
     if (monPortefeuille && user) {
-      list = list.filter((c) => c.agentId === user.id || !c.agentId);
+      list = list.filter((c) => c.agentId === user.id);
     }
     if (search) {
       const q = search.toLowerCase();

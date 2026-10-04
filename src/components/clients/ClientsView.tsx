@@ -34,7 +34,7 @@ export function ClientsView() {
   const [modal, setModal] = useState<{ item?: Client } | null>(null);
   const [historiqueClient, setHistoriqueClient] = useState<Client | null>(null);
   const [importOpen, setImportOpen] = useState(false);
-  const [monPortefeuille, setMonPortefeuille] = useState(false);
+  const [monPortefeuille, setMonPortefeuille] = useState(() => !useSessionStore.getState().isDirecteur());
   const [filtreEtape, setFiltreEtape] = useState<string>("");
   const [filtreType, setFiltreType] = useState<string>("");
   const user = useSessionStore((s) => s.user);

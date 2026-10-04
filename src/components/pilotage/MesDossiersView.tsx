@@ -59,16 +59,16 @@ export function MesDossiersView() {
             <FileText size={13} /> Compromis en cours ({mesCompromis.length})
           </h2>
           <button
-            onClick={() => setView("redacteur")}
+            onClick={() => setView("biens")}
             className="text-[12px] font-medium text-primary hover:underline"
           >
-            Nouveau dossier →
+            Voir mes biens →
           </button>
         </div>
 
         {mesCompromis.length === 0 ? (
           <div className="card p-6">
-            <EmptyState Icon={FileText} text="Aucun compromis actif" sub="Créez un compromis depuis le Rédacteur." />
+            <EmptyState Icon={FileText} text="Aucun dossier en cours" sub="Le compromis est enregistré par la direction. Tes mandats actifs sont plus bas." />
           </div>
         ) : (
           <div className="flex flex-col gap-3">
