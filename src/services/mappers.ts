@@ -17,6 +17,7 @@ import type {
   StatutCompromis, StatutCommission, TypeHonoraires, TypeClient,
   EtapePipeline, StatutRevenu, TypeRevenu,
 } from "../schemas/enums";
+import { unpackInteragence, packInteragence } from "../schemas/compromis.schema";
 
 const s = (v: string | null | undefined): string => v ?? "";
 const n = (v: number | null | undefined): number => v ?? 0;
@@ -98,7 +99,9 @@ export const mandatToRow = (m: Mandat, agentId?: string): Partial<MandatRow> => 
 });
 
 /* ── Compromis ── */
-export const compromisFromRow = (r: CompromisRow): Compromis => ({
+export const compromisFromRow = (r: CompromisRow): Compromis => {
+  const ia = unpackInteragence(s(r.notes));
+  return {
   id: r.id,
   ref: r.ref,
   acheteur: r.acheteur,
@@ -118,13 +121,16 @@ export const compromisFromRow = (r: CompromisRow): Compromis => ({
   dateActeReel: s(r.date_acte_reel),
   sruExpire: s(r.sru_expire),
   condSuspExpire: s(r.cond_susp_expire),
-  notes: s(r.notes),
+  notes: ia.notes,
   agentId: r.agent_id ?? undefined,
   agentEntree: r.agent_entree ?? undefined,
   agentSortie: r.agent_sortie ?? undefined,
   pctEntree: r.pct_entree ?? undefined,
   pctSortie: r.pct_sortie ?? undefined,
-});
+  origine: ia.meta.origine,
+  agencePartenaire: ia.meta.agencePartenaire,
+  pctAgence: ia.meta.pctAgence,
+}; };
 
 export const compromisToRow = (c: Compromis, agentId?: string): Partial<CompromisRow> => ({
   id: c.id,
@@ -146,7 +152,11 @@ export const compromisToRow = (c: Compromis, agentId?: string): Partial<Compromi
   date_acte_reel: nn(c.dateActeReel),
   sru_expire: nn(c.sruExpire),
   cond_susp_expire: nn(c.condSuspExpire),
-  notes: nn(c.notes),
+  notes: nn(packInteragence(c.notes, {
+    origine: c.origine ?? "Maison",
+    agencePartenaire: c.agencePartenaire ?? "",
+    pctAgence: c.pctAgence ?? (c.origine && c.origine !== "Maison" ? 50 : 100),
+  })),
   agent_entree: c.agentEntree ?? null,
   agent_sortie: c.agentSortie ?? null,
   pct_entree: c.pctEntree ?? null,

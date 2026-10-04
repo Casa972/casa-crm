@@ -14,6 +14,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   revenus: "Revenus",
   reporting: "Reporting",
   finance: "Tableau financier",
+  compromis: "Compromis",
   pilotage_agent: "Mon tableau de bord",
   agenda: "Agenda",
   taches: "Tâches",

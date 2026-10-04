@@ -1,7 +1,7 @@
 import { api } from "./api";
 import { TABLES, type CompromisRow, type RevenuRow } from "../types/database";
 import { compromisToRow, compromisFromRow, revenuToRow, revenuFromRow } from "./mappers";
-import { commissionMontant, type Compromis } from "../schemas/compromis.schema";
+import { commissionAgence, type Compromis } from "../schemas/compromis.schema";
 import type { Revenu } from "../types/domain";
 
 const uid = (): string => Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -41,11 +41,12 @@ export async function saveCompromisWithRevenu(
 
   // 2) Réconcilier le revenu lié
   const linked = existingRevenus.find((r) => r.sourceId === persisted.id && r.source === "pilotage");
-  const montant = commissionMontant(persisted);
+  const montant = commissionAgence(persisted);
   let revenu: Revenu | null = null;
 
   if (shouldHaveRevenu(persisted) && montant > 0) {
-    const desc = `Commission vente ${persisted.ref}`;
+    const inter = persisted.origine && persisted.origine !== "Maison" ? ` · ${persisted.origine}${persisted.agencePartenaire ? " " + persisted.agencePartenaire : ""}` : "";
+    const desc = `Commission vente ${persisted.ref}${inter}`;
     const next: Revenu = {
       id: linked?.id ?? uid(),
       date: linked?.date || new Date().toISOString().slice(0, 10),

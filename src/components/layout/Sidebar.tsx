@@ -1,7 +1,7 @@
 import {
   Sun, Users, Building2, Target, TrendingUp, ClipboardList,
   BarChart2, Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
-  GraduationCap, ExternalLink, Landmark, BookOpen, Briefcase,
+  GraduationCap, ExternalLink, Landmark, BookOpen, Briefcase, Handshake,
   Columns, Clipboard, FileText, KeyRound, Home,
   type LucideIcon,
 } from "lucide-react";
@@ -47,6 +47,7 @@ const NAV_DIR: NavEntry[] = [
   { kind: "item", id: "registre",     label: "Registre mandats", Icon: BookOpen },
 
   { kind: "group", label: "Analyse" },
+  { kind: "item", id: "compromis",   label: "Compromis",         Icon: Handshake },
   { kind: "item", id: "finance",     label: "Tableau financier", Icon: Landmark },
   { kind: "item", id: "pilotage",    label: "Pilotage",       Icon: Target },
   { kind: "item", id: "revenus",     label: "Revenus",        Icon: TrendingUp },

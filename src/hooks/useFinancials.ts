@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { commissionMontant } from "../schemas/compromis.schema";
+import { commissionAgence } from "../schemas/compromis.schema";
 import { daysDiff } from "../lib/format";
 import { AGENTS_CONFIG } from "../config/agents";
 import type { AgencyData, Compromis, Mandat } from "../types/domain";
@@ -93,7 +93,7 @@ export function useFinancials(data: AgencyData): Financials {
 
     const caPotentiel = compromis
       .filter(c => !["Acte signé", "Annulé"].includes(c.statut))
-      .reduce((s, c) => s + commissionMontant(c), 0);
+      .reduce((s, c) => s + commissionAgence(c), 0);
 
     const globalAEncaisser = caPotentiel + totalRevAtt;
     const totalPotentiel = globalEncaisse + globalAEncaisser;
@@ -102,12 +102,12 @@ export function useFinancials(data: AgencyData): Financials {
     const actesEncaisses = compromis.filter(
       c => c.statut === "Acte signé" && c.commissionStatut === "Encaissée"
     );
-    const totalActesEncaisses = actesEncaisses.reduce((s, c) => s + commissionMontant(c), 0);
+    const totalActesEncaisses = actesEncaisses.reduce((s, c) => s + commissionAgence(c), 0);
 
     const compromisAEncaisser = compromis.filter(
       c => c.statut !== "Annulé" && c.commissionStatut !== "Encaissée"
     );
-    const totalCompromisAEncaisser = compromisAEncaisser.reduce((s, c) => s + commissionMontant(c), 0);
+    const totalCompromisAEncaisser = compromisAEncaisser.reduce((s, c) => s + commissionAgence(c), 0);
 
     const mandatsEnCours = mandats.filter(m => m.statut === "Actif");
 
@@ -166,7 +166,7 @@ export function useFinancials(data: AgencyData): Financials {
       const label = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
       const previsionnel = compromis
         .filter(c => !["Acte signé", "Annulé"].includes(c.statut) && c.dateActePrev?.startsWith(monthKey))
-        .reduce((s, c) => s + commissionMontant(c), 0);
+        .reduce((s, c) => s + commissionAgence(c), 0);
       monthlyExt.push({ month: monthKey, label, encaisse: 0, enAttente: 0, previsionnel, isFuture: true, isCurrent: false });
     }
 
@@ -178,7 +178,7 @@ export function useFinancials(data: AgencyData): Financials {
     const pipelineHorizon: PipelineHorizon = { retard: 0, j30: 0, j60: 0, j90: 0, j90plus: 0, sans: 0 };
     for (const c of compromis.filter(cp => !["Acte signé", "Annulé"].includes(cp.statut) && cp.commissionStatut !== "Encaissée")) {
       const diff = c.dateActePrev ? daysDiff(c.dateActePrev) : null;
-      const comm = commissionMontant(c);
+      const comm = commissionAgence(c);
       if (diff === null) pipelineHorizon.sans += comm;
       else if (diff <= 0) pipelineHorizon.retard += comm;
       else if (diff <= 30) pipelineHorizon.j30 += comm;
@@ -196,7 +196,7 @@ export function useFinancials(data: AgencyData): Financials {
         acheteur: c.acheteur,
         dateActePrev: c.dateActePrev,
         statut: c.statut,
-        comm: commissionMontant(c),
+        comm: commissionAgence(c),
         diff: c.dateActePrev ? daysDiff(c.dateActePrev) : null,
         agentId: c.agentId,
       }))
@@ -225,7 +225,7 @@ export function useFinancials(data: AgencyData): Financials {
     }
     for (const cp of compromis) {
       if (cp.statut === "Annulé") continue;
-      const montant = commissionMontant(cp);
+      const montant = commissionAgence(cp);
 
       if (cp.agentEntree || cp.agentSortie) {
         const pctE = cp.pctEntree ?? 50;
@@ -246,7 +246,7 @@ export function useFinancials(data: AgencyData): Financials {
       actesEncaisses, totalActesEncaisses,
       compromisAEncaisser, totalCompromisAEncaisser,
       mandatsEnCours, alertesDelais,
-      commMontant: commissionMontant,
+      commMontant: commissionAgence,
       agentPerformance: Object.values(perf),
       monthly,
       monthlyExt,

@@ -184,6 +184,7 @@ export function FinanceView() {
   return (
     <div className="mx-auto max-w-[1080px] px-6 py-5">
       <FinanceNav active="finance" />
+      <SourcesCa />
 
       {/* ── Header ── */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -442,6 +443,35 @@ export function FinanceView() {
 
       {/* ── Synthèse mensuelle ── */}
       <SyntheseMensuelle data={fin.monthly} />
+    </div>
+  );
+}
+
+
+function SourcesCa() {
+  const { data } = useAgencyData();
+  const enc = data.revenus.filter((r) => r.statut === "Encaissé");
+  const sum = (pred: (type: string) => boolean) => enc.filter((r) => pred(r.type)).reduce((s, r) => s + r.montant, 0);
+  const ventes = sum((t) => t === "Commission vente");
+  const locations = sum((t) => t === "Commission location" || t === "Gestion locative");
+  const expertises = sum((t) => t === "Expertise");
+  const estimations = sum((t) => t === "Estimation valeur vénale");
+  const autres = enc.reduce((s, r) => s + r.montant, 0) - ventes - locations - expertises - estimations;
+  const items = [
+    ["Ventes", ventes],
+    ["Locations", locations],
+    ["Expertises", expertises],
+    ["Estimations", estimations],
+    ["Autres", autres],
+  ] as const;
+  return (
+    <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">
+      {items.map(([label, value]) => (
+        <div key={label} className="rounded border border-line bg-surface px-3 py-2">
+          <div className="text-[10px] font-bold uppercase tracking-wide text-ink-muted">{label}</div>
+          <div className="font-heading text-[15px] font-semibold text-ink">{eur(value)}</div>
+        </div>
+      ))}
     </div>
   );
 }

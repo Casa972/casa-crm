@@ -14,6 +14,7 @@ import { PilotageAgentView } from "./components/pilotage/PilotageAgentView";
 import { RevenusView } from "./components/revenus/RevenusView";
 import { ReportingView } from "./components/reporting/ReportingView";
 import { FinanceView } from "./components/finance/FinanceView";
+import { CompromisView } from "./components/compromis/CompromisView";
 import { ActesHome } from "./components/redacteur/ActesHome";
 import { EstimationView } from "./components/estimation/EstimationView";
 import { ValeurVenaleView } from "./components/estimation/ValeurVenaleView";
@@ -30,7 +31,7 @@ import { NotesView } from "./components/notes/NotesView";
 import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
-const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance", "estimation"];
+const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance", "estimation", "compromis"];
 
 function CurrentView(): ReactElement {
   const view = useUiStore((s) => s.activeView);
@@ -46,6 +47,7 @@ function CurrentView(): ReactElement {
     case "revenus": return <RevenusView />;
     case "reporting": return <ReportingView />;
     case "finance": return <FinanceView />;
+    case "compromis": return <CompromisView />;
     case "redacteur": return <ActesHome />;
     case "estimation": return <EstimationView />;
     case "valeur_venale": return <ValeurVenaleView />;

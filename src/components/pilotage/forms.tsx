@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
 import { FormActions } from "../ui/Modal";
-import { compromisFormSchema, commissionMontant } from "../../schemas/compromis.schema";
+import { compromisFormSchema, commissionMontant, commissionAgence, commissionPartenaire, OrigineDossier } from "../../schemas/compromis.schema";
 import { clientFormSchema } from "../../schemas/client.schema";
 import { revenuFormSchema } from "../../schemas/client.schema";
 import {
@@ -30,7 +30,8 @@ type CF =
   | "typeHonoraires" | "honoraires" | "statut" | "commissionStatut"
   | "notaire" | "financement" | "dateOffre" | "dateCompromis" | "dateActePrev"
   | "dateActeReel" | "sruExpire" | "condSuspExpire" | "notes"
-  | "agentEntree" | "agentSortie" | "pctEntree" | "pctSortie";
+  | "agentEntree" | "agentSortie" | "pctEntree" | "pctSortie"
+  | "origine" | "agencePartenaire" | "pctAgence";
 
 export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = [], clients = [] }: {
   initial?: Compromis; onSave: (c: Compromis) => void; onClose: () => void;
@@ -48,6 +49,9 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
     condSuspExpire: initial?.condSuspExpire ?? "", notes: initial?.notes ?? "",
     agentEntree: initial?.agentEntree ?? "", agentSortie: initial?.agentSortie ?? "",
     pctEntree: String(initial?.pctEntree ?? 50), pctSortie: String(initial?.pctSortie ?? 50),
+    origine: initial?.origine ?? "Maison",
+    agencePartenaire: initial?.agencePartenaire ?? "",
+    pctAgence: String(initial?.pctAgence ?? (initial?.origine && initial.origine !== "Maison" ? 50 : 100)),
   }));
   const [errors, setErrors] = useState<Errors>({});
   const s = (k: CF) => (v: string) => setF((p) => ({ ...p, [k]: v }));
@@ -67,11 +71,16 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
     }));
   };
 
-  const preview = commissionMontant({
+  const previewBase = {
     typeHonoraires: f.typeHonoraires as Compromis["typeHonoraires"],
     prixVente: Number(f.prixVente) || 0,
     honoraires: Number(f.honoraires) || 0,
-  });
+    origine: f.origine as Compromis["origine"],
+    pctAgence: Number(f.pctAgence) || 0,
+  };
+  const preview = commissionMontant(previewBase);
+  const netAgence = commissionAgence(previewBase);
+  const partPartenaire = commissionPartenaire(previewBase);
 
   const submit = () => {
     const parsed = compromisFormSchema.safeParse(f);
@@ -143,6 +152,21 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
         <Field label="Fin délai SRU"><Input type="date" value={f.sruExpire} onChange={(e) => s("sruExpire")(e.target.value)} /></Field>
         <Field label="Fin cond. suspensives"><Input type="date" value={f.condSuspExpire} onChange={(e) => s("condSuspExpire")(e.target.value)} /></Field>
       </Grid2>
+      <div className="mb-2 mt-1 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Interagence</div>
+      <Grid2>
+        <Field label="Origine du dossier">
+          <Select value={f.origine} onChange={(v) => setF((p) => ({ ...p, origine: v, pctAgence: v === "Maison" ? "100" : (p.pctAgence === "100" ? "50" : p.pctAgence) }))} options={OrigineDossier.options} />
+        </Field>
+        <Field label="Agence partenaire">
+          <Input value={f.agencePartenaire} onChange={(e) => s("agencePartenaire")(e.target.value)} placeholder="Nom de l'agence" disabled={f.origine === "Maison"} />
+        </Field>
+        <Field label="Part Casa (%)">
+          <Input type="number" min="0" max="100" value={f.pctAgence} onChange={(e) => s("pctAgence")(e.target.value)} disabled={f.origine === "Maison"} />
+        </Field>
+      </Grid2>
+      <p className="mb-3 text-[12px] text-ink-muted">
+        Entrant : le confrère a le mandat, Casa amène l'acquéreur. Sortant : Casa a le mandat, le confrère amène l'acquéreur. Le chiffre d'affaires et le pilotage ne retiennent que la part Casa.
+      </p>
       <Field label="Notes"><Textarea rows={2} value={f.notes} onChange={(e) => s("notes")(e.target.value)} /></Field>
 
       <div className="mb-2 mt-3 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Répartition commission</div>
@@ -168,21 +192,31 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
       </Grid2>
 
       <div className="mb-1 flex items-center justify-between rounded bg-primary-soft px-3.5 py-2.5">
-        <span className="text-[12.5px] font-semibold text-primary">Commission estimée</span>
+        <span className="text-[12.5px] font-semibold text-primary">Commission brute</span>
         <span className="font-heading text-base font-bold text-primary">{eur(preview)}</span>
       </div>
-      {(f.agentEntree || f.agentSortie) && preview > 0 && (
+      <div className="mb-1 flex items-center justify-between rounded border border-line bg-bg px-3.5 py-2.5">
+        <span className="text-[12.5px] font-semibold text-ink">Part Casa (CA agence)</span>
+        <span className="font-heading text-base font-bold text-ink">{eur(netAgence)}</span>
+      </div>
+      {f.origine !== "Maison" && (
+        <div className="mb-1 flex items-center justify-between px-3.5 py-1 text-[12px] text-ink-sub">
+          <span>Rétrocession {f.agencePartenaire || "confrère"}</span>
+          <span>{eur(partPartenaire)}</span>
+        </div>
+      )}
+      {(f.agentEntree || f.agentSortie) && netAgence > 0 && (
         <div className="mb-1 rounded border border-line bg-bg px-3 py-2 text-[12px]">
           {f.agentEntree && (
             <div className="flex justify-between py-0.5">
-              <span className="text-ink-sub">{f.agentEntree} <span className="text-ink-muted">(Entrée · {f.pctEntree}%)</span></span>
-              <span className="font-semibold text-ink">{eur(Math.round(preview * Number(f.pctEntree) / 100))}</span>
+              <span className="text-ink-sub">{f.agentEntree} <span className="text-ink-muted">(Entrée · {f.pctEntree}% de la part Casa)</span></span>
+              <span className="font-semibold text-ink">{eur(Math.round(netAgence * Number(f.pctEntree) / 100))}</span>
             </div>
           )}
           {f.agentSortie && (
             <div className="flex justify-between py-0.5">
-              <span className="text-ink-sub">{f.agentSortie} <span className="text-ink-muted">(Sortie · {f.pctSortie}%)</span></span>
-              <span className="font-semibold text-ink">{eur(Math.round(preview * Number(f.pctSortie) / 100))}</span>
+              <span className="text-ink-sub">{f.agentSortie} <span className="text-ink-muted">(Sortie · {f.pctSortie}% de la part Casa)</span></span>
+              <span className="font-semibold text-ink">{eur(Math.round(netAgence * Number(f.pctSortie) / 100))}</span>
             </div>
           )}
         </div>
@@ -234,6 +268,21 @@ export function ClientForm({ initial, onSave, onClose }: {
         <Field label="Dernier contact"><Input type="date" value={f.dernierContact} onChange={(e) => s("dernierContact")(e.target.value)} /></Field>
         <Field label="Relance prévue"><Input type="date" value={f.relanceDate} onChange={(e) => s("relanceDate")(e.target.value)} /></Field>
       </Grid2>
+      <div className="mb-2 mt-1 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Interagence</div>
+      <Grid2>
+        <Field label="Origine du dossier">
+          <Select value={f.origine} onChange={(v) => setF((p) => ({ ...p, origine: v, pctAgence: v === "Maison" ? "100" : (p.pctAgence === "100" ? "50" : p.pctAgence) }))} options={OrigineDossier.options} />
+        </Field>
+        <Field label="Agence partenaire">
+          <Input value={f.agencePartenaire} onChange={(e) => s("agencePartenaire")(e.target.value)} placeholder="Nom de l'agence" disabled={f.origine === "Maison"} />
+        </Field>
+        <Field label="Part Casa (%)">
+          <Input type="number" min="0" max="100" value={f.pctAgence} onChange={(e) => s("pctAgence")(e.target.value)} disabled={f.origine === "Maison"} />
+        </Field>
+      </Grid2>
+      <p className="mb-3 text-[12px] text-ink-muted">
+        Entrant : le confrère a le mandat, Casa amène l'acquéreur. Sortant : Casa a le mandat, le confrère amène l'acquéreur. Le chiffre d'affaires et le pilotage ne retiennent que la part Casa.
+      </p>
       <Field label="Notes"><Textarea rows={2} value={f.notes} onChange={(e) => s("notes")(e.target.value)} /></Field>
       <FormActions onSave={submit} onClose={onClose} />
     </>
