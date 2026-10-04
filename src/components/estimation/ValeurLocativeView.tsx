@@ -72,7 +72,7 @@ function Editor({ initial, onSave, onBack }: { initial: ValeurLocative; onSave: 
       <div className="mb-4 flex items-center justify-between gap-3">
         <button className="btn-ghost text-[13px]" onClick={onBack}><ChevronLeft size={14} /> Retour</button>
         <div className="flex gap-2">
-          {e.loyerMensuelHc > 0 && <ValeurLocativePDFDownload doc={e} />}
+          <ValeurLocativePDFDownload doc={e} />
           <button className="btn-ghost text-[13px]" onClick={() => { upd("statut", "Brouillon"); onSave({ ...e, statut: "Brouillon" }); }}>Enregistrer</button>
           <button className="btn-primary text-[13px]" onClick={() => { if (!confirm("Finaliser cette estimation ?")) return; const n = { ...e, statut: "Finalis\u00e9e" as const }; setE(n); onSave(n); onBack(); }}>Finaliser</button>
         </div>
@@ -234,7 +234,7 @@ export function ValeurLocativeView() {
               </div>
               <div className="mt-3 flex gap-2 border-t border-line pt-3">
                 <button className="btn-ghost text-[12px]" onClick={() => setEditing(est)}><Edit2 size={13} /> Modifier</button>
-                {est.loyerMensuelHc > 0 && <ValeurLocativePDFDownload doc={est} />}
+                <ValeurLocativePDFDownload doc={est} />
                 <button className="btn-ghost text-[12px] text-danger hover:bg-danger-soft" onClick={() => handleDelete(est.id)}><Trash2 size={13} /> Supprimer</button>
               </div>
             </div>

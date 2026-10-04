@@ -51,7 +51,7 @@ export function ActesHome() {
             <span className="font-heading text-sm font-semibold text-ink">{openTitle}</span>
           )}
         </div>
-        <div className="min-h-0 flex-1 overflow-hidden [&_aside]:hidden [&_h2.mb-5]:hidden">
+        <div className="min-h-0 flex-1 overflow-hidden [&_h2.mb-5]:hidden">
           <RedacteurView />
         </div>
       </div>

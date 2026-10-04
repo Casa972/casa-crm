@@ -936,6 +936,21 @@ export function RedacteurView() {
   const [compromis, setCompromis] = useState<CompromisVente>(() => ({ ...defaultCompromis(), redacteur: agentFormal(user?.id ?? "dir") }));
   const [offre, setOffre] = useState<OffreAchat>(() => ({ ...defaultOffre(), redacteur: agentFormal(user?.id ?? "dir") }));
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("casa-redacteur-draft");
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d.mandat) setMandat(d.mandat);
+      if (d.compromis) setCompromis(d.compromis);
+      if (d.offre) setOffre(d.offre);
+      if (d.docType) setDocType(d.docType);
+    } catch { /* brouillon illisible */ }
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("casa-redacteur-draft", JSON.stringify({ docType, mandat, compromis, offre }));
+  }, [docType, mandat, compromis, offre]);
+
   const { prefillRedacteur, setPrefillRedacteur, setView } = useUiStore();
   const { data } = useAgencyData();
 
@@ -996,6 +1011,7 @@ export function RedacteurView() {
     if (docType === "mandat") setMandat({ ...defaultMandat(), redacteur: agentFormalName });
     else if (docType === "compromis") setCompromis({ ...defaultCompromis(), redacteur: agentFormalName });
     else if (docType === "offre") setOffre({ ...defaultOffre(), redacteur: agentFormalName });
+    localStorage.removeItem("casa-redacteur-draft");
   };
 
   const docTitle = docType === "mandat"    ? "Mandat de vente"
