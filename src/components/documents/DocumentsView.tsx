@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Trash2, Library, AlertCircle, Loader2, Pencil, Check, X } from "lucide-react";
+import { FileText, Trash2, Library, AlertCircle, Loader2, Pencil, Check, X, Download } from "lucide-react";
 import { useDocuments, useDeleteDocument, useUpdateDocument } from "../../hooks/queries/useDocuments";
 import type { DocumentRow } from "../../types/database";
 
@@ -65,6 +65,27 @@ function DocumentCard({ doc }: { doc: DocumentRow }) {
     setParties(doc.parties ?? "");
     setBien(doc.bien ?? "");
     setEditing(false);
+  };
+
+  const handleDownload = () => {
+    const id = doc.storage_path?.startsWith("local:") ? doc.storage_path.slice(6) : "";
+    const b64 = id ? localStorage.getItem(`casa-doc-file:${id}`) : "";
+    if (!b64) {
+      alert("Ce fichier n'est pas sur cet ordinateur. Rouvre-le dans Vente pour le télécharger à nouveau.");
+      return;
+    }
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const type = doc.nom.endsWith(".docx")
+      ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      : "application/pdf";
+    const url = URL.createObjectURL(new Blob([bytes], { type }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = doc.nom;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 200);
   };
 
   return (
@@ -135,6 +156,9 @@ function DocumentCard({ doc }: { doc: DocumentRow }) {
             </>
           ) : (
             <>
+              <button onClick={handleDownload} className="rounded p-1.5 text-ink-muted hover:bg-line hover:text-ink transition-colors" title="Télécharger">
+                <Download size={14} />
+              </button>
               <button onClick={() => setEditing(true)} className="rounded p-1.5 text-ink-muted hover:bg-line hover:text-ink transition-colors" title="Modifier">
                 <Pencil size={14} />
               </button>
@@ -169,7 +193,7 @@ export function DocumentsView() {
           <Library size={20} className="text-primary" />
           <div>
             <h2 className="font-heading text-lg font-semibold text-ink">Bibliothèque</h2>
-            <p className="text-[12px] text-ink-muted">Fichiers téléchargés (PDF / Word). Pour rédiger : menu Rédaction.</p>
+            <p className="text-[12px] text-ink-muted">Mandats, offres et compromis téléchargés. Le bouton télécharge le fichier.</p>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">

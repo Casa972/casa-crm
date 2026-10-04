@@ -12,14 +12,22 @@ export async function uploadDocument(params: {
   bien?: string;
   blob: Blob;
 }): Promise<void> {
+  const id = crypto.randomUUID();
+  try {
+    const bytes = new Uint8Array(await params.blob.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    localStorage.setItem(`casa-doc-file:${id}`, btoa(binary));
+  } catch { /* quota navigateur : la fiche reste, le fichier se retélécharge depuis Vente */ }
   const { error } = await supabase.from("documents").insert({
+    id,
     agent_id:     params.agentId,
     type_doc:     params.typeDoc,
     nom:          params.nom,
     numero:       params.numero ?? null,
     parties:      params.parties ?? null,
     bien:         params.bien ?? null,
-    storage_path: "",
+    storage_path: `local:${id}`,
     taille:       params.blob.size,
   });
 
