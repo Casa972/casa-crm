@@ -30,6 +30,7 @@ const PAGE_LABELS: Record<ViewId, string> = {
   pipeline_clients: "Pipeline clients",
   notes: "Notes",
   import: "Import CSV",
+  remuneration: "Rémunération",
 };
 
 export function Topbar() {

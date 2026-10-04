@@ -1,6 +1,6 @@
 import {
   Sun, Users, Building2, Target, TrendingUp, ClipboardList,
-  BarChart2, Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
+  Calendar, CheckCircle, Calculator, LogOut, Shuffle, Library,
   GraduationCap, ExternalLink, Landmark, BookOpen, Briefcase, Handshake,
   Columns, Clipboard, FileText, KeyRound, Home,
   type LucideIcon,

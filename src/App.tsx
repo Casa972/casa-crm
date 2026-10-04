@@ -27,6 +27,7 @@ import { MatchingView } from "./components/matching/MatchingView";
 import { DocumentsView } from "./components/documents/DocumentsView";
 import { RegistreView } from "./components/registre/RegistreView";
 import { RemunerationView } from "./components/pilotage/RemunerationView";
+import { MesDossiersView } from "./components/pilotage/MesDossiersView";
 import { NotesView } from "./components/notes/NotesView";
 import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";

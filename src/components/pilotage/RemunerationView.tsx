@@ -1,6 +1,6 @@
-import { eur } from "../lib/format";
-import { commissionAgence } from "../schemas/compromis.schema";
-import { AGENTS_CONFIG } from "../config/agents";
+import { eur } from "../../lib/format";
+import { commissionAgence } from "../../schemas/compromis.schema";
+import { AGENTS_CONFIG } from "../../config/agents";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useSessionStore } from "../../store/session.store";
 import { FinanceNav } from "../shared/FinanceNav";
