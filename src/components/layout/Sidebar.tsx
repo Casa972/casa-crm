@@ -80,9 +80,6 @@ const NAV_AGENT: NavEntry[] = [
   ...DOCS_COMMON,
   { kind: "item", id: "documents",    label: "Bibliothèque",    Icon: Library },
 
-  { kind: "group", label: "Ma part" },
-  { kind: "item", id: "remuneration", label: "Ma commission", Icon: Users },
-
   { kind: "group", label: "Outils" },
   { kind: "item", id: "notes",       label: "Notes",          Icon: Clipboard },
   { kind: "item", id: "calculatrice",label: "Calculatrice",   Icon: Calculator },

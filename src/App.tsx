@@ -32,7 +32,7 @@ import { NotesView } from "./components/notes/NotesView";
 import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
-const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance", "compromis"];
+const DIR_ONLY: ViewId[] = ["revenus", "reporting", "pilotage", "finance", "compromis", "remuneration"];
 
 function CurrentView(): ReactElement {
   const view = useUiStore((s) => s.activeView);
