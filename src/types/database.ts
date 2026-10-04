@@ -70,6 +70,10 @@ export interface CompromisRow {
   agent_sortie: string | null;
   pct_entree: number | null;
   pct_sortie: number | null;
+  origine?: string | null;
+  agence_partenaire?: string | null;
+  pct_agence?: number | null;
+  commune?: string | null;
   created_at?: string;
 }
 

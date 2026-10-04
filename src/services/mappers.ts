@@ -17,7 +17,7 @@ import type {
   StatutCompromis, StatutCommission, TypeHonoraires, TypeClient,
   EtapePipeline, StatutRevenu, TypeRevenu,
 } from "../schemas/enums";
-import { unpackInteragence, packInteragence } from "../schemas/compromis.schema";
+import { unpackInteragence } from "../schemas/compromis.schema";
 
 const s = (v: string | null | undefined): string => v ?? "";
 const n = (v: number | null | undefined): number => v ?? 0;
@@ -101,6 +101,7 @@ export const mandatToRow = (m: Mandat, agentId?: string): Partial<MandatRow> => 
 /* ── Compromis ── */
 export const compromisFromRow = (r: CompromisRow): Compromis => {
   const ia = unpackInteragence(s(r.notes));
+  const origine = (r.origine as Compromis["origine"]) || ia.meta.origine;
   return {
   id: r.id,
   ref: r.ref,
@@ -127,9 +128,10 @@ export const compromisFromRow = (r: CompromisRow): Compromis => {
   agentSortie: r.agent_sortie ?? undefined,
   pctEntree: r.pct_entree ?? undefined,
   pctSortie: r.pct_sortie ?? undefined,
-  origine: ia.meta.origine,
-  agencePartenaire: ia.meta.agencePartenaire,
-  pctAgence: ia.meta.pctAgence,
+  origine,
+  agencePartenaire: r.agence_partenaire || ia.meta.agencePartenaire,
+  pctAgence: r.pct_agence ?? ia.meta.pctAgence,
+  commune: s(r.commune),
 }; };
 
 export const compromisToRow = (c: Compromis, agentId?: string): Partial<CompromisRow> => ({
@@ -152,11 +154,11 @@ export const compromisToRow = (c: Compromis, agentId?: string): Partial<Compromi
   date_acte_reel: nn(c.dateActeReel),
   sru_expire: nn(c.sruExpire),
   cond_susp_expire: nn(c.condSuspExpire),
-  notes: nn(packInteragence(c.notes, {
-    origine: c.origine ?? "Maison",
-    agencePartenaire: c.agencePartenaire ?? "",
-    pctAgence: c.pctAgence ?? (c.origine && c.origine !== "Maison" ? 50 : 100),
-  })),
+  notes: nn(c.notes),
+  origine: c.origine ?? "Maison",
+  agence_partenaire: c.agencePartenaire || null,
+  pct_agence: c.pctAgence ?? (c.origine && c.origine !== "Maison" ? 50 : 100),
+  commune: c.commune || null,
   agent_entree: c.agentEntree ?? null,
   agent_sortie: c.agentSortie ?? null,
   pct_entree: c.pctEntree ?? null,

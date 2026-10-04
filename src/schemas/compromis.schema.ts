@@ -90,6 +90,7 @@ export const compromisFormSchema = z
     origine: OrigineDossier.default("Maison"),
     agencePartenaire: z.string().default(""),
     pctAgence: z.coerce.number().int().min(0).max(100).default(100),
+    commune: z.string().default(""),
   })
   .refine(
     (c) => c.typeHonoraires !== "pct" || c.honoraires > 0,
@@ -132,6 +133,7 @@ export const compromisSchema = z.object({
   origine: OrigineDossier.optional(),
   agencePartenaire: z.string().optional(),
   pctAgence: z.number().optional(),
+  commune: z.string().optional(),
 });
 export type Compromis = z.infer<typeof compromisSchema>;
 
