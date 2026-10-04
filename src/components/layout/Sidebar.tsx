@@ -48,11 +48,11 @@ const NAV_DIR: NavEntry[] = [
   { kind: "item", id: "registre",     label: "Registre mandats", Icon: BookOpen },
 
   { kind: "group", label: "Analyse" },
-  { kind: "item", id: "compromis",   label: "Compromis",         Icon: Handshake },
-  { kind: "item", id: "finance",     label: "Argent encaissé", Icon: Landmark },
-  { kind: "item", id: "pilotage",    label: "Dossiers en cours", Icon: Target },
-  { kind: "item", id: "revenus",     label: "Autres recettes", Icon: TrendingUp },
-  { kind: "item", id: "remuneration", label: "Rémunération",  Icon: Users },
+  { kind: "item", id: "compromis",   label: "Affaires",          Icon: Handshake },
+  { kind: "item", id: "finance",     label: "Encaissé",          Icon: Landmark },
+  { kind: "item", id: "pilotage",    label: "En cours",          Icon: Target },
+  { kind: "item", id: "revenus",     label: "Autres recettes",   Icon: TrendingUp },
+  { kind: "item", id: "remuneration", label: "Commissions",      Icon: Users },
 
   { kind: "group", label: "Outils" },
   { kind: "item", id: "notes", label: "Notes", Icon: Clipboard },
@@ -81,7 +81,7 @@ const NAV_AGENT: NavEntry[] = [
   { kind: "item", id: "documents",    label: "Bibliothèque",    Icon: Library },
 
   { kind: "group", label: "Ma part" },
-  { kind: "item", id: "remuneration", label: "Ma rémunération", Icon: Users },
+  { kind: "item", id: "remuneration", label: "Ma commission", Icon: Users },
 
   { kind: "group", label: "Outils" },
   { kind: "item", id: "notes",       label: "Notes",          Icon: Clipboard },

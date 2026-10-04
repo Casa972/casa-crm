@@ -1,11 +1,11 @@
 import { useUiStore, type ViewId } from "../../store/ui.store";
 
 const TABS = [
-  { id: "compromis" as ViewId, label: "1. Compromis", icon: "📝" },
-  { id: "finance"  as ViewId,  label: "2. Argent encaissé", icon: "🏦" },
-  { id: "pilotage" as ViewId,  label: "3. Dossiers en cours", icon: "🤝" },
-  { id: "revenus"  as ViewId,  label: "4. Autres recettes", icon: "💰" },
-  { id: "remuneration" as ViewId, label: "5. Rémunération", icon: "👤" },
+  { id: "compromis" as ViewId, label: "Affaires", icon: "📝" },
+  { id: "finance"  as ViewId,  label: "Encaissé", icon: "🏦" },
+  { id: "pilotage" as ViewId,  label: "En cours", icon: "🤝" },
+  { id: "revenus"  as ViewId,  label: "Autres recettes", icon: "💰" },
+  { id: "remuneration" as ViewId, label: "Commissions", icon: "👤" },
 ];
 
 export function FinanceNav({ active }: { active: ViewId }) {

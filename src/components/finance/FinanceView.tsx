@@ -185,7 +185,7 @@ export function FinanceView() {
   return (
     <div className="mx-auto max-w-[1080px] px-6 py-5">
       <FinanceNav active="finance" />
-      <p className="mb-4 text-[12.5px] text-ink-sub">Argent déjà reçu. Les dossiers pas encore signés sont dans Dossiers en cours. La part des commerciaux est dans Rémunération.</p>
+      <p className="mb-4 text-[12.5px] text-ink-sub">Encaissé : l'argent est sur le compte de l'agence. En cours : l'affaire n'est pas encore signée. Commissions : ce que touche le commercial.</p>
       <SourcesCa />
 
       {/* ── Header ── */}
