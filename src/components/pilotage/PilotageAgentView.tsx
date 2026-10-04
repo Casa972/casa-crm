@@ -2,7 +2,8 @@ import { useState } from "react";
 import { KpiCard, StatusPill } from "../shared/StatusPill";
 import { EmptyState } from "../ui/Modal";
 import { CheckCircle, Calendar, CheckCircle2, Circle, Target, Phone, Users, Home, FileText, Handshake, Key, TrendingUp, Building2 } from "lucide-react";
-import { daysDiff, fdate } from "../../lib/format";
+import { daysDiff, fdate, eur } from "../../lib/format";
+import { useRemuneration } from "./RemunerationView";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useSessionStore } from "../../store/session.store";
 import { useUiStore } from "../../store/ui.store";
@@ -315,6 +316,7 @@ export function PilotageAgentView() {
   // Pipeline mini : nb par étape
   const byEtape = ETAPES.map((e) => ({ etape: e, count: mesClients.filter((c) => c.statut === e).length }));
   const maxCount = Math.max(...byEtape.map((x) => x.count), 1);
+  const mine = useRemuneration(user.id)[0];
 
   return (
     <div className="mx-auto max-w-[900px] px-4 py-6">
@@ -353,6 +355,19 @@ export function PilotageAgentView() {
 
       {/* ── Onglet Dashboard ── */}
       {tab === "dashboard" && <>
+
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="card p-4">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Généré pour l'agence</div>
+          <div className="mt-1 font-heading text-2xl font-semibold text-ink">{eur(mine?.ca ?? 0)}</div>
+          <div className="mt-1 text-[12px] text-ink-sub">50 % de la part Casa sur tes entrées et tes sorties</div>
+        </div>
+        <div className="card p-4">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-ink-muted">Ma commission</div>
+          <div className="mt-1 font-heading text-2xl font-semibold text-ink">{eur((mine?.toucheVente ?? 0) + (mine?.toucheEst ?? 0))}</div>
+          <div className="mt-1 text-[12px] text-ink-sub">25 % par rôle sur une vente, 50 % sur une estimation · {eur(mine?.aVenir ?? 0)} à venir</div>
+        </div>
+      </div>
 
       {/* KPIs */}
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
