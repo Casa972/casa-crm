@@ -419,7 +419,6 @@ function EstimationEditor({ initial, onSave, onBack }: {
               <Field label="Demandeur"><Input value={e.demandeur} onChange={ev => upd("demandeur", ev.target.value)} placeholder="M. et Mme DUPONT" /></Field>
               <Field label="Rédacteur"><Input value={e.redacteur} onChange={ev => upd("redacteur", ev.target.value)} /></Field>
               <Field label="Date"><Input type="date" value={e.dateEstimation} onChange={ev => upd("dateEstimation", ev.target.value)} /></Field>
-              <Field label="Honoraires facturés (€)"><Input type="number" value={e.honorairesFactures || ""} onChange={ev => upd("honorairesFactures", Number(ev.target.value))} /></Field>
               <Field label="Lieu de signature"><Input value={e.lieu ?? ""} onChange={ev => upd("lieu", ev.target.value)} placeholder="Le Lamentin (Martinique)" /></Field>
               <Field label="Certification expert"><Input value={e.certificationExpert ?? ""} onChange={ev => upd("certificationExpert", ev.target.value)} placeholder="Expert Immobilier Certifié INIGEP®" /></Field>
             </Grid2>

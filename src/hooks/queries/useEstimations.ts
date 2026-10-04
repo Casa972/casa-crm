@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { estimationService, uid } from "../../services/estimation.service";
-import { syncSourceRevenu } from "../../services/sourceRevenu";
 import { useSessionStore } from "../../store/session.store";
 import type { Estimation } from "../../schemas/estimation.schema";
 
@@ -22,22 +21,8 @@ export function useSaveEstimation() {
   const qc = useQueryClient();
   const user = useSessionStore((s) => s.user);
   return useMutation({
-    mutationFn: async (e: Estimation) => {
-      const saved = await estimationService.save(e, user?.id);
-      const expertise = saved.typeDoc !== "valeur_venale";
-      await syncSourceRevenu({
-        sourceId: saved.id,
-        source: "estimation",
-        type: expertise ? "Expertise" : "Estimation valeur vénale",
-        montant: saved.honorairesFactures || 0,
-        desc: `${expertise ? "Expertise" : "Estimation"} ${saved.adresse || saved.commune || saved.id}`,
-        date: saved.dateEstimation,
-        active: saved.statut === "Finalisée",
-      }).catch(() => undefined);
-      return saved;
-    },
+    mutationFn: (e: Estimation) => estimationService.save(e, user?.id),
     onSuccess: (saved) => {
-      qc.invalidateQueries({ queryKey: ["agency"] });
       qc.setQueryData<Estimation[]>([...KEY, user?.id], (prev = []) => {
         const exists = prev.some((x) => x.id === saved.id);
         return exists ? prev.map((x) => (x.id === saved.id ? saved : x)) : [saved, ...prev];

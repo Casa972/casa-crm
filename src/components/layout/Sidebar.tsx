@@ -23,7 +23,7 @@ const DOCS_COMMON: NavEntry[] = [
   { kind: "group", label: "Rédaction" },
   { kind: "item", id: "redacteur",       label: "Vente",                  Icon: FileText },
   { kind: "item", id: "bail",            label: "Baux",                   Icon: KeyRound },
-  { kind: "item", id: "estimation",      label: "Expertises",             Icon: Home },
+  { kind: "item", id: "estimation",      label: "Estimations",             Icon: Home },
   { kind: "item", id: "valeur_venale",   label: "Valeur vénale",          Icon: Home },
   { kind: "item", id: "valeur_locative", label: "Valeur locative",        Icon: Home },
 ];
