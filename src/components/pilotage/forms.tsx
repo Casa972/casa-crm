@@ -268,21 +268,6 @@ export function ClientForm({ initial, onSave, onClose }: {
         <Field label="Dernier contact"><Input type="date" value={f.dernierContact} onChange={(e) => s("dernierContact")(e.target.value)} /></Field>
         <Field label="Relance prévue"><Input type="date" value={f.relanceDate} onChange={(e) => s("relanceDate")(e.target.value)} /></Field>
       </Grid2>
-      <div className="mb-2 mt-1 text-[11px] font-bold uppercase tracking-wide text-ink-muted">Interagence</div>
-      <Grid2>
-        <Field label="Origine du dossier">
-          <Select value={f.origine} onChange={(v) => setF((p) => ({ ...p, origine: v, pctAgence: v === "Maison" ? "100" : (p.pctAgence === "100" ? "50" : p.pctAgence) }))} options={OrigineDossier.options} />
-        </Field>
-        <Field label="Agence partenaire">
-          <Input value={f.agencePartenaire} onChange={(e) => s("agencePartenaire")(e.target.value)} placeholder="Nom de l'agence" disabled={f.origine === "Maison"} />
-        </Field>
-        <Field label="Part Casa (%)">
-          <Input type="number" min="0" max="100" value={f.pctAgence} onChange={(e) => s("pctAgence")(e.target.value)} disabled={f.origine === "Maison"} />
-        </Field>
-      </Grid2>
-      <p className="mb-3 text-[12px] text-ink-muted">
-        Entrant : le confrère a le mandat, Casa amène l'acquéreur. Sortant : Casa a le mandat, le confrère amène l'acquéreur. Le chiffre d'affaires et le pilotage ne retiennent que la part Casa.
-      </p>
       <Field label="Notes"><Textarea rows={2} value={f.notes} onChange={(e) => s("notes")(e.target.value)} /></Field>
       <FormActions onSave={submit} onClose={onClose} />
     </>
