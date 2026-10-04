@@ -104,9 +104,9 @@ export function RevenusView() {
         </div>
         <div className="card p-4">
           <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-ink-muted">En attente</div>
-          <div className="font-heading text-2xl font-bold text-amber">{eur(fin.globalAEncaisser)}</div>
+          <div className="font-heading text-2xl font-bold text-amber">{eur(fin.revenusEnAttente)}</div>
           <div className="mt-1 text-[12px] text-ink-muted">
-            Portefeuille compromis + revenus en attente
+            Revenus saisis, pas encore encaissés
           </div>
         </div>
         <div className="card p-4">
@@ -120,6 +120,8 @@ export function RevenusView() {
           </div>
         </div>
       </div>
+
+      <SaisieHorsCrm onSave={(r) => save.mutate(r)} />
 
       {/* Graphique mensuel */}
       <div className="card mb-5 p-5">
@@ -211,6 +213,48 @@ export function RevenusView() {
           <RevenuForm initial={modal.item} onClose={() => setModal(null)} onSave={r => { save.mutate(r); setModal(null); }} />
         </Modal>
       )}
+    </div>
+  );
+}
+
+function SaisieHorsCrm({ onSave }: { onSave: (r: Revenu) => void }) {
+  const [type, setType] = useState<Revenu["type"]>("Expertise");
+  const [montant, setMontant] = useState("");
+  const [desc, setDesc] = useState("");
+  const [statut, setStatut] = useState<Revenu["statut"]>("Encaissé");
+  const add = () => {
+    const n = Number(montant);
+    if (!n) return;
+    onSave({
+      id: "",
+      date: new Date().toISOString().slice(0, 10),
+      type,
+      montant: n,
+      desc: desc || type,
+      statut,
+      source: "manuel",
+    });
+    setMontant("");
+    setDesc("");
+  };
+  return (
+    <div className="card mb-5 p-4">
+      <div className="mb-2 text-[13px] font-semibold text-ink">Expertises et estimations hors CRM</div>
+      <p className="mb-3 text-[12px] text-ink-muted">Saisis seulement le montant. Le dossier reste en dehors du CRM. Il alimente le tableau financier.</p>
+      <div className="grid gap-2 sm:grid-cols-[1.2fr_120px_1fr_140px_auto]">
+        <select className="rounded border border-line2 bg-surface px-2 py-2 text-[13px]" value={type} onChange={(e) => setType(e.target.value as Revenu["type"])}>
+          <option>Expertise</option>
+          <option>Estimation valeur vénale</option>
+          <option>Honoraires conseil</option>
+        </select>
+        <input className="rounded border border-line2 px-2 py-2 text-[13px]" type="number" placeholder="Montant €" value={montant} onChange={(e) => setMontant(e.target.value)} />
+        <input className="rounded border border-line2 px-2 py-2 text-[13px]" placeholder="Client ou bien" value={desc} onChange={(e) => setDesc(e.target.value)} />
+        <select className="rounded border border-line2 bg-surface px-2 py-2 text-[13px]" value={statut} onChange={(e) => setStatut(e.target.value as Revenu["statut"])}>
+          <option>Encaissé</option>
+          <option>En attente</option>
+        </select>
+        <button className="btn-primary" onClick={add}>Ajouter</button>
+      </div>
     </div>
   );
 }
