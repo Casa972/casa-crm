@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { FinanceNav } from "../shared/FinanceNav";
 import { eur, fdate } from "../../lib/format";
+import { caSources } from "../../lib/caSources";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useFinancials } from "../../hooks/useFinancials";
 import {
@@ -450,19 +451,13 @@ export function FinanceView() {
 
 function SourcesCa() {
   const { data } = useAgencyData();
-  const enc = data.revenus.filter((r) => r.statut === "Encaissé");
-  const sum = (pred: (type: string) => boolean) => enc.filter((r) => pred(r.type)).reduce((s, r) => s + r.montant, 0);
-  const ventes = sum((t) => t === "Commission vente");
-  const locations = sum((t) => t === "Commission location" || t === "Gestion locative");
-  const expertises = sum((t) => t === "Expertise");
-  const estimations = sum((t) => t === "Estimation valeur vénale");
-  const autres = enc.reduce((s, r) => s + r.montant, 0) - ventes - locations - expertises - estimations;
+  const s = caSources(data.revenus);
   const items = [
-    ["Ventes", ventes],
-    ["Locations", locations],
-    ["Expertises", expertises],
-    ["Estimations", estimations],
-    ["Autres", autres],
+    ["Ventes", s.ventes],
+    ["Locations", s.locations],
+    ["Expertises", s.expertises],
+    ["Estimations", s.estimations],
+    ["Autres", s.autres],
   ] as const;
   return (
     <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">

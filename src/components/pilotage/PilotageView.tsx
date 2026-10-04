@@ -13,7 +13,7 @@ import {
   useAgencyData, useSaveCompromis, useEncaisserCommission, useDeleteCompromis,
 } from "../../hooks/queries/useAgencyData";
 import { useUiStore } from "../../store/ui.store";
-import { commissionMontant } from "../../schemas/compromis.schema";
+import { commissionAgence } from "../../schemas/compromis.schema";
 import type { Compromis } from "../../types/domain";
 
 const STATUT_ORDER = ["Offre acceptée", "Compromis", "Acte prévu", "Acte signé"];
@@ -249,8 +249,8 @@ export function PilotageView() {
             <option value="Annulé">Annulé</option>
           </select>
         </div>
-        <button className="btn-primary" onClick={() => setModal({})}>
-          <Plus size={14} /> Nouveau dossier
+        <button className="btn-primary" onClick={() => setView("compromis")}>
+          <Plus size={14} /> Saisir dans Compromis
         </button>
       </div>
 
@@ -259,7 +259,7 @@ export function PilotageView() {
           <EmptyState Icon={Plus} text="Aucun dossier" sub="Ajoutez un compromis pour suivre vos ventes." />
         ) : (
           filtered.map(c => {
-            const montant = commissionMontant(c);
+            const montant = commissionAgence(c);
             const sru = daysDiff(c.sruExpire), cond = daysDiff(c.condSuspExpire);
             const alert = (sru !== null && sru <= 3) || (cond !== null && cond <= 7);
             const open = detail === c.id;
@@ -427,7 +427,7 @@ export function PilotageView() {
                       >
                         <FileText size={13} /> Générer le document
                       </button>
-                      <button className="btn-ghost text-[12px]" onClick={() => setModal({ item: c })}>
+                      <button className="btn-ghost text-[12px]" onClick={() => setView("compromis")}>
                         <Edit2 size={13} /> Modifier
                       </button>
                       {data.revenus.some(r => r.sourceId === c.id) && (

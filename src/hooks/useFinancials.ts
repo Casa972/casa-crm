@@ -49,6 +49,7 @@ export interface PipelineHorizon {
 export interface Financials {
   globalEncaisse: number;
   globalAEncaisser: number;
+  revenusEnAttente: number;
   totalPotentiel: number;
   pctRealise: number;
   revMois: number;
@@ -95,8 +96,9 @@ export function useFinancials(data: AgencyData): Financials {
       .filter(c => !["Acte signé", "Annulé"].includes(c.statut))
       .reduce((s, c) => s + commissionAgence(c), 0);
 
-    const globalAEncaisser = caPotentiel + totalRevAtt;
-    const totalPotentiel = globalEncaisse + globalAEncaisser;
+    const globalAEncaisser = caPotentiel;
+    const revenusEnAttente = totalRevAtt;
+    const totalPotentiel = globalEncaisse + globalAEncaisser + revenusEnAttente;
     const pctRealise = totalPotentiel > 0 ? Math.round((globalEncaisse / totalPotentiel) * 100) : 0;
 
     const actesEncaisses = compromis.filter(
@@ -232,8 +234,8 @@ export function useFinancials(data: AgencyData): Financials {
         const pctS = cp.pctSortie ?? 50;
         const idE = AGENTS_CONFIG.find(a => a.name === cp.agentEntree)?.id;
         const idS = AGENTS_CONFIG.find(a => a.name === cp.agentSortie)?.id;
-        if (idE && perf[idE]) { perf[idE].compromis += 1; perf[idE].caVentes += Math.round(montant * pctE / 100); }
-        if (idS && perf[idS] && idS !== idE) { perf[idS].compromis += 1; perf[idS].caVentes += Math.round(montant * pctS / 100); }
+        if (idE && perf[idE]) { perf[idE].compromis += idS && idS !== idE ? 0.5 : 1; perf[idE].caVentes += Math.round(montant * pctE / 100); }
+        if (idS && perf[idS] && idS !== idE) { perf[idS].compromis += 0.5; perf[idS].caVentes += Math.round(montant * pctS / 100); }
       } else {
         const a = perf[cp.agentId ?? "dir"];
         if (a) { a.compromis += 1; a.caVentes += montant; }
@@ -241,7 +243,7 @@ export function useFinancials(data: AgencyData): Financials {
     }
 
     return {
-      globalEncaisse, globalAEncaisser, totalPotentiel, pctRealise,
+      globalEncaisse, globalAEncaisser, revenusEnAttente, totalPotentiel, pctRealise,
       revMois, revMoisPrev, revAnneeCourante,
       actesEncaisses, totalActesEncaisses,
       compromisAEncaisser, totalCompromisAEncaisser,

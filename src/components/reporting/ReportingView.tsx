@@ -4,6 +4,7 @@ import { FinanceNav } from "../shared/FinanceNav";
 import { eur } from "../../lib/format";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useFinancials } from "../../hooks/useFinancials";
+import { caSources } from "../../lib/caSources";
 import {
   BarChart2, FileDown,
   ArrowUpRight, ArrowDownRight,
@@ -108,11 +109,14 @@ export function ReportingView() {
   const yearNow = new Date().getFullYear();
 
   // Ventilation encaissements par nature
-  const ventilation = new Map<string, number>();
-  for (const r of data.revenus.filter(r => r.statut === "Encaissé")) {
-    ventilation.set(r.type, (ventilation.get(r.type) ?? 0) + r.montant);
-  }
-  const ventEntries = [...ventilation.entries()].sort((a, b) => b[1] - a[1]);
+  const sources = caSources(data.revenus);
+  const ventEntries = [
+    ["Ventes", sources.ventes],
+    ["Locations", sources.locations],
+    ["Expertises", sources.expertises],
+    ["Estimations", sources.estimations],
+    ["Autres", sources.autres],
+  ].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
   const ventTotal = ventEntries.reduce((sum, [, v]) => sum + v, 0);
   const VENT_COLORS = ["#1A3A52", "#2D7A5F", "#9A6D22", "#5B4E8C", "#A03A30"];
 

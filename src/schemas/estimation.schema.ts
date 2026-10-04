@@ -200,6 +200,7 @@ export const estimationSchema = z.object({
   statut: z.enum(["Brouillon", "Finalisée"]).default("Brouillon"),
   agentId: z.string().optional(),
   typeDoc: z.enum(["valeur_venale", "expertise"]).default("expertise"),
+  honorairesFactures: z.coerce.number().default(0),
 });
 
 export type Estimation = z.infer<typeof estimationSchema>;
