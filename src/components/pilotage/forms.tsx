@@ -94,7 +94,7 @@ export function CompromisForm({ initial, onSave, onClose, biens = [], mandats = 
     <>
       <Grid2>
         <Field label="Référence dossier" error={errors.ref}><Input value={f.ref} onChange={(e) => s("ref")(e.target.value)} placeholder="COMP-2026-XXX" /></Field>
-        <Field label="Statut dossier"><Select value={f.statut} onChange={(v) => setF((p) => ({ ...p, statut: v, dateActeReel: v === "Acte signé" && !p.dateActeReel ? today() : p.dateActeReel }))} options={StatutCompromis.options} /></Field>
+        <Field label="Statut dossier"><Select value={f.statut} onChange={(v) => setF((p) => ({ ...p, statut: v, dateActeReel: v === "Acte signé" && !p.dateActeReel ? today() : p.dateActeReel, commissionStatut: v === "Acte signé" ? "Encaissée" : p.commissionStatut }))} options={StatutCompromis.options} /></Field>
         <Field label="Acheteur" error={errors.acheteur}>
           {acheteurClients.length > 0 ? (
             <select
