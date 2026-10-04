@@ -110,13 +110,15 @@ export function ReportingView() {
 
   // Ventilation encaissements par nature
   const sources = caSources(data.revenus);
-  const ventEntries: [string, number][] = [
-    ["Ventes", sources.ventes],
-    ["Locations", sources.locations],
-    ["Expertises", sources.expertises],
-    ["Estimations", sources.estimations],
-    ["Autres", sources.autres],
-  ].filter((pair): pair is [string, number] => pair[1] > 0).sort((a, b) => b[1] - a[1]);
+  const ventEntries: [string, number][] = (
+    [
+      ["Ventes", sources.ventes],
+      ["Locations", sources.locations],
+      ["Expertises", sources.expertises],
+      ["Estimations", sources.estimations],
+      ["Autres", sources.autres],
+    ] as [string, number][]
+  ).filter((pair) => pair[1] > 0).sort((a, b) => b[1] - a[1]);
   const ventTotal = ventEntries.reduce((sum, [, v]) => sum + v, 0);
   const VENT_COLORS = ["#1A3A52", "#2D7A5F", "#9A6D22", "#5B4E8C", "#A03A30"];
 
