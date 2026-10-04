@@ -26,7 +26,7 @@ import { AgendaView, TachesView } from "./components/tools/AgendaTachesView";
 import { MatchingView } from "./components/matching/MatchingView";
 import { DocumentsView } from "./components/documents/DocumentsView";
 import { RegistreView } from "./components/registre/RegistreView";
-import { MesDossiersView } from "./components/pilotage/MesDossiersView";
+import { RemunerationView } from "./components/pilotage/RemunerationView";
 import { NotesView } from "./components/notes/NotesView";
 import { Toaster } from "./components/ui/Toaster";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
@@ -48,6 +48,7 @@ function CurrentView(): ReactElement {
     case "reporting": return <ReportingView />;
     case "finance": return <FinanceView />;
     case "compromis": return <CompromisView />;
+    case "remuneration": return <RemunerationView />;
     case "redacteur": return <ActesHome />;
     case "estimation": return <EstimationView />;
     case "valeur_venale": return <ValeurVenaleView />;

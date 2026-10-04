@@ -100,6 +100,7 @@ export function PilotageView() {
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-5">
       <FinanceNav active="pilotage" />
+      <p className="mb-4 text-[12.5px] text-ink-sub">Dossiers pas encore encaissés. Le montant est la part Casa, pas le salaire du commercial.</p>
 
       {/* ── KPIs ── */}
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">

@@ -49,10 +49,10 @@ const NAV_DIR: NavEntry[] = [
 
   { kind: "group", label: "Analyse" },
   { kind: "item", id: "compromis",   label: "Compromis",         Icon: Handshake },
-  { kind: "item", id: "finance",     label: "Tableau financier", Icon: Landmark },
-  { kind: "item", id: "pilotage",    label: "Pilotage",       Icon: Target },
-  { kind: "item", id: "revenus",     label: "Revenus",        Icon: TrendingUp },
-  { kind: "item", id: "reporting",   label: "Reporting",      Icon: BarChart2 },
+  { kind: "item", id: "finance",     label: "Argent encaissé", Icon: Landmark },
+  { kind: "item", id: "pilotage",    label: "Dossiers en cours", Icon: Target },
+  { kind: "item", id: "revenus",     label: "Autres recettes", Icon: TrendingUp },
+  { kind: "item", id: "remuneration", label: "Rémunération",  Icon: Users },
 
   { kind: "group", label: "Outils" },
   { kind: "item", id: "notes", label: "Notes", Icon: Clipboard },
@@ -79,6 +79,9 @@ const NAV_AGENT: NavEntry[] = [
 
   ...DOCS_COMMON,
   { kind: "item", id: "documents",    label: "Bibliothèque",    Icon: Library },
+
+  { kind: "group", label: "Ma part" },
+  { kind: "item", id: "remuneration", label: "Ma rémunération", Icon: Users },
 
   { kind: "group", label: "Outils" },
   { kind: "item", id: "notes",       label: "Notes",          Icon: Clipboard },

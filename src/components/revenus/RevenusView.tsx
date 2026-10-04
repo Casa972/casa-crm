@@ -86,6 +86,7 @@ export function RevenusView() {
   return (
     <div className="mx-auto max-w-[960px] px-6 py-5">
       <FinanceNav active="revenus" />
+      <p className="mb-4 text-[12.5px] text-ink-sub">Expertises, estimations et locations. Pour une estimation, écris le nom du commercial dans la description : il touchera 50 %.</p>
 
       {/* KPIs */}
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
