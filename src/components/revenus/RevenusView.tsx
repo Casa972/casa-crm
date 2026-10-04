@@ -193,7 +193,7 @@ export function RevenusView() {
                           </button>
                         )}
                       </div>
-                      <div className="text-[11.5px] text-ink-muted">{r.type} · {fdate(r.date)}</div>
+                      <div className="text-[11.5px] text-ink-muted">{r.type} · encaissé le {fdate(r.date)}</div>
                     </div>
                     <StatusPill label={r.statut} />
                     <span className={`font-heading text-[16px] font-bold ${r.statut === "Encaissé" ? "text-emerald" : "text-amber"}`}>
@@ -223,12 +223,13 @@ function SaisieHorsCrm({ onSave }: { onSave: (r: Revenu) => void }) {
   const [montant, setMontant] = useState("");
   const [desc, setDesc] = useState("");
   const [statut, setStatut] = useState<Revenu["statut"]>("Encaissé");
+  const [dateEnc, setDateEnc] = useState(() => new Date().toISOString().slice(0, 10));
   const add = () => {
     const n = Number(montant);
-    if (!n) return;
+    if (!n || !dateEnc) return;
     onSave({
       id: "",
-      date: new Date().toISOString().slice(0, 10),
+      date: dateEnc,
       type,
       montant: n,
       desc: desc || type,
@@ -241,8 +242,8 @@ function SaisieHorsCrm({ onSave }: { onSave: (r: Revenu) => void }) {
   return (
     <div className="card mb-5 p-4">
       <div className="mb-2 text-[13px] font-semibold text-ink">Expertises et estimations hors CRM</div>
-      <p className="mb-3 text-[12px] text-ink-muted">Saisis seulement le montant. Le dossier reste en dehors du CRM. Il alimente le tableau financier.</p>
-      <div className="grid gap-2 sm:grid-cols-[1.2fr_120px_1fr_140px_auto]">
+      <p className="mb-3 text-[12px] text-ink-muted">Saisis le montant et la date d'encaissement. Le dossier reste en dehors du CRM.</p>
+      <div className="grid gap-2 sm:grid-cols-[1.1fr_110px_1fr_130px_140px_auto]">
         <select className="rounded border border-line2 bg-surface px-2 py-2 text-[13px]" value={type} onChange={(e) => setType(e.target.value as Revenu["type"])}>
           <option>Expertise</option>
           <option>Estimation valeur vénale</option>
@@ -250,6 +251,7 @@ function SaisieHorsCrm({ onSave }: { onSave: (r: Revenu) => void }) {
         </select>
         <input className="rounded border border-line2 px-2 py-2 text-[13px]" type="number" placeholder="Montant €" value={montant} onChange={(e) => setMontant(e.target.value)} />
         <input className="rounded border border-line2 px-2 py-2 text-[13px]" placeholder="Client ou bien" value={desc} onChange={(e) => setDesc(e.target.value)} />
+        <input className="rounded border border-line2 px-2 py-2 text-[13px]" type="date" value={dateEnc} onChange={(e) => setDateEnc(e.target.value)} title="Date d'encaissement" />
         <select className="rounded border border-line2 bg-surface px-2 py-2 text-[13px]" value={statut} onChange={(e) => setStatut(e.target.value as Revenu["statut"])}>
           <option>Encaissé</option>
           <option>En attente</option>

@@ -302,10 +302,10 @@ export function RevenuForm({ initial, onSave, onClose }: {
   return (
     <>
       <Grid2>
-        <Field label="Date"><Input type="date" value={f.date} onChange={(e) => s("date")(e.target.value)} /></Field>
+        <Field label="Date d'encaissement"><Input type="date" value={f.date} onChange={(e) => s("date")(e.target.value)} /></Field>
         <Field label="Montant (€)" error={errors.montant}><Input type="number" value={f.montant} onChange={(e) => s("montant")(e.target.value)} /></Field>
         <Field label="Type"><Select value={f.type} onChange={s("type")} options={TypeRevenu.options} /></Field>
-        <Field label="Statut"><Select value={f.statut} onChange={s("statut")} options={StatutRevenu.options} /></Field>
+        <Field label="Statut"><Select value={f.statut} onChange={(v) => setF((p) => ({ ...p, statut: v, date: v === "Encaissé" && !p.date ? today() : p.date }))} options={StatutRevenu.options} /></Field>
       </Grid2>
       <Field label="Description"><Textarea rows={2} value={f.desc} onChange={(e) => s("desc")(e.target.value)} /></Field>
       <FormActions onSave={submit} onClose={onClose} />
