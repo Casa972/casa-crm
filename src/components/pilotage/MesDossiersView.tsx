@@ -32,12 +32,12 @@ export function MesDossiersView() {
   if (!user) return null;
 
   const mesCompromis = data.compromis
-    .filter((c) => c.agentId === user.id || !c.agentId)
+    .filter((c) => c.agentId === user.id)
     .filter((c) => c.statut !== "Acte signé" && c.statut !== "Annulé")
     .sort((a, b) => (a.dateActePrev || "").localeCompare(b.dateActePrev || ""));
 
   const mesMandats = data.mandats
-    .filter((m) => (m.agentId === user.id || !m.agentId) && m.statut === "Actif")
+    .filter((m) => m.agentId === user.id && m.statut === "Actif")
     .sort((a, b) => a.dateFin.localeCompare(b.dateFin));
 
   const mandatsUrgents = mesMandats.filter((m) => {
