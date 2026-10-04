@@ -119,7 +119,14 @@ export function Sidebar() {
         )}
       >
         <div className="border-b border-line px-3 pb-3 pt-4">
-          <img src={logo} alt="Casa Caraïbes" className="mb-1.5 h-8 w-auto max-w-full object-contain object-left" />
+          <button
+            type="button"
+            onClick={() => { setView(isDir ? "today" : "pilotage_agent"); closeSidebar(); }}
+            className="block text-left"
+            aria-label="Retour à l'accueil"
+          >
+            <img src={logo} alt="Casa Caraïbes" className="mb-1.5 h-8 w-auto max-w-full object-contain object-left" />
+          </button>
           <div className="text-[11px] font-medium text-primary">
             {isDir ? "Espace directeur" : `Espace ${user.name}`}
           </div>
