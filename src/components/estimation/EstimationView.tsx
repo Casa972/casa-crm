@@ -109,6 +109,7 @@ function calculerCapitalisation(e: Estimation): number {
 function newEstimation(agentId?: string, agentName?: string): Estimation {
   return {
     id: uid(), clientId: "", agentId, statut: "Brouillon", typeDoc: "expertise",
+    honorairesFactures: 0,
     typeBien: "Appartement en copropriété", residence: "", adresse: "", commune: "Les Trois-Îlets", codePostal: "97229",
     sectionCadastrale: "", parcelles: "", demandeur: "", redacteur: agentName ?? "M. Luc CLEMENTE",
     dateEstimation: today(), photoBase64: "",

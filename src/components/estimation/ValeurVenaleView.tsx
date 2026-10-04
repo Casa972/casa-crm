@@ -66,6 +66,7 @@ function calculerPrix(e: Estimation): PrixSuggestion | null {
 function newValeurVenale(agentId?: string, agentName?: string): Estimation {
   return {
     id: uid(), clientId: "", agentId, statut: "Brouillon", typeDoc: "valeur_venale",
+    honorairesFactures: 0,
     typeBien: "Appartement en copropriété", residence: "", adresse: "",
     commune: "Les Trois-Îlets", codePostal: "97229",
     sectionCadastrale: "", parcelles: "",

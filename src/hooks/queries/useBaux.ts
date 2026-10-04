@@ -30,7 +30,7 @@ export function useSaveBail() {
         source: "bail",
         type: "Commission location",
         montant: saved.honorairesAgence || 0,
-        desc: `Honoraires location ${saved.adresse || saved.id}`,
+        desc: `Honoraires location ${saved.adresseBien || saved.commune || saved.id}`,
         date: saved.dateDebut || saved.dateDocument,
         active: saved.statut === "Finalisé",
       }).catch(() => undefined);
