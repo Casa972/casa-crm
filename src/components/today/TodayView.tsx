@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { CheckCircle, AlertTriangle, Clock, TrendingUp, Bell, Users, Landmark, Target, Zap, Sparkles } from "lucide-react";
+import { CheckCircle, AlertTriangle, Clock, TrendingUp, Bell, Users, Zap, Sparkles } from "lucide-react";
 import { NouveauDossierWizard } from "../biens/NouveauDossierWizard";
 import { EmptyState } from "../ui/Modal";
 import { Modal, FormActions } from "../ui/Modal";
 import { Field, Grid2, Input, Select, Textarea } from "../ui/Field";
-import { eur, daysDiff, fdate } from "../../lib/format";
+import { daysDiff, fdate } from "../../lib/format";
 import { useAgencyData } from "../../hooks/queries/useAgencyData";
 import { useSaveClient } from "../../hooks/queries/useAgencyData";
 import { useFinancials } from "../../hooks/useFinancials";
@@ -114,22 +114,13 @@ function TodayDirecteur() {
           <NouveauDossierWizard onClose={() => setWizardOpen(false)} />
         </Modal>
       )}
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <button onClick={() => setView("finance")} className="card border-l-4 border-l-emerald bg-emerald-soft p-4 text-left hover:shadow-card-hover transition-shadow">
-          <div className="text-[10.5px] font-bold uppercase tracking-wide text-emerald flex items-center gap-1"><Landmark size={11} /> CA {yearNow}</div>
-          <div className="mt-1.5 font-heading text-2xl font-semibold tabular-nums text-emerald">{eur(caYTD)}</div>
-        </button>
-        <button onClick={() => setView("pilotage")} className="card border-l-4 border-l-amber bg-amber-soft p-4 text-left hover:shadow-card-hover transition-shadow">
-          <div className="text-[10.5px] font-bold uppercase tracking-wide text-amber flex items-center gap-1"><Target size={11} /> En cours</div>
-          <div className="mt-1.5 font-heading text-2xl font-semibold tabular-nums text-amber">{eur(fin.globalAEncaisser)}</div>
-          <div className="text-[11px] text-amber">{fin.compromisAEncaisser.length} dossiers</div>
-        </button>
+      <div className="mb-6 grid grid-cols-2 gap-3">
         <button onClick={() => setView("clients")} className={`card border-l-4 p-4 text-left hover:shadow-card-hover transition-shadow ${relances.length > 0 ? "border-l-danger bg-danger-soft" : "border-l-emerald bg-emerald-soft"}`}>
           <div className={`text-[10.5px] font-bold uppercase tracking-wide flex items-center gap-1 ${relances.length > 0 ? "text-danger" : "text-emerald"}`}><Bell size={11} /> Relances retard</div>
           <div className={`mt-1.5 font-heading text-2xl font-semibold tabular-nums ${relances.length > 0 ? "text-danger" : "text-emerald"}`}>{relances.length}</div>
         </button>
         <button onClick={() => setView("registre")} className={`card border-l-4 p-4 text-left hover:shadow-card-hover transition-shadow ${mandatsExp.length > 0 ? "border-l-violet bg-violet-soft" : "border-l-line"}`}>
-          <div className={`text-[10.5px] font-bold uppercase tracking-wide flex items-center gap-1 ${mandatsExp.length > 0 ? "text-violet" : "text-ink-muted"}`}><AlertTriangle size={11} /> Mandats exp. &lt;30j</div>
+          <div className={`text-[10.5px] font-bold uppercase tracking-wide flex items-center gap-1 ${mandatsExp.length > 0 ? "text-violet" : "text-ink-muted"}`}><AlertTriangle size={11} /> Mandats exp. <30j</div>
           <div className={`mt-1.5 font-heading text-2xl font-semibold tabular-nums ${mandatsExp.length > 0 ? "text-violet" : "text-ink"}`}>{mandatsExp.length}</div>
         </button>
       </div>
@@ -137,24 +128,15 @@ function TodayDirecteur() {
         <div className="card p-4">
           <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5"><Users size={13} /> Performance agents</div>
           <div className="flex flex-col gap-2">
-            {fin.agentPerformance.map((a) => {
-              const pct = fin.globalEncaisse > 0 ? Math.round((a.caVentes / fin.globalEncaisse) * 100) : 0;
-              return (
+            {fin.agentPerformance.map((a) => (
                 <div key={a.id} className="flex items-center gap-3">
                   <div className="flex size-7 shrink-0 items-center justify-center rounded-full text-white text-[11px] font-bold" style={{ background: a.color }}>{a.name[0]}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between text-[12px] mb-0.5">
-                      <span className="font-medium text-ink">{a.name}</span>
-                      <span className="font-semibold text-ink">{eur(a.caVentes)}</span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-line overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: a.color }} />
-                    </div>
+                    <div className="text-[12px] font-medium text-ink">{a.name}</div>
                     <div className="flex gap-3 mt-0.5 text-[10.5px] text-ink-muted"><span>{a.clients} clients</span><span>{a.compromis} compromis</span></div>
                   </div>
                 </div>
-              );
-            })}
+            ))}
           </div>
           <button onClick={() => setView("reporting")} className="mt-3 text-[12px] text-primary hover:underline">Reporting complet →</button>
         </div>
@@ -194,7 +176,6 @@ function TodayDirecteur() {
                     <th className="pb-2 text-left font-semibold">Dossier</th>
                     <th className="pb-2 text-left font-semibold">Acheteur</th>
                     <th className="pb-2 text-left font-semibold">Acte prévu</th>
-                    <th className="pb-2 text-right font-semibold">Commission</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -203,7 +184,6 @@ function TodayDirecteur() {
                       <td className="py-2 font-semibold text-ink">{a.ref}</td>
                       <td className="py-2 text-ink-sub">{a.acheteur}</td>
                       <td className="py-2 text-ink-sub">{fdate(a.dateActePrev) || "—"}</td>
-                      <td className="py-2 text-right font-semibold text-primary">{eur(a.comm)}</td>
                     </tr>
                   ))}
                 </tbody>
