@@ -88,8 +88,6 @@ function TodayDirecteur() {
   const mandatsExp = data.mandats.filter((m) => {
     const d = daysDiff(m.dateFin); return m.statut === "Actif" && d !== null && d >= 0 && d <= 30;
   });
-  const yearNow = new Date().getFullYear();
-  const caYTD = fin.revAnneeCourante;
 
   return (
     <div className="mx-auto max-w-[940px] px-6 py-6">
