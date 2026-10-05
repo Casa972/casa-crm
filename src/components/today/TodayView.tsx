@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, AlertTriangle, Clock, TrendingUp, Bell, Users, Zap, Sparkles } from "lucide-react";
+import { CheckCircle, AlertTriangle, Clock, TrendingUp, Bell, Zap, Sparkles } from "lucide-react";
 import { NouveauDossierWizard } from "../biens/NouveauDossierWizard";
 import { EmptyState } from "../ui/Modal";
 import { Modal, FormActions } from "../ui/Modal";
@@ -118,27 +118,12 @@ function TodayDirecteur() {
           <div className={`mt-1.5 font-heading text-2xl font-semibold tabular-nums ${relances.length > 0 ? "text-danger" : "text-emerald"}`}>{relances.length}</div>
         </button>
         <button onClick={() => setView("registre")} className={`card border-l-4 p-4 text-left hover:shadow-card-hover transition-shadow ${mandatsExp.length > 0 ? "border-l-violet bg-violet-soft" : "border-l-line"}`}>
-          <div className={`text-[10.5px] font-bold uppercase tracking-wide flex items-center gap-1 ${mandatsExp.length > 0 ? "text-violet" : "text-ink-muted"}`}><AlertTriangle size={11} /> Mandats exp. <30j</div>
+          <div className={`text-[10.5px] font-bold uppercase tracking-wide flex items-center gap-1 ${mandatsExp.length > 0 ? "text-violet" : "text-ink-muted"}`}><AlertTriangle size={11} /> Mandats exp. sous 30 j</div>
           <div className={`mt-1.5 font-heading text-2xl font-semibold tabular-nums ${mandatsExp.length > 0 ? "text-violet" : "text-ink"}`}>{mandatsExp.length}</div>
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         <div className="card p-4">
-          <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5"><Users size={13} /> Performance agents</div>
-          <div className="flex flex-col gap-2">
-            {fin.agentPerformance.map((a) => (
-                <div key={a.id} className="flex items-center gap-3">
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-full text-white text-[11px] font-bold" style={{ background: a.color }}>{a.name[0]}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[12px] font-medium text-ink">{a.name}</div>
-                    <div className="flex gap-3 mt-0.5 text-[10.5px] text-ink-muted"><span>{a.clients} clients</span><span>{a.compromis} compromis</span></div>
-                  </div>
-                </div>
-            ))}
-          </div>
-          <button onClick={() => setView("reporting")} className="mt-3 text-[12px] text-primary hover:underline">Reporting complet →</button>
-        </div>
-        <div className="card p-4 md:col-span-2">
           <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-ink-muted flex items-center gap-1.5"><Clock size={13} /> Clients à relancer</div>
           {aTraiter.length === 0 ? (
             <EmptyState Icon={CheckCircle} text="Tout est à jour !" sub="Aucune relance en attente." />
